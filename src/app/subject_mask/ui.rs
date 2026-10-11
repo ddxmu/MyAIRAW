@@ -25,16 +25,13 @@ impl Editor {
             return;
         }
         let reason = self.selection_unavailable();
-        control_label(ui, "Select", |ui| {
+        control_label(ui, "选片", |ui| {
             let gap = 4.;
             let w = (ui.available_width() - 2. * gap) / 3.;
             for (feature, tip) in [
-                (Feature::Subject, "Mask the photo's main subject"),
-                (Feature::Sky, "Mask the sky"),
-                (
-                    Feature::Background,
-                    "Mask everything but the photo's main subject",
-                ),
+                (Feature::Subject, "为照片主体创建蒙版"),
+                (Feature::Sky, "为天空创建蒙版"),
+                (Feature::Background, "为照片主体以外的区域创建蒙版"),
             ] {
                 if self.feature_tile(ui, feature, w, tip, reason) {
                     self.request_selection(Request {
@@ -74,7 +71,7 @@ impl Editor {
             egui::WidgetInfo::labeled(
                 egui::WidgetType::Button,
                 disabled.is_none(),
-                format!("Select {}", feature.name()),
+                format!("选择{}", crate::app::chinese::label(feature.name())),
             )
         });
         let hot = response.hovered() && disabled.is_none();
@@ -94,7 +91,7 @@ impl Editor {
         ui.painter().text(
             rect.center_bottom() - egui::vec2(0., 9.),
             egui::Align2::CENTER_CENTER,
-            feature.name(),
+            crate::app::chinese::label(feature.name()),
             egui::FontId::proportional(11.),
             ink,
         );
@@ -128,8 +125,8 @@ impl Editor {
                 ui.set_width(ui.available_width());
                 ui.label(
                     egui::RichText::new(format!(
-                        "Select {}: click it on the photo",
-                        feature.name()
+                        "选择{}：点击照片中的对象",
+                        crate::app::chinese::label(feature.name())
                     ))
                     .strong()
                     .size(12.5),
@@ -142,18 +139,16 @@ impl Editor {
                 };
                 ui.add(
                     egui::Label::new(small(if applied {
-                        "Click more of the subject to add to it, Alt-click something to leave \
-                         it out, or drag a box to start over from the box."
+                        "点击主体更多位置添加区域，Alt 点击排除，或拖动新选框重新开始。"
                     } else {
-                        "Click the subject, or drag a box around it. Each click can be refined \
-                         with more: click to add, Alt-click to leave out."
+                        "点击主体或拖动框选。可继续点击添加区域，按住 Alt 点击排除区域。"
                     }))
                     .wrap(),
                 );
                 let used = format!(
                     "{points} point{}{}",
                     if points == 1 { "" } else { "s" },
-                    if boxed { " and a box" } else { "" }
+                    if boxed { "和一个选框" } else { "" }
                 );
                 ui.add(egui::Label::new(small(&used)));
                 if let Some(why) = failure {
@@ -161,14 +156,14 @@ impl Editor {
                 }
                 ui.add_space(4.);
                 ui.horizontal(|ui| {
-                    let done = egui::Button::new(egui::RichText::new("Done").strong())
+                    let done = egui::Button::new(egui::RichText::new("完成").strong())
                         .fill(egui::Color32::from_rgb(52, 98, 170));
-                    if ui.add(done).on_hover_text("Escape").clicked() {
+                    if ui.add(done).on_hover_text("退出").clicked() {
                         self.selection.end_prompting();
                     }
                     if ui
-                        .button("Start over")
-                        .on_hover_text("Forget the clicks; the next click selects afresh")
+                        .button("重新开始")
+                        .on_hover_text("清除点击记录，下次点击重新选择")
                         .clicked()
                     {
                         self.clear_prompt();
@@ -288,8 +283,8 @@ impl Editor {
                 ui.set_width(ui.available_width());
                 ui.label(
                     egui::RichText::new(format!(
-                        "Before “Select {}” can run",
-                        request.feature.name()
+                        "使用“选择{}”之前",
+                        crate::app::chinese::label(request.feature.name())
                     ))
                     .strong()
                     .size(12.5),
@@ -312,15 +307,12 @@ impl Editor {
                         }));
                     });
                 };
-                step(ui, upgraded, !upgraded, "Upgrade this catalog");
+                step(ui, upgraded, !upgraded, "升级此图库");
                 step(
                     ui,
                     model,
                     upgraded && !model,
-                    &format!(
-                        "Download the selection models ({} MB)",
-                        download_megabytes()
-                    ),
+                    &format!("下载选区模型（{} MB）", download_megabytes()),
                 );
                 ui.add_space(6.);
                 if !upgraded {
@@ -332,8 +324,7 @@ impl Editor {
                     ui.add_space(4.);
                     ui.colored_label(
                         egui::Color32::from_rgb(230, 170, 90),
-                        "This copy of RAWmakase has no ONNX Runtime library, so selecting \
-                         cannot run yet.",
+                        "此 MyAIRAW 缺少 ONNX Runtime 库，暂时无法运行智能选择。",
                     );
                 }
             });
@@ -346,11 +337,7 @@ impl Editor {
         };
         ui.add(
             egui::Label::new(small(
-                "Masks made from a selection are stored in the catalog, which needs a newer \
-                 format. RAWmakase first saves a backup copy beside the catalog (as large as \
-                 it), then upgrades it. Older versions of RAWmakase cannot open an upgraded \
-                 catalog, and it must not be open on another computer or in another copy of \
-                 RAWmakase.",
+                "智能选区蒙版需要新版图库格式。MyAIRAW 会先在图库旁保存同等大小的备份，再升级图库。旧版程序无法打开升级后的图库；升级时请勿在其他电脑或程序中同时打开该图库。",
             ))
             .wrap(),
         );
@@ -358,17 +345,17 @@ impl Editor {
         if upgrading {
             ui.horizontal(|ui| {
                 ui.spinner();
-                ui.label("Backing up and upgrading the catalog…");
+                ui.label("正在备份并升级图库…");
             });
             return;
         }
         ui.horizontal(|ui| {
-            let go = egui::Button::new(egui::RichText::new("Upgrade catalog…").strong())
+            let go = egui::Button::new(egui::RichText::new("升级图库…").strong())
                 .fill(egui::Color32::from_rgb(52, 98, 170));
             if ui.add(go).clicked() {
                 self.upgrade_catalog(request);
             }
-            if ui.button("Not now").clicked() {
+            if ui.button("暂不").clicked() {
                 self.selection.prompt = None;
             }
         });
@@ -380,7 +367,7 @@ impl Editor {
                     .desired_width(ui.available_width())
                     .text(format!("{} of {} MB", done / 1_000_000, total / 1_000_000)),
             );
-            if ui.button("Cancel download").clicked() {
+            if ui.button("取消下载").clicked() {
                 self.selection.models.cancel();
             }
             return;
@@ -388,19 +375,16 @@ impl Editor {
         if installing {
             ui.horizontal(|ui| {
                 ui.spinner();
-                ui.label("Working…");
+                ui.label("处理中…");
             });
             return;
         }
         if let Some(why) = self.selection.models.failure() {
             ui.add(
                 egui::Label::new(
-                    egui::RichText::new(format!(
-                        "The download stopped: {why}. Download again to carry on from \
-                         where it stopped."
-                    ))
-                    .size(11.)
-                    .color(egui::Color32::from_rgb(230, 170, 90)),
+                    egui::RichText::new(format!("下载已停止：{why}。重新下载即可从断点继续。"))
+                        .size(11.)
+                        .color(egui::Color32::from_rgb(230, 170, 90)),
                 )
                 .wrap(),
             );
@@ -409,8 +393,7 @@ impl Editor {
         ui.add(
             egui::Label::new(
                 egui::RichText::new(
-                    "The model runs on this computer; no photo leaves it. It is a one-time \
-                     download and needs about that much free disk space.",
+                    "模型在本机运行，照片不会上传。只需下载一次，并需要约同等大小的可用磁盘空间。",
                 )
                 .size(11.)
                 .color(egui::Color32::LIGHT_GRAY),
@@ -419,12 +402,12 @@ impl Editor {
         );
         ui.add_space(6.);
         ui.horizontal(|ui| {
-            let go = egui::Button::new(egui::RichText::new("Download").strong())
+            let go = egui::Button::new(egui::RichText::new("下载").strong())
                 .fill(egui::Color32::from_rgb(52, 98, 170));
             if ui.add(go).clicked() {
                 self.install_model();
             }
-            if ui.button("Not now").clicked() {
+            if ui.button("暂不").clicked() {
                 self.selection.prompt = None;
             }
         });
@@ -434,11 +417,8 @@ impl Editor {
         if self.selection.models.installed() && self.selection.running().is_none() {
             indented(ui, |ui| {
                 let remove = ui
-                    .small_button("Remove selection model")
-                    .on_hover_text(
-                        "Delete the downloaded model. Saved masks keep working; selecting \
-                         again asks to download it.",
-                    )
+                    .small_button("移除选区模型")
+                    .on_hover_text("删除已下载的模型。已有蒙版仍可使用，再次选择时会提示下载。")
                     .clicked();
                 if remove {
                     let unload = self.selection.worker.unloader();
@@ -450,19 +430,17 @@ impl Editor {
         }
     }
     fn selection_progress(&mut self, ui: &mut egui::Ui, request: Request) {
-        control_label(ui, "Select", |ui| {
+        control_label(ui, "选片", |ui| {
             ui.spinner();
             // No percentage: the runtime reports none for a run.
             ui.label(format!(
                 "Finding the {}…",
-                request.feature.name().to_lowercase()
+                crate::app::chinese::label(request.feature.name()).to_lowercase()
             ))
-            .on_hover_text(
-                "The first selection on a photo takes a few seconds; the next ones are quick",
-            );
+            .on_hover_text("首次选择需等待几秒，后续选择更快");
             if ui
-                .button("Cancel")
-                .on_hover_text("Stop selecting; the photo is left as it was")
+                .button("取消")
+                .on_hover_text("停止选择，照片保持原样")
                 .clicked()
             {
                 self.cancel_selection();
@@ -477,23 +455,20 @@ impl Editor {
         }
         hint(ui, &failure.message());
         if *failure == Failure::NoSubject {
-            hint(
-                ui,
-                "Automatic selection knows people and animals. For anything else, click it yourself.",
-            );
+            hint(ui, "自动选区可识别人和动物。其他对象请在照片中点击选择。");
         }
         indented(ui, |ui| {
             if *failure == Failure::NoSubject
                 && ui
                     .add(
-                        egui::Button::new(egui::RichText::new("Click the subject…").strong())
+                        egui::Button::new(egui::RichText::new("点击主体…").strong())
                             .fill(egui::Color32::from_rgb(52, 98, 170)),
                     )
                     .clicked()
             {
                 self.begin_aiming(request);
             }
-            if ui.button("Try again").clicked() {
+            if ui.button("重试").clicked() {
                 self.selection.failure = None;
                 // A failed click is retried with its clicks, not as an automatic selection.
                 if self.selection.prompting.is_some() {
@@ -502,7 +477,7 @@ impl Editor {
                     self.request_selection(request);
                 }
             }
-            if ui.button("Dismiss").clicked() {
+            if ui.button("关闭提示").clicked() {
                 self.selection.failure = None;
             }
         });
@@ -517,9 +492,9 @@ impl Editor {
         ui.separator();
         let reason = self.selection_unavailable();
         for (feature, label) in [
-            (Feature::Subject, "Subject"),
-            (Feature::Sky, "Sky"),
-            (Feature::Background, "Background"),
+            (Feature::Subject, "主体"),
+            (Feature::Sky, "天空"),
+            (Feature::Background, "背景"),
         ] {
             let response = ui.add_enabled(
                 reason.is_none() && self.selection.running().is_none(),
@@ -553,13 +528,12 @@ impl Editor {
         let busy = self.selection.running().is_some();
         let free = reason.is_none() && !busy && self.selection.prompting.is_none();
         indented(ui, |ui| {
-            let regenerate = ui.add_enabled(free, egui::Button::new("Regenerate"));
+            let regenerate = ui.add_enabled(free, egui::Button::new("重新生成"));
             let regenerate = match reason {
                 Some(why) => regenerate.on_disabled_hover_text(why),
-                None => regenerate.on_hover_text(
-                    "Find it again and replace only this part of the mask; its other parts and \
-                     the adjustments stay",
-                ),
+                None => {
+                    regenerate.on_hover_text("重新选择并替换此蒙版部分，其他部分与调整保持不变")
+                }
             };
             if regenerate.clicked() {
                 self.request_selection(Request {
@@ -569,11 +543,8 @@ impl Editor {
             }
             if feature != Feature::Sky {
                 let refine = ui
-                    .add_enabled(free, egui::Button::new("Refine with clicks…"))
-                    .on_hover_text(
-                        "Click on the photo to add to this selection, Alt-click to leave \
-                         something out",
-                    );
+                    .add_enabled(free, egui::Button::new("点击细化…"))
+                    .on_hover_text("点击照片添加选区，按住 Alt 点击排除区域");
                 if refine.clicked() {
                     self.begin_refining(mask, component);
                 }

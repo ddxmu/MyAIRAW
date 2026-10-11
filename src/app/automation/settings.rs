@@ -10,53 +10,53 @@ use mapping::supported_action as parse_action;
 /// What a button can be set to from the list: its name and the key it presses,
 /// spelled as in `midi.json`. Anything else is typed in the field beside it.
 pub(super) const PRESETS: [(&str, &str); 47] = [
-    ("Do nothing", ""),
-    ("Undo", "cmd+z"),
-    ("Redo", "cmd+shift+z"),
-    ("Previous photo", "left"),
-    ("Next photo", "right"),
+    ("不执行操作", ""),
+    ("撤销", "cmd+z"),
+    ("重做", "cmd+shift+z"),
+    ("上一张照片", "left"),
+    ("下一张照片", "right"),
     ("Arrow up", "arrowup"),
     ("Arrow down", "arrowdown"),
-    ("Star rating 0", "0"),
-    ("Star rating 1", "1"),
-    ("Star rating 2", "2"),
-    ("Star rating 3", "3"),
-    ("Star rating 4", "4"),
-    ("Star rating 5", "5"),
-    ("Pick", "p"),
-    ("Reject", "x"),
-    ("Unflag", "u"),
-    ("Label red", "6"),
-    ("Label yellow", "7"),
-    ("Label green", "8"),
-    ("Label blue", "9"),
-    ("Before / after", "backslash"),
-    ("Show clipping", "j"),
-    ("Toggle zoom", "z"),
-    ("Crop & Straighten", "r"),
-    ("Spot removal", "q"),
-    ("White balance selector", "w"),
-    ("Masking", "shift+w"),
-    ("Hide / show the side panels", "tab"),
-    ("Hide / show all panels", "shift+tab"),
-    ("Convert to black & white or color", "toggle:bw"),
-    ("Color Mixer: Hue", "mixer:hue"),
-    ("Color Mixer: Saturation", "mixer:sat"),
-    ("Color Mixer: Luminance", "mixer:lum"),
-    ("Copy settings…", "cmd+shift+c"),
-    ("Paste settings", "cmd+shift+v"),
-    ("Paste settings from previous", "cmd+alt+v"),
-    ("Sync settings…", "cmd+shift+s"),
-    ("Reset all settings", "cmd+shift+r"),
-    ("Auto tone", "cmd+shift+u"),
-    ("Export…", "cmd+shift+e"),
-    ("Export with previous", "cmd+alt+shift+e"),
-    ("Library grid", "g"),
-    ("Develop", "d"),
-    ("Hold Shift", "hold:shift"),
-    ("Hold Command", "hold:cmd"),
-    ("Hold Alt", "hold:alt"),
-    ("Show in Loupe", "e"),
+    ("评分 0 星", "0"),
+    ("评分 1 星", "1"),
+    ("评分 2 星", "2"),
+    ("评分 3 星", "3"),
+    ("评分 4 星", "4"),
+    ("评分 5 星", "5"),
+    ("选中", "p"),
+    ("拒绝", "x"),
+    ("清除旗标", "u"),
+    ("红色标签", "6"),
+    ("黄色标签", "7"),
+    ("绿色标签", "8"),
+    ("蓝色标签", "9"),
+    ("前后对比", "backslash"),
+    ("显示剪裁警告", "j"),
+    ("切换缩放", "z"),
+    ("裁剪与拉直", "r"),
+    ("污点移除", "q"),
+    ("白平衡吸管", "w"),
+    ("蒙版", "shift+w"),
+    ("隐藏／显示侧边面板", "tab"),
+    ("隐藏／显示全部面板", "shift+tab"),
+    ("转换为黑白或彩色", "toggle:bw"),
+    ("颜色混合器：色相", "mixer:hue"),
+    ("颜色混合器：饱和度", "mixer:sat"),
+    ("颜色混合器：明亮度", "mixer:lum"),
+    ("复制设置…", "cmd+shift+c"),
+    ("粘贴设置", "cmd+shift+v"),
+    ("粘贴上一张设置", "cmd+alt+v"),
+    ("同步设置…", "cmd+shift+s"),
+    ("重置所有设置", "cmd+shift+r"),
+    ("自动色调", "cmd+shift+u"),
+    ("导出…", "cmd+shift+e"),
+    ("使用上次设置导出", "cmd+alt+shift+e"),
+    ("照片库网格", "g"),
+    ("显影", "d"),
+    ("按住 Shift", "hold:shift"),
+    ("按住 Command", "hold:cmd"),
+    ("按住 Alt", "hold:alt"),
+    ("在放大视图显示", "e"),
 ];
 
 /// What a dial does.
@@ -70,9 +70,9 @@ enum DialUse {
 impl DialUse {
     fn label(self) -> String {
         match self {
-            DialUse::None => "Do nothing".into(),
-            DialUse::Photos => "Previous / next photo".into(),
-            DialUse::Slider(Param::Band(i)) => format!("Color Mixer: {}", BANDS[i]),
+            DialUse::None => "不执行操作".into(),
+            DialUse::Photos => "上一张／下一张照片".into(),
+            DialUse::Slider(Param::Band(i)) => format!("颜色混合器：{}", BANDS[i]),
             DialUse::Slider(p) => {
                 let name = p.spec();
                 let mut chars = name.chars();
@@ -147,23 +147,23 @@ fn mappings(
     last: Option<Last>,
 ) {
     let ctx = ui.ctx().clone();
-    form_row(ui, "Add a control", |ui| {
+    form_row(ui, "添加控制器", |ui| {
         let id = egui::Id::new(("control-number", device_id));
         let mut number = ui.data(|d| d.get_temp::<u8>(id)).unwrap_or(0);
         ui.add(egui::DragValue::new(&mut number).range(0..=127));
         ui.data_mut(|d| d.insert_temp(id, number));
-        if ui.button("Add dial / slider").clicked() {
+        if ui.button("添加旋钮／滑块").clicked() {
             ui.data_mut(|d| d.insert_temp(egui::Id::new(("add-cc", device_id)), number));
         }
-        if ui.button("Add button").clicked() {
+        if ui.button("添加按钮").clicked() {
             ui.data_mut(|d| d.insert_temp(egui::Id::new(("add-note", device_id)), number));
         }
     });
     hint(
         ui,
-        "Move a control to discover its number, or add it by CC / note number. Assign an action below.",
+        "移动控制器以识别编号，或按 CC／音符编号添加，再在下方分配操作。",
     );
-    group(ui, "Dials and faders");
+    group(ui, "旋钮与推子");
     let choices = DialUse::all();
     let mut dials: Vec<(String, u8)> = profile
         .dials()
@@ -204,7 +204,7 @@ fn mappings(
                 });
             small(ui, &format!("CC {cc}"));
         });
-        form_row(ui, "Control format", |ui| {
+        form_row(ui, "控制格式", |ui| {
             let mut encoder = config.encoder(cc);
             egui::ComboBox::from_id_salt(("encoder", device_id, cc))
                 .selected_text(encoder.label())
@@ -226,7 +226,7 @@ fn mappings(
     }
     gap(ui);
 
-    group(ui, "Buttons");
+    group(ui, "按钮");
     let mut buttons: Vec<(String, u8)> = profile
         .buttons()
         .iter()
@@ -265,7 +265,7 @@ fn mappings(
         form_row(ui, &name, |ui| {
             egui::ComboBox::from_id_salt(("automation-button", device_id, note))
                 .width(170.)
-                .selected_text(preset.unwrap_or("Custom"))
+                .selected_text(preset.unwrap_or("自定义"))
                 .show_ui(ui, |ui| {
                     for (label, spec) in PRESETS {
                         if ui.selectable_label(preset == Some(label), label).clicked() {
@@ -316,7 +316,7 @@ fn mappings(
     gap(ui);
     hint(
         ui,
-        "Buttons run application actions. Enter a name such as undo, pick or treatment:bw, or a supported shortcut such as cmd+shift+z. Dials follow the selected mask while Masking is active.",
+        "按钮执行应用操作，例如 undo、pick、treatment:bw，或 cmd+shift+z 等快捷键。蒙版工具开启时，旋钮作用于所选蒙版。",
     );
 }
 impl Editor {
@@ -331,33 +331,33 @@ impl Editor {
             return;
         }
         let mut settings = self.controls.settings.clone();
-        group(ui, "Scripts and AI");
-        form_row(ui, "Local access", |ui| {
-            ui.checkbox(&mut settings.socket, "Allow local scripts and applications");
+        group(ui, "脚本与 AI");
+        form_row(ui, "本地访问", |ui| {
+            ui.checkbox(&mut settings.socket, "允许本地脚本和应用");
         });
-        form_row(ui, "Status", |ui| {
+        form_row(ui, "状态", |ui| {
             small(
                 ui,
                 if self.controls.socket.is_some() {
-                    "Ready for scripts and MCP clients"
+                    "已就绪，可连接脚本及 MCP 客户端"
                 } else if settings.socket {
                     "Could not start local access"
                 } else {
-                    "Off"
+                    "关闭"
                 },
             );
         });
         form_row(ui, "", |ui| {
             hint(
                 ui,
-                "Connect Codex or another MCP client to control the editor. No MIDI device is required. Access is limited to programs running under your local account.",
+                "连接 Codex 或其他 MCP 客户端以控制编辑器。无需 MIDI 设备，仅允许本机用户账户下的程序访问。",
             );
         });
-        form_row(ui, "Setup", |ui| {
+        form_row(ui, "设置", |ui| {
             let error_id = egui::Id::new("mcp-guide-error");
             if ui
-                .link("MCP setup · macOS, Linux and Windows")
-                .on_hover_text("Open the setup guide in your default browser")
+                .link("MCP 配置 · macOS、Linux 和 Windows")
+                .on_hover_text("在默认浏览器中打开配置指南")
                 .clicked()
             {
                 // This build omits eframe's links feature. Use the same platform
@@ -376,9 +376,9 @@ impl Editor {
             }
         });
         gap(ui);
-        group(ui, "MIDI devices");
+        group(ui, "MIDI 设备");
         ui.horizontal(|ui| {
-            ui.menu_button("Add device", |ui| {
+            ui.menu_button("添加设备", |ui| {
                 for profile in Profile::ALL {
                     if ui.button(profile.label()).clicked() {
                         self.controls.selected = Some(settings.add(profile));
@@ -386,7 +386,7 @@ impl Editor {
                     }
                 }
             });
-            if ui.button("Refresh inputs").clicked() || !self.controls.ports_scanned {
+            if ui.button("刷新输入").clicked() || !self.controls.ports_scanned {
                 self.controls.ports = midi::ports();
                 self.controls.ports_scanned = true;
             }
@@ -394,7 +394,7 @@ impl Editor {
         if settings.devices.is_empty() {
             hint(
                 ui,
-                "No MIDI devices configured. Add a Loupedeck+ or a custom controller; each device keeps its own mappings.",
+                "尚未配置 MIDI 设备。可添加 Loupedeck+ 或自定义控制器，各设备独立保存映射。",
             );
         }
         #[cfg(not(any(target_os = "macos", target_os = "windows")))]
@@ -420,13 +420,13 @@ impl Editor {
                 small(
                     ui,
                     if !device.enabled {
-                        "Disabled"
+                        "已禁用"
                     } else if status {
-                        "Connected"
+                        "已连接"
                     } else if device.port.is_empty() {
-                        "Choose an input"
+                        "选择输入"
                     } else {
-                        "Not connected"
+                        "未连接"
                     },
                 );
             });
@@ -441,29 +441,29 @@ impl Editor {
             .find(|d| Some(d.id) == self.controls.selected)
         {
             gap(ui);
-            group(ui, "Device settings");
-            form_row(ui, "Name", |ui| {
+            group(ui, "设备设置");
+            form_row(ui, "名称", |ui| {
                 ui.text_edit_singleline(&mut device.name);
             });
-            form_row(ui, "Enabled", |ui| {
-                ui.checkbox(&mut device.enabled, "Listen to this device");
+            form_row(ui, "已启用", |ui| {
+                ui.checkbox(&mut device.enabled, "监听此设备");
             });
-            form_row(ui, "Profile", |ui| {
+            form_row(ui, "配置文件", |ui| {
                 small(ui, device.profile.label());
-                if ui.button("Reset mappings to profile").clicked() {
+                if ui.button("将映射重置为配置文件默认值").clicked() {
                     device.mapping = device.profile.mapping();
                 }
             });
-            form_row(ui, "MIDI input", |ui| {
+            form_row(ui, "MIDI 输入", |ui| {
                 egui::ComboBox::from_id_salt(("port", device.id))
                     .selected_text(if device.port.is_empty() {
-                        "Choose an input"
+                        "选择输入"
                     } else {
                         &device.port
                     })
                     .show_ui(ui, |ui| {
                         if ui
-                            .selectable_label(device.port.is_empty(), "Not assigned")
+                            .selectable_label(device.port.is_empty(), "未分配")
                             .clicked()
                         {
                             device.port.clear();
@@ -487,52 +487,42 @@ impl Editor {
             });
             if self.controls.ports.is_empty() {
                 form_row(ui, "", |ui| {
-                    hint(
-                        ui,
-                        "No MIDI inputs found. Connect your device, then refresh inputs.",
-                    )
+                    hint(ui, "未找到 MIDI 输入。请连接设备后刷新输入列表。")
                 });
             }
-            ui.collapsing("Advanced connection", |ui| {
-                form_row(ui, "Port name", |ui| {
+            ui.collapsing("高级连接", |ui| {
+                form_row(ui, "端口名称", |ui| {
                     if ui.text_edit_singleline(&mut device.port).changed() {
                         device.port_id = None;
                     }
                 });
                 form_row(ui, "", |ui| {
-                    if ui
-                        .checkbox(&mut device.exact, "Match the entire port name")
-                        .changed()
-                    {
+                    if ui.checkbox(&mut device.exact, "匹配完整端口名称").changed() {
                         device.port_id = None;
                     }
                 });
-                form_row(ui, "MIDI channel", |ui| {
+                form_row(ui, "MIDI 通道", |ui| {
                     egui::ComboBox::from_id_salt(("channel", device.id))
-                        .selected_text(
-                            device
-                                .channel
-                                .map_or("All channels".into(), |c| c.to_string()),
-                        )
+                        .selected_text(device.channel.map_or("所有通道".into(), |c| c.to_string()))
                         .show_ui(ui, |ui| {
-                            ui.selectable_value(&mut device.channel, None, "All channels");
+                            ui.selectable_value(&mut device.channel, None, "所有通道");
                             for c in 1..=16 {
                                 ui.selectable_value(&mut device.channel, Some(c), c.to_string());
                             }
                         });
                 });
-                form_row(ui, "Turn speed", |ui| {
+                form_row(ui, "旋转速度", |ui| {
                     ui.add(
                         egui::DragValue::new(&mut device.mapping.sensitivity)
                             .range(1..=16)
                             .suffix("×"),
                     );
                 });
-                form_row(ui, "Photo dial", |ui| {
+                form_row(ui, "照片切换旋钮", |ui| {
                     ui.add(
                         egui::DragValue::new(&mut device.mapping.photo_detent)
                             .range(1..=64)
-                            .suffix(" ticks per photo"),
+                            .suffix(" 刻度／张照片"),
                     );
                 });
             });
@@ -546,20 +536,20 @@ impl Editor {
             if let Some(problem) = problem {
                 hint(ui, &problem);
             }
-            form_row(ui, "Last input", |ui| {
+            form_row(ui, "最近输入", |ui| {
                 small(
                     ui,
                     &match last {
                         Some(Last::Dial(cc, v)) => format!("CC {cc} · value {v}"),
                         Some(Last::Button(n)) => format!("Note {n}"),
-                        None => "Move a dial or press a button to identify it".into(),
+                        None => "转动旋钮或按下按钮以识别".into(),
                     },
                 );
             });
-            ui.collapsing("Control mappings", |ui| {
+            ui.collapsing("控制映射", |ui| {
                 mappings(ui, &mut device.mapping, device.profile, device.id, last);
             });
-            if ui.button("Remove device").clicked() {
+            if ui.button("移除设备").clicked() {
                 remove = Some(device.id);
             }
         }

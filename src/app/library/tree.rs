@@ -175,9 +175,9 @@ pub(super) fn folder_tree_row(
         if can_relink
             && ui
                 .button(if node.root.is_some() {
-                    "Locate root folder…"
+                    "定位根文件夹…"
                 } else {
-                    "Locate this folder…"
+                    "定位此文件夹…"
                 })
                 .clicked()
         {

@@ -135,7 +135,7 @@ impl Editor {
             ui.painter().text(
                 area.center(),
                 egui::Align2::CENTER_CENTER,
-                "Pick a photo in the Library to edit it",
+                "从照片库选择要编辑的照片",
                 egui::FontId::proportional(15.),
                 palette.gray(120),
             );
@@ -175,7 +175,7 @@ impl Editor {
         ui.painter().text(
             badge.left_center() + Vec2::new(36., 0.),
             egui::Align2::LEFT_CENTER,
-            "Loading photo…",
+            "正在加载照片…",
             egui::FontId::proportional(12.),
             palette.gray(225),
         );
@@ -370,7 +370,7 @@ impl Editor {
             painter.image(region.id(), at, uv, Color32::WHITE);
         }
         if self.view.compare.before_only() {
-            before_after::badge(ui, area, "Before");
+            before_after::badge(ui, area, "编辑前");
         }
         self.develop_info_overlay(ui, panes.after.clip);
         // A click or drag on Before acts where the same point is on the edit; the
@@ -746,10 +746,9 @@ impl Editor {
                 && angle != current
             {
                 self.document.edit.recipe_mut().straighten = angle;
-                self.document.edit.name_next_step(super::history::Step::new(
-                    "Straighten",
-                    format!("{angle:+.2}"),
-                ));
+                self.document
+                    .edit
+                    .name_next_step(super::history::Step::new("拉直", format!("{angle:+.2}")));
             }
         }
         true

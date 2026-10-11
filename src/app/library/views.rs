@@ -29,10 +29,10 @@ impl View {
     }
     fn hover(self) -> String {
         let (name, key) = match self {
-            Self::Grid => ("Grid", "G"),
-            Self::Loupe => ("Loupe", "E"),
-            Self::Compare => ("Compare", "C"),
-            Self::Survey => ("Survey", "N"),
+            Self::Grid => ("网格", "G"),
+            Self::Loupe => ("放大视图", "E"),
+            Self::Compare => ("比较", "C"),
+            Self::Survey => ("筛选视图", "N"),
         };
         format!("{name} ({})", keys_text(key))
     }

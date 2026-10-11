@@ -124,7 +124,7 @@ impl Editor {
     fn stand_in_for(&self, photo: PhotoId) -> Option<Wanted> {
         let library = self.library.as_ref()?;
         let path = library.photo(photo)?.path.clone();
-        if !crate::storage::is_raw(&path) {
+        if !crate::storage::is_editable(&path) {
             return None;
         }
         let record = library.session.catalog.edit_record(photo).ok()?;

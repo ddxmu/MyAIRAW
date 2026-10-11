@@ -197,10 +197,10 @@ impl Library {
                         &palette,
                         &match position {
                             Some(_) if selected > 1 => {
-                                format!("{} of {} photos selected", selected, self.visible.len())
+                                format!("已选择 {} / {} 张照片", selected, self.visible.len())
                             }
-                            Some(at) => format!("{} of {} photos", at + 1, self.visible.len()),
-                            None => format!("{} photos", self.visible.len()),
+                            Some(at) => format!("第 {} / {} 张照片", at + 1, self.visible.len()),
+                            None => format!("{} 张照片", self.visible.len()),
                         },
                     ));
                     if let Some(p) = &photo {

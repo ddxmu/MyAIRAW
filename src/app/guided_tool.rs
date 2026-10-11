@@ -112,7 +112,7 @@ impl Editor {
             self.document.edit.recipe_mut().upright.mode = UprightMode::Guided;
             self.document
                 .edit
-                .name_next_step(super::history::Step::new("Upright", "Guided"));
+                .name_next_step(super::history::Step::new("透视校正", "引导式"));
         }
         let u = &self.document.edit.recipe().upright;
         if u.guides.is_empty() {
@@ -143,7 +143,7 @@ impl Editor {
         let issue = issue.or((count < 2).then_some(guided::Issue::TooFew));
         match issue {
             Some(issue) => self.status = issue.message().into(),
-            None if self.status.starts_with("Guided Upright") => self.status.clear(),
+            None if self.status.starts_with("引导式透视校正") => self.status.clear(),
             None => {}
         }
         let value = match count {
@@ -162,7 +162,7 @@ impl Editor {
         let mut guides = self.document.edit.recipe().upright.guides.clone();
         if i < guides.len() {
             guides.remove(i);
-            self.set_guides(guides, "Delete Guide");
+            self.set_guides(guides, "删除引导线");
         }
     }
     /// The Guided tool's keys: Delete and Backspace delete the selected guide.
@@ -302,8 +302,8 @@ impl Editor {
             && let Some(drag) = self.view.guided.drag.take()
         {
             let step = match drag {
-                GuideDrag::New { .. } => "Add Guide",
-                GuideDrag::End { .. } => "Move Guide",
+                GuideDrag::New { .. } => "添加引导线",
+                GuideDrag::End { .. } => "移动引导线",
             };
             if let Some(next) = released(&guides, drag, to_frame) {
                 if matches!(drag, GuideDrag::New { .. }) {

@@ -101,8 +101,8 @@ impl Editor {
             self.document.edit.finish_gesture();
         }
         let step = match kind {
-            AutoKind::Settings => Step::new("Auto Settings", ""),
-            AutoKind::WhiteBalance => Step::new("White Balance", "Auto"),
+            AutoKind::Settings => Step::new("自动设置", ""),
+            AutoKind::WhiteBalance => Step::new("白平衡", "自动"),
         };
         let mut applied = self.document.edit.recipe().clone();
         match kind {

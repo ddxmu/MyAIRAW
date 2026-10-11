@@ -26,44 +26,33 @@ impl Library {
                         .map(|t| (t.id(), t.size_vec2()));
                     crate::app::navigator::navigator(ui, photo, None, None);
                 }
-                section(ui, "Catalog", false, |ui| {
+                section(ui, "图库", false, |ui| {
                     let offline = self.session.photos.len() - self.available_count();
                     let all = self.filters.folder_scope.is_none()
                         && self.filters.collection.is_none()
                         && !self.filters.only_missing;
-                    if source_row(ui, "All Photographs", self.session.photos.len(), all).clicked() {
+                    if source_row(ui, "全部照片", self.session.photos.len(), all).clicked() {
                         self.filters.folder_scope = None;
                         self.selected_folder.clear();
                         self.filters.collection = None;
                         self.filters.only_missing = false;
                         self.filter()
                     }
-                    if source_row(
-                        ui,
-                        "Quick Collection",
-                        self.quick_count(),
-                        self.showing_quick(),
-                    )
-                    .on_hover_text("B adds the selected photos · ⌘B shows them")
-                    .clicked()
+                    if source_row(ui, "快速收藏集", self.quick_count(), self.showing_quick())
+                        .on_hover_text("B 添加所选照片 · ⌘B 显示快速收藏")
+                        .clicked()
                         && let Err(e) = self.show_quick()
                     {
-                        self.message = format!("Quick Collection unavailable: {e}");
+                        self.message = format!("快速收藏不可用：{e}");
                     }
                     if offline > 0
-                        && source_row(
-                            ui,
-                            "Offline Photographs",
-                            offline,
-                            self.filters.only_missing,
-                        )
-                        .clicked()
+                        && source_row(ui, "离线照片", offline, self.filters.only_missing).clicked()
                     {
                         self.filters.only_missing = !self.filters.only_missing;
                         self.filter()
                     }
                 });
-                section(ui, "Folders", false, |ui| {
+                section(ui, "文件夹", false, |ui| {
                     // Lightroom-style volume headers with an attached light.
                     let mut volumes: std::collections::BTreeMap<
                         crate::platform::volume::Volume,
@@ -153,22 +142,20 @@ impl Library {
                     if self.session.roots.is_empty() {
                         ui.add_space(4.);
                         ui.label(
-                            egui::RichText::new("No folders yet")
+                            egui::RichText::new("尚无文件夹")
                                 .size(11.)
                                 .color(palette.gray(120)),
                         );
                     }
                     ui.add_space(12.);
-                    if add_row(ui, "Add Folder…")
-                        .on_hover_text(
-                            "Add a folder of photos to this catalog. Photos stay where they are.",
-                        )
+                    if add_row(ui, "添加文件夹…")
+                        .on_hover_text("将照片文件夹添加到图库，照片仍保留在原位置。")
                         .clicked()
                     {
                         action = Action::AddFolder;
                     }
                 });
-                section(ui, "Collections", false, |ui| {
+                section(ui, "收藏集", false, |ui| {
                     let tree = collections::tree(
                         &self.session.collections,
                         &self.session.collection_photos,
@@ -187,7 +174,7 @@ impl Library {
                     if tree.is_empty() {
                         ui.add_space(4.);
                         ui.label(
-                            egui::RichText::new("No collections")
+                            egui::RichText::new("尚无收藏集")
                                 .size(11.)
                                 .color(palette.gray(120)),
                         );
@@ -288,10 +275,10 @@ impl Library {
                 .iter()
                 .find(|c| c.id == id)
                 .map_or_else(
-                    || "Collection".into(),
+                    || "收藏集".into(),
                     |c| {
                         if c.name == crate::catalog::QUICK_COLLECTION {
-                            "Quick Collection".into()
+                            "快速收藏集".into()
                         } else {
                             c.name.clone()
                         }
@@ -299,7 +286,7 @@ impl Library {
                 );
         }
         if self.selected_folder.is_empty() {
-            return "All Photographs".into();
+            return "全部照片".into();
         }
         match self.selected_folder.rsplit_once('/') {
             Some((_, name)) => name.into(),

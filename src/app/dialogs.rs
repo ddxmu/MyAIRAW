@@ -71,7 +71,7 @@ impl Editor {
                     | FileDialog::ImportXmp
                     | FileDialog::ImportFolder(_) => unreachable!("Handled by the import choosers"),
                     FileDialog::LoadPreset => rfd::FileDialog::new()
-                        .add_filter("RAWmakase preset", &["json"])
+                        .add_filter("MyAIRAW 预设", &["json"])
                         .pick_file(),
                     FileDialog::SavePreset => rfd::FileDialog::new()
                         .set_file_name("preset.json")

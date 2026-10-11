@@ -77,7 +77,7 @@ pub(super) fn tone_stage(
             *v *= l.delta[slot::COLOR + c].exp2();
         }
     }
-    if let Some(ramp) = &lut.black_ramp {
+    if let Some(ramp) = lut.black_ramp.as_ref().filter(|_| !m.display_referred) {
         if exposure != 0. {
             // The ramp's black point follows exposure, as for the global slider.
             let ramp = ExposureRamp::new(
@@ -116,7 +116,7 @@ pub(super) fn tone_stage(
     let shaped = y * 2f32.powf(ev);
     let mapped = if r.engine < 3 {
         shaped * (2.2 * shaped + 0.05) / (shaped * (2.2 * shaped + 0.6) + 0.1)
-    } else if r.profile_tone && r.profile.is_some() {
+    } else if m.display_referred || (r.profile_tone && r.profile.is_some()) {
         shaped
     } else {
         // Scene-referred shoulder anchored at 18% middle gray. No per-channel clipping.

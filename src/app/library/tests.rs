@@ -47,25 +47,100 @@ fn develop_says_why_it_cannot_open_a_photo() -> Result<()> {
     let ctx = egui::Context::default();
     let library = Library::load(&path, ctx.clone())?;
     let photo = library.session.photos[0].clone();
-    assert_eq!(
-        develop_refusal(&photo, true),
-        Some(Refusal::NotRaw("JPG".into()))
-    );
+    assert_eq!(develop_refusal(&photo, true), None);
     assert_eq!(develop_refusal(&photo, false), Some(Refusal::Offline));
     assert_eq!(Refusal::NotRaw("JPG".into()).label(), "JPG file");
     let mut editor = crate::app::Editor::with_context(&ctx, None, Default::default(), None);
     editor.library = Some(Box::new(library));
     editor.module = Module::Library;
     editor.develop_catalog_photo(photo.id);
-    assert!(editor.module == Module::Library);
-    let (title, reason) = editor.not_editable.clone().unwrap();
-    assert_eq!(title, "a.jpg can't be opened in Develop");
-    assert!(reason.contains("camera RAW"));
+    assert!(editor.module == Module::Develop);
+    assert!(editor.not_editable.is_none());
     // Dismissed, then the file goes offline.
     editor.not_editable = None;
     std::fs::remove_file(folder.join("a.jpg"))?;
     editor.develop_catalog_photo(photo.id);
-    assert!(editor.not_editable.unwrap().1.contains("offline"));
+    assert!(editor.not_editable.unwrap().1.contains("离线"));
+    Ok(())
+}
+
+#[test]
+fn ordinary_photos_open_save_reopen_and_export() -> Result<()> {
+    let directory = tempfile::tempdir()?;
+    let folder = directory.path().join("photos");
+    std::fs::create_dir(&folder)?;
+    for extension in ["jpg", "png", "tiff"] {
+        image::RgbImage::from_pixel(64, 48, image::Rgb([128, 96, 64]))
+            .save(folder.join(format!("test.{extension}")))?;
+    }
+    let path = directory.path().join("library.rawmakase");
+    Catalog::create(&path)?.add_folder(&folder)?;
+    let ctx = egui::Context::default();
+    let library = Library::load(&path, ctx.clone())?;
+    let photos = library.session.photos.clone();
+    let mut editor = crate::app::Editor::with_context(&ctx, None, Default::default(), None);
+    editor.library = Some(Box::new(library));
+    for photo in photos {
+        let original = std::fs::read(&photo.path)?;
+        editor.develop_catalog_photo(photo.id);
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        while editor.document.full().is_none() {
+            assert!(
+                std::time::Instant::now() < deadline,
+                "{}: {}",
+                photo.filename,
+                editor.status
+            );
+            editor.events(&ctx);
+            std::thread::sleep(std::time::Duration::from_millis(5));
+        }
+        assert!(editor.module == Module::Develop);
+        assert!(editor.not_editable.is_none());
+        let frame = editor.begin_edit_frame();
+        editor.document.edit.setup_mut().exposure = 0.7;
+        editor.finish_edit_frame(frame, &ctx);
+        assert!(editor.flush(), "{}", editor.status);
+        let catalog = &editor.library.as_ref().unwrap().session.catalog;
+        let raw = crate::photo::open(&photo.path)?;
+        let (profiles, _) = crate::camera_profiles::installed(&raw.metadata);
+        let resolved = crate::edits::resolve(
+            &catalog.edit_record(photo.id)?,
+            &photo.path,
+            &raw.metadata,
+            &profiles,
+            &editor.raw_defaults,
+        )?;
+        assert_eq!(resolved.recipe.exposure, 0.7);
+        let decoded = raw.develop(
+            crate::camera_data::Decode::full(Default::default()),
+            &std::sync::atomic::AtomicBool::new(false),
+        )?;
+        let rendered = crate::develop::render(&decoded, &resolved.recipe.checked()?, 64)?;
+        let output = directory
+            .path()
+            .join(format!("{}-edited.jpg", photo.filename));
+        crate::export::export(
+            &output,
+            &photo.path,
+            &rendered,
+            &decoded.metadata,
+            &Default::default(),
+            crate::storage::Replace::NoClobber,
+        )?;
+        assert_eq!(image::open(output)?.width(), 64);
+        assert!(
+            crate::export::export(
+                &photo.path,
+                &photo.path,
+                &rendered,
+                &decoded.metadata,
+                &Default::default(),
+                crate::storage::Replace::Overwrite
+            )
+            .is_err()
+        );
+        assert_eq!(std::fs::read(&photo.path)?, original);
+    }
     Ok(())
 }
 
@@ -1038,7 +1113,7 @@ fn a_rejected_range_leaves_the_unflagged_view_in_one_write() -> Result<()> {
     library.edit_selection(crate::app::photo_metadata::Edit::Flag(-1), false)?;
     assert_eq!(visible_names(&library), ["a.RAF", "e.RAF"]);
     assert_eq!(library.selected(), Some(ids[4]));
-    assert_eq!(library.message, "3 photos · Reject");
+    assert_eq!(library.message, "3 张照片 · 拒绝");
     let saved = library.session.catalog.photos()?;
     assert_eq!(saved.iter().filter(|p| p.flag == -1).count(), 3);
     // One failing photo saves none of the batch.

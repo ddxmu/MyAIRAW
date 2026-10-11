@@ -65,10 +65,7 @@ pub(in crate::app) fn reference_loader(
         match loaded {
             Ok(Ok(())) => {}
             Ok(Err(e)) => reply(Err(format!("{e:#}"))),
-            Err(panic) => reply(Err(format!(
-                "Loading failed: {}",
-                super::panic_message(&*panic)
-            ))),
+            Err(panic) => reply(Err(format!("加载失败：{}", super::panic_message(&*panic)))),
         }
     })
 }

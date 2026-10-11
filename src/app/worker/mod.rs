@@ -28,9 +28,9 @@ pub(crate) enum RenderStage {
 impl RenderStage {
     fn label(self) -> &'static str {
         match self {
-            Self::Draft => "Draft • refining",
-            Self::Fit => "Fit • full quality",
-            Self::Region => "100% • full quality",
+            Self::Draft => "草稿 · 正在细化",
+            Self::Fit => "适应窗口 · 完整质量",
+            Self::Region => "100% · 完整质量",
         }
     }
 }

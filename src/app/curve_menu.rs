@@ -79,7 +79,11 @@ impl Editor {
         // Named through the frame, as a control's step is, so a wheel resize still
         // pending is recorded under its own name first.
         if *r != before {
-            super::widgets::name_frame_step(&self.context, "Point Curve".into(), name);
+            super::widgets::name_frame_step(
+                &self.context,
+                "点曲线".into(),
+                super::chinese::label(&name).to_string(),
+            );
         }
     }
     /// Whether the Save Point Curve window is open.
@@ -99,22 +103,20 @@ impl Editor {
             .show(ctx, |ui| {
                 ui.set_width(380.);
                 ui.label(
-                    egui::RichText::new("Save Point Curve")
+                    egui::RichText::new("保存点曲线")
                         .size(17.)
                         .color(palette.gray(235)),
                 );
                 ui.add_space(6.);
                 ui.label(
-                    egui::RichText::new(
-                        "Saves the RGB, Red, Green and Blue curves for the Point Curve menu.",
-                    )
-                    .size(11.)
-                    .color(palette.gray(150)),
+                    egui::RichText::new("保存 RGB、红、绿、蓝曲线到点曲线菜单。")
+                        .size(11.)
+                        .color(palette.gray(150)),
                 );
                 ui.add_space(12.);
                 let field = ui.add(
                     egui::TextEdit::singleline(&mut saving.name)
-                        .hint_text("Curve name")
+                        .hint_text("曲线名称")
                         .desired_width(f32::INFINITY),
                 );
                 if !saving.focused {
@@ -130,13 +132,13 @@ impl Editor {
                     ui.spacing_mut().button_padding = Vec2::new(14., 6.);
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         if ui
-                            .add_enabled_ui(named, |ui| primary_button(ui, "Save"))
+                            .add_enabled_ui(named, |ui| primary_button(ui, "保存"))
                             .inner
                             .clicked()
                         {
                             choice = Some(SaveChoice::Save);
                         }
-                        if ui.button("Cancel").clicked() {
+                        if ui.button("取消").clicked() {
                             choice = Some(SaveChoice::Cancel);
                         }
                     });
@@ -197,7 +199,7 @@ mod tests {
         assert_eq!(applied, 1);
         assert_eq!(
             (steps[0].name.as_str(), steps[0].value.as_str()),
-            ("Point Curve", "Medium Contrast")
+            ("点曲线", "中等对比度")
         );
         e.undo();
         assert_eq!(*e.document.edit.recipe(), before);
@@ -215,7 +217,7 @@ mod tests {
         let r = e.document.edit.recipe();
         assert_eq!(r.panels.state(Panel::ToneCurve), PanelState::On);
         let (steps, applied) = e.document.edit.history().steps();
-        assert_eq!((applied, steps[0].name.as_str()), (1, "Point Curve"));
+        assert_eq!((applied, steps[0].name.as_str()), (1, "点曲线"));
         // Once more, with nothing to change: no step, and the next edit keeps its
         // own name.
         let frame = e.begin_edit_frame();
@@ -227,7 +229,7 @@ mod tests {
         e.finish_edit_frame(frame, &ctx);
         let (steps, applied) = e.document.edit.history().steps();
         assert_eq!(applied, 2);
-        assert_ne!(steps[1].name, "Point Curve");
+        assert_ne!(steps[1].name, "点曲线");
     }
 
     #[test]
@@ -236,7 +238,7 @@ mod tests {
         let mut e = Editor::with_context(&ctx, None, crate::app::session::Session::default(), None);
         let d = tempfile::tempdir().unwrap();
         let store = SavedCurves {
-            dir: d.path().join("Curves"),
+            dir: d.path().join("曲线"),
         };
         e.curves.saved = Some(Vec::new());
         e.document.edit.setup_mut().curve = BuiltinCurve::StrongContrast.curve();

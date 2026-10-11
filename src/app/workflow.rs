@@ -97,7 +97,7 @@ impl Editor {
         if let Some(photo) = photo {
             self.request_stand_ins(id, photo, neighbour);
         }
-        self.status = "Reading RAW…".into();
+        self.status = "正在读取图像…".into();
         self.loader.submit(LoadJob {
             id,
             path,
@@ -114,7 +114,8 @@ impl Editor {
     /// the filmstrip, or the previous one after stepping back.
     pub(super) fn prefetch_neighbour(&self, id: PhotoId) -> Option<PathBuf> {
         let photo = self.library.as_ref()?.photo(self.neighbour_of(id)?)?;
-        (photo.path.is_file() && crate::storage::is_raw(&photo.path)).then(|| photo.path.clone())
+        (photo.path.is_file() && crate::storage::is_editable(&photo.path))
+            .then(|| photo.path.clone())
     }
     /// The photo next to `id` in the direction of travel.
     fn neighbour_of(&self, id: PhotoId) -> Option<PhotoId> {
@@ -131,7 +132,7 @@ impl Editor {
         if let Some(library) = &mut self.library
             && let Err(e) = library.commit_drafts()
         {
-            self.status = format!("Not saved: {e}");
+            self.status = format!("未保存：{e}");
             return false;
         }
         true
@@ -185,7 +186,7 @@ impl Editor {
                 }
                 Err(e) => {
                     self.document.edit.save_state_mut().failed(e.to_string());
-                    self.status = format!("Edits not saved: {e}");
+                    self.status = format!("编辑未保存：{e}");
                     return false;
                 }
             }
@@ -268,7 +269,7 @@ impl Editor {
             if submitted.is_err() {
                 let error = "the autosave thread could not start".to_string();
                 self.document.edit.save_state_mut().failed(error.clone());
-                self.status = format!("Edits not saved: {error}");
+                self.status = format!("编辑未保存：{error}");
                 return Flushed::Failed;
             }
             self.document.edit.save_state_mut().saving();
@@ -294,13 +295,13 @@ impl Editor {
         }
         match saved {
             Ok(p) => self.saved_to(&p),
-            Err(e) => self.status = format!("Edits not saved: {e}"),
+            Err(e) => self.status = format!("编辑未保存：{e}"),
         }
     }
     fn saved_to(&mut self, location: &CatalogLocation) {
         let CatalogLocation::File(path) = location;
         self.status = format!(
-            "Saved {}",
+            "已保存 {}",
             path.file_name().unwrap_or_default().to_string_lossy()
         );
     }

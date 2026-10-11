@@ -205,8 +205,8 @@ impl Library {
             ));
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 let done = ui
-                    .add(egui::Button::new(egui::RichText::new("Done").size(11.)).small())
-                    .on_hover_text("Back to the grid (Esc)");
+                    .add(egui::Button::new(egui::RichText::new("完成").size(11.)).small())
+                    .on_hover_text("返回网格（Esc）");
                 if done.clicked() {
                     self.close_survey();
                 }

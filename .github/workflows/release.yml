@@ -26,6 +26,8 @@ env:
 
 jobs:
   prepare:
+    # MyAIRAW's local arm64/ad-hoc releases use the separately documented flow.
+    if: github.repository == 'pch/rawmakase'
     runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.version.outputs.version }}

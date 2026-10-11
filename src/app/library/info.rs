@@ -19,17 +19,17 @@ impl Library {
             .id_salt("library-info")
             .auto_shrink(false)
             .show(ui, |ui| {
-                section(ui, "Quick Develop", false, |ui| {
+                section(ui, "快速显影", false, |ui| {
                     let refusal = photo
                         .as_ref()
                         .and_then(|p| super::develop_refusal(p, self.is_available(&p.path)));
                     let open = ui
                         .add_enabled(
                             photo.is_some() && refusal.is_none(),
-                            egui::Button::new("Open in Develop")
+                            egui::Button::new("在显影中打开")
                                 .min_size(Vec2::new(ui.available_width(), 24.)),
                         )
-                        .on_hover_text("Develop · D")
+                        .on_hover_text("显影 · D")
                         .on_disabled_hover_text(
                             refusal
                                 .as_ref()
@@ -44,20 +44,18 @@ impl Library {
                     ui.add_space(4.);
                     // Why the button is greyed out, in the line kept for this.
                     let note = match &refusal {
-                        Some(super::Refusal::Offline) => {
-                            "Offline: relink its folder to edit".into()
-                        }
+                        Some(super::Refusal::Offline) => "照片离线：重新定位文件夹后可编辑".into(),
                         Some(super::Refusal::NotRaw(format)) => {
-                            format!("{format} files can't be edited in Develop")
+                            format!("{format} 文件无法在显影中编辑")
                         }
                         None if photo.as_ref().is_some_and(|p| p.has_lightroom_edits) => {
-                            "Has Lightroom edits".into()
+                            "含 Lightroom 编辑".into()
                         }
                         None => String::new(),
                     };
                     info_text(ui, &note);
                 });
-                section(ui, "Metadata", false, |ui| {
+                section(ui, "元数据", false, |ui| {
                     match &photo {
                         Some(p) => {
                             // In Loupe and Compare, as for their keys, only the
@@ -81,36 +79,36 @@ impl Library {
                     // Camera settings and size, as Lightroom's EXIF metadata shows them.
                     let info = info.clone().unwrap_or_default();
                     let text = |f: fn(&PhotoInfo) -> Option<String>| f(&info).unwrap_or_default();
-                    metadata_row(ui, "File Name", &field(|p| &p.filename));
+                    metadata_row(ui, "文件名", &field(|p| &p.filename));
                     match photo.as_ref().filter(|p| p.master.is_some()) {
                         Some(p) => match self.copy_names.row(ui, p, &mut self.session) {
                             Ok(true) => self.filter(),
                             Ok(false) => {}
-                            Err(e) => self.message = format!("Copy name could not be saved: {e}"),
+                            Err(e) => self.message = format!("无法保存副本名称：{e}"),
                         },
                         None => {
-                            metadata_row(ui, "Copy Name", "");
+                            metadata_row(ui, "副本名称", "");
                         }
                     }
                     self.metadata_fields(ui);
                     for (key, value, hover) in [
                         (
-                            "Folder",
+                            "文件夹",
                             folder,
                             photo.as_ref().map(|p| p.path.display().to_string()),
                         ),
                         (
-                            "Capture Time",
+                            "拍摄时间",
                             photo.as_ref().map(Photo::capture_text).unwrap_or_default(),
                             None,
                         ),
-                        ("Format", field(|p| &p.format), None),
-                        ("Dimensions", text(PhotoInfo::dimensions_text), None),
-                        ("Exposure", text(PhotoInfo::exposure_text), None),
-                        ("Focal Length", text(PhotoInfo::focal_text), None),
-                        ("ISO Speed", text(PhotoInfo::iso_text), None),
-                        ("Camera", text(|i| i.camera.clone()), None),
-                        ("Lens", text(|i| i.lens.clone()), None),
+                        ("格式", field(|p| &p.format), None),
+                        ("尺寸", text(PhotoInfo::dimensions_text), None),
+                        ("曝光", text(PhotoInfo::exposure_text), None),
+                        ("焦距", text(PhotoInfo::focal_text), None),
+                        ("ISO 感光度", text(PhotoInfo::iso_text), None),
+                        ("相机", text(|i| i.camera.clone()), None),
+                        ("镜头", text(|i| i.lens.clone()), None),
                     ] {
                         let response = metadata_row(ui, key, &value);
                         if let Some(hover) = hover {
@@ -120,7 +118,7 @@ impl Library {
                         }
                     }
                 });
-                section(ui, "Keywording", false, |ui| {
+                section(ui, "关键词", false, |ui| {
                     self.keyword_fields(ui);
                 });
             });
@@ -150,7 +148,7 @@ impl Library {
                 self.edit_photos(&ids, edit, false).map(|_| ())
             };
             if let Err(e) = done {
-                self.message = format!("Metadata could not be saved: {e}");
+                self.message = format!("无法保存元数据：{e}");
             }
             return true;
         }

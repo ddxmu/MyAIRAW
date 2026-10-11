@@ -1,15 +1,16 @@
 [package]
 name = "rawmakase"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2024"
 rust-version = "1.98"
 description = "A fast, non-destructive RAW photo developer"
 license = "MIT"
-repository = "https://github.com/pch/rawmakase"
+repository = "https://github.com/ddxmu/MyAIRAW"
 
 # The control protocol and its command-line client build on their own, without
 # the app's GUI, GPU or native libraries.
 [workspace]
+exclude = ["vendor/fastframe-update"]
 members = ["crates/rawmakase-catalog", "crates/rawmakase-engine", "crates/rawmakase-export", "crates/rawmakase-inference", "crates/rawmakase-interop", "crates/rawmakase-model", "crates/rawmakase-native", "crates/rawmakase-protocol", "tools/rawmakase-ctl"]
 
 [dependencies]
@@ -62,7 +63,7 @@ rfd = "0.17.2"
 ureq = { version = "3.4", default-features = false, features = ["rustls"] }
 # Shared egui app foundation (github.com/crmne/fastframe). Not on crates.io
 # yet: pin a tag and update it deliberately.
-fastframe-update = { git = "https://github.com/crmne/fastframe", tag = "v0.1.7", version = "0.1.7" }
+fastframe-update = { path = "vendor/fastframe-update", version = "0.1.7" }
 fastframe-text = { git = "https://github.com/crmne/fastframe", tag = "v0.1.7", version = "0.1.7" }
 fastframe-fonts = { git = "https://github.com/crmne/fastframe", tag = "v0.1.7", version = "0.1.7" }
 fastframe-icons = { git = "https://github.com/crmne/fastframe", tag = "v0.1.7", version = "0.1.7" }
@@ -87,6 +88,7 @@ midir = "0.11"
 # Quit through the window's close guard (src/platform/quit.rs).
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSString"] }
 objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSApplication", "NSMenu", "NSMenuItem", "NSResponder", "NSView", "NSWindow"] }
 
 # The desktop's text size through the desktop portal (src/platform/text_scale.rs);

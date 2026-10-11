@@ -144,23 +144,20 @@ impl Editor {
         let mut settings = self.raw_defaults.settings().clone();
         let presets = self.presets.library.clone();
         let presets = &presets.presets;
-        group(ui, "Raw Defaults");
-        form_row(ui, "Master", |ui| {
+        group(ui, "RAW 默认设置");
+        form_row(ui, "全局默认", |ui| {
             choice_combo(ui, "raw-default-master", &mut settings.master, presets);
         });
         form_row(ui, "", |ui| {
-            ui.checkbox(
-                &mut settings.camera_overrides,
-                "Override global setting for specific camera",
-            );
+            ui.checkbox(&mut settings.camera_overrides, "为指定相机覆盖全局默认设置");
         });
         let form = &mut self.preferences.raw_defaults;
         let on = settings.camera_overrides;
         let existing = settings.camera_choice(&form.camera).cloned();
-        form_row(ui, "Camera", |ui| {
+        form_row(ui, "相机", |ui| {
             ui.add_enabled_ui(on && !form.cameras.is_empty(), |ui| {
                 let shown = if form.camera.is_empty() {
-                    "No cameras in this catalog".to_string()
+                    "此图库没有相机信息".to_string()
                 } else {
                     form.camera.clone()
                 };
@@ -182,13 +179,13 @@ impl Editor {
             });
         });
         let mut create = false;
-        form_row(ui, "Default", |ui| {
+        form_row(ui, "默认", |ui| {
             ui.add_enabled_ui(on && !form.camera.is_empty(), |ui| {
                 choice_combo(ui, "raw-default-camera-choice", &mut form.choice, presets);
                 let label = if existing.is_some() {
-                    "Update Default"
+                    "更新默认设置"
                 } else {
-                    "Create Default"
+                    "创建默认设置"
                 };
                 create = ui
                     .add_enabled(
@@ -227,7 +224,7 @@ impl Editor {
         form_row(ui, "", |ui| {
             hint(
                 ui,
-                "Photos without an edit start from these, and Reset returns to them. Saved edits and Lightroom edits are kept.",
+                "未编辑的照片以这些设置为起点，重置时也恢复到这里。已保存的编辑和 Lightroom 编辑会保留。",
             );
         });
         if settings != *self.raw_defaults.settings() {
@@ -237,7 +234,7 @@ impl Editor {
                 Ok(()) => self
                     .photo_defaults()
                     .and_then(|d| d.note)
-                    .unwrap_or_else(|| "Raw defaults saved".into()),
+                    .unwrap_or_else(|| "RAW 默认设置已保存".into()),
             };
         }
     }
@@ -279,7 +276,7 @@ fn remove_button(ui: &mut egui::Ui, enabled: bool) -> egui::Response {
         13.,
         tint,
     );
-    response.on_hover_text("Remove this camera's default")
+    response.on_hover_text("移除此相机的默认设置")
 }
 /// Adobe Default, Camera Settings, RAWmakase Default or a Develop preset, by group.
 fn choice_combo(ui: &mut egui::Ui, id: &str, choice: &mut DefaultChoice, presets: &[Preset]) {
@@ -302,7 +299,7 @@ fn choice_combo(ui: &mut egui::Ui, id: &str, choice: &mut DefaultChoice, presets
                 if last_group != Some(&p.group) {
                     ui.separator();
                     let title = if p.group.is_empty() {
-                        "User Presets"
+                        "用户预设"
                     } else {
                         &p.group
                     };
@@ -399,7 +396,7 @@ mod tests {
                     metadata: m.clone(),
                     recipe: adobe.clone(),
                     export: Default::default(),
-                    status: "Original".into(),
+                    status: "原始".into(),
                 })),
                 Event::Profiles {
                     id: generation,
@@ -475,7 +472,7 @@ mod tests {
                 metadata: m,
                 recipe: adobe.clone(),
                 export: Default::default(),
-                status: "Original".into(),
+                status: "原始".into(),
             })))
             .unwrap();
         editor.events(&ctx);
@@ -519,7 +516,7 @@ mod tests {
                 // As the loader resolves it.
                 recipe: editor.raw_defaults.resolve(&m, &profiles(&m)).recipe,
                 export: Default::default(),
-                status: "Original".into(),
+                status: "原始".into(),
             })),
             Event::Profiles {
                 id: generation,
@@ -530,7 +527,7 @@ mod tests {
             editor.tx.send(event).unwrap();
         }
         editor.events(&ctx);
-        assert!(editor.document.lightroom_notice.contains("not applied"));
+        assert!(editor.document.lightroom_notice.contains("未应用"));
         assert_eq!(
             *editor.document.edit.recipe(),
             Recipe::with_profiles(&m, &profiles(&m))

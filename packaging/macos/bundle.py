@@ -78,6 +78,7 @@ def main():
     shutil.copy2(root / "licenses/Adobe-DNG-SDK.txt", notices)
     shutil.copy2(root / "licenses/Hack-MIT-BitstreamVera.txt", notices)
     shutil.copy2(root / "licenses/Inter-OFL.txt", notices)
+    shutil.copy2(root / "licenses/NotoSansSC-OFL.txt", notices)
     shutil.copy2(root / "licenses/Lucide-ISC.txt", notices)
     shutil.copy2(root / "licenses/NotoEmoji-OFL.txt", notices)
     shutil.copy2(root / "licenses/Ubuntu-UFL.txt", notices)
@@ -166,7 +167,7 @@ def main():
     finally:
         shutil.rmtree(iconset)
     # macOS 26 draws the layered icon; older systems use the flat icns above.
-    if install_icon_assets(root, resources, args.minimum_macos, args.icon_assets):
+    if args.icon_assets and install_icon_assets(root, resources, args.minimum_macos, args.icon_assets):
         metadata["CFBundleIconName"] = "RAWmakase"
         with (app / "Contents/Info.plist").open("wb") as handle:
             plistlib.dump(metadata, handle)

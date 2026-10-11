@@ -16,122 +16,116 @@ type Shortcut = (&'static str, &'static str);
 type Group<'a> = (&'a str, &'a [Shortcut]);
 
 const LIBRARY: [Shortcut; 9] = [
-    ("Arrows", "Move the active photo"),
-    ("Home / End", "First / last photo"),
-    ("Shift+Arrows / Shift+click", "Extend the selection"),
-    ("Cmd+click", "Add or remove a photo"),
-    ("Cmd+A", "Select all"),
-    ("Cmd+D", "Select none"),
-    ("/", "Deselect the active photo"),
-    ("Cmd+L", "Turn the filters off / on"),
-    ("J", "Cycle the grid cell style"),
+    ("方向键", "移动当前照片"),
+    ("Home / End", "第一张／最后一张"),
+    ("Shift+方向键 / Shift+点击", "扩展选区"),
+    ("Cmd+点击", "添加或移除照片"),
+    ("Cmd+A", "全选"),
+    ("Cmd+D", "全不选"),
+    ("/", "取消选择当前照片"),
+    ("Cmd+L", "关闭／开启筛选"),
+    ("J", "切换网格样式"),
 ];
 const LOUPE: [Shortcut; 7] = [
-    ("E / Return / double-click", "Open the Loupe"),
-    ("G / Esc / double-click", "Back to the grid"),
-    ("Z / click", "Fit or the last zoom"),
-    ("Cmd+= / Cmd+-", "Zoom in / out"),
+    ("E / 回车 / 双击", "打开放大视图"),
+    ("G / Esc / 双击", "返回网格"),
+    ("Z / click", "适合窗口或上次缩放"),
+    ("Cmd+= / Cmd+-", "放大／缩小"),
     ("Cmd+Alt+0", "100%"),
-    ("drag", "Pan"),
-    ("I", "Cycle photo info"),
+    ("drag", "平移"),
+    ("I", "切换照片信息"),
 ];
 const COMPARE: [Shortcut; 6] = [
-    ("C", "Compare the active photo with the next"),
-    ("Left / Right", "Change the candidate"),
-    ("Up", "Make the candidate the select"),
-    ("Down", "Swap select and candidate"),
-    ("click", "Make a photo active for rating keys"),
-    ("G / Esc", "Back to the grid"),
+    ("C", "比较当前与下一张照片"),
+    ("左右", "更换候选照片"),
+    ("上", "将候选设为选片"),
+    ("下", "交换选片与候选"),
+    ("click", "激活照片以使用评分键"),
+    ("G / Esc", "返回网格"),
 ];
 const SURVEY: [Shortcut; 5] = [
-    ("N", "Survey the selected photos"),
-    ("Arrows", "Move the active photo"),
-    ("click", "Make a photo active for rating keys"),
-    ("Cmd+click", "Take a photo out"),
-    ("G / Esc", "Back to the grid"),
+    ("N", "筛选所选照片"),
+    ("方向键", "移动当前照片"),
+    ("click", "激活照片以使用评分键"),
+    ("Cmd+点击", "移除照片"),
+    ("G / Esc", "返回网格"),
 ];
 const RATING: [Shortcut; 8] = [
-    ("0 / 1 / 2 / 3 / 4 / 5", "Star rating"),
-    ("[ / ]", "Lower / raise the rating"),
-    ("6 / 7 / 8 / 9", "Red, yellow, green, blue"),
-    ("P / X / U", "Pick / reject / unflag"),
-    ("`", "Toggle pick"),
-    ("Cmd+Up / Cmd+Down", "Raise / lower the flag"),
-    ("Shift+key", "Apply and go to the next photo"),
-    ("Cmd+Z / Cmd+Shift+Z", "Undo / redo, anywhere"),
+    ("0 / 1 / 2 / 3 / 4 / 5", "星级评分"),
+    ("[ / ]", "降低／提高评分"),
+    ("6 / 7 / 8 / 9", "红、黄、绿、蓝"),
+    ("P / X / U", "选中／拒绝／清除旗标"),
+    ("`", "切换选中状态"),
+    ("Cmd+Up / Cmd+Down", "提高／降低旗标"),
+    ("Shift+按键", "应用并切换到下一张"),
+    ("Cmd+Z / Cmd+Shift+Z", "全局撤销／重做"),
 ];
 const QUICK: [Shortcut; 3] = [
-    ("B", "Add to or take out of it"),
-    ("Cmd+B", "Show it"),
-    ("Cmd+Shift+B", "Clear it"),
+    ("B", "添加或移除"),
+    ("Cmd+B", "显示"),
+    ("Cmd+Shift+B", "清除"),
 ];
 const GENERAL: [Shortcut; 8] = [
-    ("G", "Library"),
-    ("D", "Develop"),
-    ("Tab", "Hide / show the side panels"),
-    ("Shift+Tab", "Hide / show the side panels and filmstrip"),
-    ("F7 / F8 / F6", "Left panel / right panel / filmstrip"),
-    ("Cmd+'", "Create virtual copy"),
-    ("Cmd+,", "Preferences"),
-    ("Cmd+/", "These shortcuts"),
+    ("G", "照片库"),
+    ("D", "显影"),
+    ("Tab", "隐藏／显示侧边面板"),
+    ("Shift+Tab", "隐藏／显示侧边面板与胶片栏"),
+    ("F7 / F8 / F6", "左面板／右面板／胶片栏"),
+    ("Cmd+'", "创建虚拟副本"),
+    ("Cmd+,", "偏好设置"),
+    ("Cmd+/", "这些快捷键"),
 ];
 const DEVELOP: [Shortcut; 47] = [
-    ("R", "Crop & Straighten"),
-    ("Return", "Finish the crop"),
-    ("X", "Swap the crop's orientation"),
-    ("O / Shift+O", "Next crop overlay / turn it"),
-    ("Cmd+drag", "Straighten along a line"),
-    ("Shift+T", "Guided Upright: draw guides"),
-    ("Delete", "Delete the selected spot, guide or red eye"),
-    ("Q", "Spot removal"),
-    ("Shift+W", "Masking"),
-    ("W", "White balance selector"),
-    ("Cmd+Option+Shift+T", "Targeted adjustment: Tone Curve"),
+    ("R", "裁剪与拉直"),
+    ("回车", "完成裁剪"),
+    ("X", "交换裁剪方向"),
+    ("O / Shift+O", "下一个裁剪参考线／旋转"),
+    ("Cmd+拖动", "沿线拉直"),
+    ("Shift+T", "引导式透视：绘制引导线"),
+    ("删除", "删除所选污点、引导线或红眼"),
+    ("Q", "污点移除"),
+    ("Shift+W", "蒙版"),
+    ("W", "白平衡吸管"),
+    ("Cmd+Option+Shift+T", "目标调整：色调曲线"),
     (
         "Cmd+Option+Shift+H / S / L",
-        "Targeted adjustment: Hue / Saturation / Luminance",
+        "目标调整：色相／饱和度／明亮度",
     ),
-    ("Cmd+Option+Shift+G", "Targeted adjustment: B&W mix"),
-    ("Esc", "Put the open tool away"),
-    ("[ / ]", "Brush or red eye size (Shift: feather)"),
-    (
-        "Scroll",
-        "Brush or red eye size over the photo (Shift: feather)",
-    ),
-    ("/", "New source for the selected spot"),
-    ("H", "Hide spot pins"),
-    ("A", "Visualize spots"),
-    ("Space", "Pan while a tool is open"),
-    ("\\", "Before alone"),
-    ("Y", "Before and after, left and right"),
-    ("Option+Y", "Before and after, top and bottom"),
-    ("Shift+Y", "Before and after, split"),
-    (
-        "Cmd+Option+Shift+→ / ←",
-        "Copy Before to After / After to Before",
-    ),
-    ("Cmd+Option+Shift+↑", "Swap Before and After"),
-    ("Shift+R", "Reference View"),
-    ("I", "Photo info overlay: Info 1, Info 2, off"),
-    ("J", "Show shadow and highlight clipping"),
-    ("Z / F", "Toggle zoom / fit"),
-    ("Left / Right", "Previous / next photo"),
-    ("Cmd+Shift+C / Cmd+Shift+V", "Copy / paste settings"),
-    ("Cmd+Option+V", "Paste settings from previous photo"),
-    ("Cmd+Shift+S", "Sync settings to the selected photos"),
-    ("Cmd+Option+Shift+M", "Match total exposures"),
-    ("Cmd+Shift+N", "New Develop Preset"),
-    ("Cmd+Shift+R", "Reset all settings"),
-    ("Cmd+Shift+U", "Auto tone"),
-    ("V", "Convert to black & white or back to color"),
-    ("Cmd+Shift+E", "Export…"),
-    ("Cmd+Alt+Shift+E", "Export with previous"),
-    ("double-click", "Reset a slider or grading wheel"),
-    ("Shift+drag", "Grading wheel: hue or saturation only"),
-    ("Cmd+drag", "Grading wheel: fine adjustment"),
-    ("Up / Down", "Nudge the hovered slider (Shift: 10)"),
-    ("right-click", "Panel header: Solo Mode"),
-    ("E", "Show the photo in the Loupe"),
+    ("Cmd+Option+Shift+G", "目标调整：黑白混合"),
+    ("Esc", "关闭当前工具"),
+    ("[ / ]", "画笔／红眼大小（Shift：羽化）"),
+    ("滚动", "照片上的画笔／红眼大小（Shift：羽化）"),
+    ("/", "为所选污点选新来源"),
+    ("H", "隐藏污点图钉"),
+    ("A", "显示污点"),
+    ("空格", "工具开启时平移"),
+    ("\\", "仅编辑前"),
+    ("Y", "前后左右对比"),
+    ("Option+Y", "前后上下对比"),
+    ("Shift+Y", "前后分割对比"),
+    ("Cmd+Option+Shift+→ / ←", "复制编辑前到后／后到前"),
+    ("Cmd+Option+Shift+↑", "交换编辑前后"),
+    ("Shift+R", "参考视图"),
+    ("I", "照片信息叠加：信息 1、信息 2、关闭"),
+    ("J", "显示阴影与高光剪裁"),
+    ("Z / F", "切换缩放／适合"),
+    ("左右", "上一张／下一张照片"),
+    ("Cmd+Shift+C / Cmd+Shift+V", "复制／粘贴设置"),
+    ("Cmd+Option+V", "粘贴上一张照片的设置"),
+    ("Cmd+Shift+S", "将设置同步到所选照片"),
+    ("Cmd+Option+Shift+M", "匹配总曝光"),
+    ("Cmd+Shift+N", "新建显影预设"),
+    ("Cmd+Shift+R", "重置所有设置"),
+    ("Cmd+Shift+U", "自动色调"),
+    ("V", "切换黑白／彩色"),
+    ("Cmd+Shift+E", "导出…"),
+    ("Cmd+Alt+Shift+E", "使用上次设置导出"),
+    ("double-click", "重置滑块或颜色分级轮"),
+    ("Shift+拖动", "颜色分级轮：仅色相或饱和度"),
+    ("Cmd+拖动", "颜色分级轮：精细调整"),
+    ("上 / 下", "微调悬停滑块（Shift：十步）"),
+    ("right-click", "面板标题：单独模式"),
+    ("E", "在放大视图中显示照片"),
 ];
 
 const WIDTH: f32 = 820.;
@@ -151,17 +145,17 @@ impl Editor {
             return;
         }
         let views: [Group; 4] = [
-            ("Library grid", &LIBRARY),
-            ("Loupe", &LOUPE),
-            ("Compare", &COMPARE),
-            ("Survey", &SURVEY),
+            ("照片库网格", &LIBRARY),
+            ("放大视图", &LOUPE),
+            ("比较", &COMPARE),
+            ("筛选视图", &SURVEY),
         ];
         let common: [Group; 3] = [
-            ("Rating, flags and labels", &RATING),
-            ("Quick Collection", &QUICK),
-            ("Everywhere", &GENERAL),
+            ("评分、旗标与标签", &RATING),
+            ("快速收藏集", &QUICK),
+            ("全局", &GENERAL),
         ];
-        let develop: [Group; 1] = [("Develop", &DEVELOP)];
+        let develop: [Group; 1] = [("显影", &DEVELOP)];
         // The current module's shortcuts come first, in the left column.
         let (left, right): (Vec<Group>, Vec<Group>) = if self.module == Module::Library {
             (views.to_vec(), [&common[..], &develop].concat())
@@ -177,18 +171,18 @@ impl Editor {
                 let mut close = false;
                 ui.horizontal(|ui| {
                     ui.label(
-                        egui::RichText::new("Keyboard Shortcuts")
+                        egui::RichText::new("键盘快捷键")
                             .size(17.)
                             .color(palette.gray(235)),
                     );
                     ui.add_space(10.);
                     ui.label(
-                        egui::RichText::new(format!("{} shows this anytime", keys_text("Cmd+/")))
+                        egui::RichText::new(format!("{} 随时显示此帮助", keys_text("Cmd+/")))
                             .size(12.)
                             .color(palette.gray(130)),
                     );
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        close = icon_button(ui, Icon::Close, "Close · Esc").clicked();
+                        close = icon_button(ui, Icon::Close, "关闭 · Esc").clicked();
                     });
                 });
                 ui.add_space(14.);
@@ -325,12 +319,12 @@ fn cap_label(cap: &str) -> String {
         "Cmd" => "Ctrl".into(),
         "Alt" if mac => "⌥".into(),
         "Shift" if mac => "⇧".into(),
-        "Up" => "↑".into(),
-        "Down" => "↓".into(),
-        "Left" => "←".into(),
-        "Right" => "→".into(),
-        "Arrows" => "← ↑ → ↓".into(),
-        "Return" if mac => "↩".into(),
+        "上" => "↑".into(),
+        "下" => "↓".into(),
+        "左" => "←".into(),
+        "右" => "→".into(),
+        "方向键" => "← ↑ → ↓".into(),
+        "回车" if mac => "↩".into(),
         other => other.into(),
     }
 }

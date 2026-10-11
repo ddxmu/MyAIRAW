@@ -273,10 +273,10 @@ fn render_edited(
     let raw = crate::photo::open(path)?;
     let recipe = EditSource::recipe(Some(source), &raw)?;
     let image = raw.develop(crate::camera_data::Decode::Half, cancel)?;
-    anyhow::ensure!(!cancel.load(Ordering::Relaxed), "Cancelled");
+    anyhow::ensure!(!cancel.load(Ordering::Relaxed), "已取消");
     let out = crate::develop::render(&image, &recipe.checked()?, 640)?;
     image::RgbImage::from_raw(out.width, out.height, out.rgb8())
-        .ok_or_else(|| anyhow::anyhow!("Invalid preview size"))
+        .ok_or_else(|| anyhow::anyhow!("预览尺寸无效"))
 }
 
 #[derive(Default)]
@@ -321,28 +321,25 @@ impl Progress {
         }
         if edits_pending > 0 {
             ui.small(format!(
-                "Rendering {}",
-                plural(edits_pending, "edited preview", "edited previews")
+                "正在渲染 {}",
+                plural(edits_pending, "编辑后预览", "编辑后预览")
             ))
             .on_hover_text(
-                "Photos with Lightroom or RAWmakase edits are rendered with them, \
-                 visible ones first. Each is kept, so this happens once.",
+                "有 Lightroom 或 MyAIRAW 编辑的照片会应用编辑生成预览，并优先处理可见照片。预览会保留，无需重复生成。",
             );
         }
         if self.completed < self.total {
-            ui.small(format!("Preparing previews {} / {}", self.completed, self.total))
-                .on_hover_text("Cached previews load first; missing ones are built in the background as you browse.");
+            ui.small(format!("正在准备预览 {} / {}", self.completed, self.total))
+                .on_hover_text("优先加载缓存预览，缺少的预览会在浏览时于后台生成。");
         }
         if self.failed > 0 {
-            ui.small(format!("{} previews unavailable", self.failed))
-                .on_hover_text(
-                    "The original may be offline, damaged, or have no usable embedded preview.",
-                );
+            ui.small(format!("{} 个预览不可用", self.failed))
+                .on_hover_text("原文件可能离线、损坏或没有可用的内嵌预览。");
         }
         if let Some(error) = &self.cache_error {
             ui.colored_label(
                 ui.visuals().warn_fg_color,
-                egui::RichText::new("Preview cache could not be updated").small(),
+                egui::RichText::new("无法更新预览缓存").small(),
             )
             .on_hover_text(error);
         }
@@ -511,7 +508,7 @@ mod tests {
             while !cancel.load(Ordering::Relaxed) {
                 std::thread::sleep(Duration::from_millis(1));
             }
-            anyhow::bail!("Cancelled")
+            anyhow::bail!("已取消")
         }
         let directory = tempfile::tempdir()?;
         let source = directory.path().join("photo.png");

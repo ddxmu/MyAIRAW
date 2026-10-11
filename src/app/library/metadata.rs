@@ -93,7 +93,7 @@ impl Library {
                 flag_name(p.flag),
                 label_name(&p.label)
             ),
-            _ => format!("{} photos · {}", changes.len(), summary(&edit, &changes[0])),
+            _ => format!("{} 张照片 · {}", changes.len(), summary(&edit, &changes[0])),
         };
         self.filter();
         // Sorted by what changed, the photo may have moved: keep it in view.
@@ -179,12 +179,12 @@ fn summary(edit: &Edit, (_, rating, flag, label): &Metadata) -> String {
     }
 }
 fn label_name(label: &str) -> &str {
-    if label.is_empty() { "No label" } else { label }
+    if label.is_empty() { "无标签" } else { label }
 }
 fn flag_name(flag: i32) -> &'static str {
     match flag {
-        1 => "Pick",
-        -1 => "Reject",
-        _ => "Unflagged",
+        1 => "选中",
+        -1 => "拒绝",
+        _ => "无旗标",
     }
 }

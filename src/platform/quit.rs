@@ -24,6 +24,7 @@ pub(crate) fn set_work_pending(pending: bool) {
 pub(crate) fn through_close_guard(app: &impl winit::raw_window_handle::HasWindowHandle) {
     use objc2::{MainThreadMarker, sel};
     use objc2_app_kit::{NSApplication, NSView};
+    use objc2_foundation::NSString;
     use winit::raw_window_handle::RawWindowHandle;
     let Some(main_thread) = MainThreadMarker::new() else {
         return;
@@ -45,10 +46,29 @@ pub(crate) fn through_close_guard(app: &impl winit::raw_window_handle::HasWindow
         return;
     };
     for top in menu.itemArray() {
+        if top.title().to_string() == "Window" {
+            top.setTitle(&NSString::from_str("窗口"));
+        }
         let Some(submenu) = top.submenu() else {
             continue;
         };
         for item in submenu.itemArray() {
+            let title = item.title().to_string();
+            let translated = match title.as_str() {
+                "About MyAIRAW" => Some("关于 MyAIRAW"),
+                "Hide MyAIRAW" => Some("隐藏 MyAIRAW"),
+                "Hide Others" => Some("隐藏其他应用"),
+                "Show All" => Some("显示全部"),
+                "Quit MyAIRAW" => Some("退出 MyAIRAW"),
+                "Services" => Some("服务"),
+                "Minimize" => Some("最小化"),
+                "Zoom" => Some("缩放"),
+                "Bring All to Front" => Some("全部置于前面"),
+                _ => None,
+            };
+            if let Some(title) = translated {
+                item.setTitle(&NSString::from_str(title));
+            }
             if item.action() == Some(sel!(terminate:)) {
                 // SAFETY: the window implements performClose:, outlives the menu
                 // item (the app quits with it), and both are used on the main

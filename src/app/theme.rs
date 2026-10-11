@@ -435,7 +435,7 @@ impl Themes {
     pub(super) fn status(&self) -> Option<String> {
         use fastframe_theme::{Problem, Status};
         Some(match self.catalog.status(self.selected().as_deref())? {
-            Status::Loading => "Loading themes…".into(),
+            Status::Loading => "正在加载主题…".into(),
             Status::SelectedUnavailable => {
                 "The chosen theme is missing; the last one stays until it is back.".into()
             }

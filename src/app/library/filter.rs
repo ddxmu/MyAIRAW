@@ -28,9 +28,9 @@ impl RatingOp {
     }
     pub(super) fn name(self) -> &'static str {
         match self {
-            Self::AtLeast => "Rating is greater than or equal to",
-            Self::AtMost => "Rating is less than or equal to",
-            Self::Exactly => "Rating is equal to",
+            Self::AtLeast => "评分大于或等于",
+            Self::AtMost => "评分小于或等于",
+            Self::Exactly => "评分等于",
         }
     }
     fn holds(self, rating: i32, limit: i32) -> bool {

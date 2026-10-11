@@ -12,11 +12,11 @@ pub fn data_dir() -> PathBuf {
             cfg!(windows)
                 .then(|| std::env::var_os("APPDATA"))
                 .flatten()
-                .map(|p| PathBuf::from(p).join("RAWmakase"))
+                .map(|p| PathBuf::from(p).join("MyAIRAW"))
         })
         .unwrap_or_else(|| {
             if cfg!(target_os = "macos") {
-                home().join("Library/Application Support/RAWmakase")
+                home().join("Library/Application Support/MyAIRAW")
             } else if cfg!(windows) {
                 // XDG_DATA_HOME is not consulted on Windows.
                 home().join(".local/share/rawmakase")

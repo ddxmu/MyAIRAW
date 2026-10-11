@@ -287,7 +287,7 @@ impl Editor {
     }
     fn push_op(&mut self, mut op: RetouchOp) {
         if self.document.edit.recipe().retouch.len() >= crate::model::retouch::MAX_OPS {
-            self.status = "Too many spots on this photo".into();
+            self.status = "此照片的修复点数量已达上限".into();
             return;
         }
         if op.offset[0].is_nan() {
@@ -386,8 +386,8 @@ impl Editor {
             .retouch
             .selected
             .filter(|i| *i < self.document.edit.recipe().retouch.len());
-        super::widgets::set_edit_context(ui, "Spot");
-        control_label(ui, "Mode", |ui| {
+        super::widgets::set_edit_context(ui, "污点");
+        control_label(ui, "模式", |ui| {
             let mut mode = selected.map_or(self.view.retouch.mode, |i| {
                 self.document.edit.recipe().retouch[i].mode
             });
@@ -395,7 +395,7 @@ impl Editor {
             if segmented(
                 ui,
                 &mut mode,
-                &[(RetouchMode::Heal, "Heal"), (RetouchMode::Clone, "Clone")],
+                &[(RetouchMode::Heal, "修复"), (RetouchMode::Clone, "仿制")],
                 w,
             ) {
                 self.view.retouch.mode = mode;
@@ -417,7 +417,7 @@ impl Editor {
         };
         slider_with(
             ui,
-            "Size",
+            "大小",
             &mut size,
             0.001..=0.25,
             0.012,
@@ -426,7 +426,7 @@ impl Editor {
         );
         slider_with(
             ui,
-            "Feather",
+            "羽化",
             &mut feather,
             0. ..=1.,
             0.5,
@@ -435,7 +435,7 @@ impl Editor {
         );
         slider_with(
             ui,
-            "Opacity",
+            "不透明度",
             &mut opacity,
             0. ..=1.,
             1.,
@@ -451,13 +451,13 @@ impl Editor {
         }
         ui.add_space(6.);
         indented(ui, |ui| {
-            ui.checkbox(&mut self.view.retouch.visualize, "Visualize Spots")
-                .on_hover_text("A: show fine detail in black and white, so dust stands out");
+            ui.checkbox(&mut self.view.retouch.visualize, "显示污点")
+                .on_hover_text("A：以黑白显示细节，突出灰尘");
         });
         if self.view.retouch.visualize {
             slider_with(
                 ui,
-                "Threshold",
+                "阈值",
                 &mut self.view.retouch.threshold,
                 0. ..=1.,
                 0.5,
@@ -466,25 +466,19 @@ impl Editor {
             );
         }
         indented(ui, |ui| {
-            ui.checkbox(&mut self.view.retouch.hide_pins, "Hide pins")
+            ui.checkbox(&mut self.view.retouch.hide_pins, "隐藏图钉")
                 .on_hover_text("H");
         });
         ui.add_space(4.);
-        hint(
-            ui,
-            "Click a spot to remove it · drag to paint · ⌘/Ctrl-drag to pick the source",
-        );
-        hint(
-            ui,
-            "[ ] size · ⇧[ ] feather · / new source · Delete removes",
-        );
+        hint(ui, "点击移除污点 · 拖动绘制 · ⌘/Ctrl 拖动选择来源");
+        hint(ui, "[ ] 大小 · ⇧[ ] 羽化 · / 新来源 · Delete 移除");
         ui.add_space(4.);
         indented(ui, |ui| {
             let w = (ui.available_width() - 4.) / 2.;
             let any = !self.document.edit.recipe().retouch.is_empty();
             if ui
-                .add_enabled(any, egui::Button::new("Reset").min_size(Vec2::new(w, 22.)))
-                .on_hover_text("Remove every spot")
+                .add_enabled(any, egui::Button::new("重置").min_size(Vec2::new(w, 22.)))
+                .on_hover_text("移除所有污点")
                 .clicked()
             {
                 self.document.edit.recipe_mut().retouch.clear();
@@ -493,10 +487,10 @@ impl Editor {
             if ui
                 .add_sized(
                     [w, 22.],
-                    egui::Button::new(egui::RichText::new("Close").color(palette.on_accent()))
+                    egui::Button::new(egui::RichText::new("关闭").color(palette.on_accent()))
                         .fill(palette.accent()),
                 )
-                .on_hover_text("Close the tool · Q")
+                .on_hover_text("关闭工具 · Q")
                 .clicked()
             {
                 self.view.tool = super::state::Tool::None;

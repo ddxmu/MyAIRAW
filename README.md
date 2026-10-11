@@ -1,3 +1,20 @@
+# MyAIRAW 中文版
+
+基于 MIT 许可的 [RAWmakase](https://github.com/pch/rawmakase)，保留原作者及第三方许可证。
+
+- 简体中文界面，橘红/黑色 RAW 图标。
+- 编辑相机 RAW，以及 JPG / JPEG、PNG、TIFF 普通照片；支持调色、曝光、裁剪、导出，原图不变。
+- 偏好设置 → 立即检查，从本仓库 Releases 获取新版本；优先匹配的签名增量包，失败时回退签名完整包，重启安装支持回滚。
+- 当前本地安装包：Apple Silicon、macOS 27.0+；ad-hoc 签名，未做 Apple 公证。PNG 透明区域在 RGB 编辑/导出时合成白色。
+
+[下载 MyAIRAW](https://github.com/ddxmu/MyAIRAW/releases/latest) · [构建及发布说明](docs/myairaw.md)
+
+0.2.2 需要先手动安装一次 0.2.3，之后才能连接此仓库更新。
+
+以下保留原项目文档，原版平台支持和原版下载地址不代表此中文版的已发布安装包。
+
+---
+
 <h1><img src="packaging/icons/rawmakase.svg" width="48" height="48" align="top" alt=""> RAWmakase</h1>
 
 */raw·muh·KAH·say/, RAW + omakase*

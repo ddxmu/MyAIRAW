@@ -12,6 +12,9 @@ pub(super) fn recover_highlights_cancellable(
 ) -> Result<CameraImage> {
     check_cancel(cancel)?;
     let mut out = im.clone();
+    if im.metadata.display_referred {
+        return Ok(out);
+    }
     out.pixels.par_iter_mut().enumerate().for_each(|(i, p)| {
         if cancel.load(Ordering::Relaxed) {
             return;

@@ -126,7 +126,12 @@ pub(crate) struct LibraryLayout {
     pub filters_off: bool,
 }
 pub(crate) fn load_session() -> Session {
-    read_json_or_default(&data_dir().join("session.json"))
+    let path = data_dir().join("session.json");
+    let mut session: Session = read_json_or_default(&path);
+    if !path.exists() {
+        session.no_update_checks = true;
+    }
+    session
 }
 
 #[cfg(test)]

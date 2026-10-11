@@ -31,6 +31,13 @@ standalone `rawmakase-ctl`). The last two build without the app.
 
 ## Entry points and native boundary
 
+MyAIRAW adds JPEG/PNG/TIFF input in `crates/rawmakase-native/src/raw/raster.rs`:
+orientation and ICC normalization feed linear sRGB into the existing render,
+cache, saved-edit and export paths. `storage::is_editable` owns format eligibility.
+`vendor/fastframe-update/src/delta.rs` reconstructs signed file-level updates;
+`packaging/macos/myairaw-delta.py` creates them. Installation and rollback remain
+the existing fastframe-update helper's responsibility.
+
 | File | Responsibility |
 | --- | --- |
 | [src/main.rs](../src/main.rs) | CLI argument parsing and command dispatch; starts the desktop application when no subcommand is selected. |

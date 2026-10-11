@@ -62,28 +62,31 @@ impl Library {
         let changed = ui
             .add(
                 egui::TextEdit::singleline(&mut self.filters.query)
-                    .hint_text("Search")
+                    .hint_text("搜索")
                     .font(egui::FontId::proportional(12.))
                     .desired_width(if compact { 120. } else { 190. })
                     // As tall as the segmented controls in the bar.
                     .min_size(Vec2::new(0., COMPACT_SEGMENT_HEIGHT))
                     .vertical_align(egui::Align::Center),
             )
-            .on_hover_text("Search filename, keyword, capture date or label")
+            .on_hover_text("搜索文件名、关键词、拍摄日期或标签")
             .changed();
         self.turn_on(changed)
     }
     fn flag_filter(&mut self, ui: &mut egui::Ui, compact: bool) -> bool {
         let palette = theme::palette(ui.ctx());
         if !compact {
-            ui.label(filter_caption(&palette, "Flag"));
+            ui.label(filter_caption(&palette, "旗标"));
         }
         let mut changed = false;
-        for (flag, name) in [(1, "Picked"), (0, "Unflagged"), (-1, "Rejected")] {
+        for (flag, name) in [(1, "已选中"), (0, "无旗标"), (-1, "已拒绝")] {
             let on = self.filters.flags.contains(&flag);
             let (rect, response) = toggle_cell(ui, 22., on);
             flag_icon(ui.painter(), &palette, rect.center(), flag, on);
-            if response.on_hover_text(name).clicked() {
+            if response
+                .on_hover_text(crate::app::chinese::label(name))
+                .clicked()
+            {
                 toggle(&mut self.filters.flags, flag);
                 changed = true;
             }
@@ -93,13 +96,13 @@ impl Library {
     fn rating_filter(&mut self, ui: &mut egui::Ui, compact: bool) -> bool {
         let palette = theme::palette(ui.ctx());
         if !compact {
-            ui.label(filter_caption(&palette, "Rating"));
+            ui.label(filter_caption(&palette, "评分"));
         }
         let mut changed = false;
         let filters = &mut self.filters;
         let unrated = filters.rating == Some(0);
         let shown = if unrated {
-            "Unrated"
+            "未评分"
         } else {
             filters.rating_op.symbol()
         };
@@ -115,23 +118,17 @@ impl Library {
                 }
             }
             ui.separator();
-            if ui
-                .selectable_label(unrated, "Unrated photos only")
-                .clicked()
-            {
+            if ui.selectable_label(unrated, "仅未评分照片").clicked() {
                 filters.rating = Some(0);
                 filters.rating_op = RatingOp::Exactly;
                 changed = true;
             }
         })
         .response
-        .on_hover_text("How the rating compares");
+        .on_hover_text("评分比较方式");
         for star in 1..=5 {
             let response = star_toggle(ui, filters.rating.is_some_and(|r| r >= star));
-            let hover = format!(
-                "Rating {} {star} · click again to clear",
-                filters.rating_op.symbol()
-            );
+            let hover = format!("评分 {} {star} · 再次点击清除", filters.rating_op.symbol());
             if response.on_hover_text(hover).clicked() {
                 filters.rating = (filters.rating != Some(star)).then_some(star);
                 changed = true;
@@ -142,15 +139,15 @@ impl Library {
     fn label_filter(&mut self, ui: &mut egui::Ui, compact: bool) -> bool {
         let palette = theme::palette(ui.ctx());
         if !compact {
-            ui.label(filter_caption(&palette, "Color"));
+            ui.label(filter_caption(&palette, "彩色"));
         }
         let mut chips: Vec<(Label, &str)> = LABELS
             .iter()
             .map(|l| (Label::Color((*l).into()), *l))
             .collect();
-        chips.push((Label::None, "No label"));
+        chips.push((Label::None, "无标签"));
         if self.has_other_labels() || self.filters.labels.contains(&Label::Other) {
-            chips.push((Label::Other, "Other labels"));
+            chips.push((Label::Other, "其他标签"));
         }
         let mut changed = false;
         for (label, name) in chips {
@@ -180,15 +177,15 @@ impl Library {
     fn kind_filter(&mut self, ui: &mut egui::Ui, compact: bool) -> bool {
         let palette = theme::palette(ui.ctx());
         if !compact {
-            ui.label(filter_caption(&palette, "Kind"));
+            ui.label(filter_caption(&palette, "类别"));
         }
         let changed = segmented(
             ui,
             &mut self.filters.kind,
             &[
-                (Kind::All, "All"),
-                (Kind::Masters, "Masters"),
-                (Kind::Copies, "Copies"),
+                (Kind::All, "全部"),
+                (Kind::Masters, "主版本"),
+                (Kind::Copies, "副本"),
             ],
             if compact { 150. } else { 180. },
         );
@@ -200,8 +197,8 @@ impl Library {
         let toggle_keys = keys_text("Cmd+L");
         if !self.filters.enabled {
             let clicked = ui
-                .add(egui::Button::new(filter_caption(&palette, "Filters Off")).small())
-                .on_hover_text(format!("Turn the filters back on ({toggle_keys})"))
+                .add(egui::Button::new(filter_caption(&palette, "筛选已关闭")).small())
+                .on_hover_text(format!("重新启用筛选（{toggle_keys}）"))
                 .clicked();
             if clicked {
                 self.filters.enabled = true;
@@ -213,13 +210,11 @@ impl Library {
         }
         let clicked = ui
             .add(
-                egui::Button::new(filter_caption(&palette, "Clear"))
+                egui::Button::new(filter_caption(&palette, "清除"))
                     .small()
                     .frame(false),
             )
-            .on_hover_text(format!(
-                "Clear every filter in the bar · {toggle_keys} turns them off for now"
-            ))
+            .on_hover_text(format!("清除所有筛选 · {toggle_keys} 临时关闭筛选"))
             .clicked();
         if clicked {
             self.filters.clear_bar();

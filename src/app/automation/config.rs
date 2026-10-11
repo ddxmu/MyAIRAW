@@ -18,10 +18,10 @@ impl Encoder {
     ];
     pub(crate) fn label(self) -> &'static str {
         match self {
-            Self::Absolute => "Absolute (0–127)",
-            Self::TwosComplement => "Relative (1 / 127)",
-            Self::Offset => "Relative (65 / 63)",
-            Self::SignMagnitude => "Relative (1 / 65)",
+            Self::Absolute => "绝对值（0–127）",
+            Self::TwosComplement => "相对值（1 / 127）",
+            Self::Offset => "相对值（65 / 63）",
+            Self::SignMagnitude => "相对值（1 / 65）",
         }
     }
     pub(crate) fn ticks(self, value: u8) -> Option<i32> {

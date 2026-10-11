@@ -11,22 +11,22 @@ use std::{path::Path, sync::atomic::Ordering};
 const WIDTH: f32 = 700.;
 const HEIGHT: f32 = 600.;
 /// The name the built-in watermark is listed under.
-const SIMPLE_COPYRIGHT_LABEL: &str = "Simple Copyright Watermark";
+const SIMPLE_COPYRIGHT_LABEL: &str = "简单版权水印";
 
 fn destination_label(d: Destination) -> &'static str {
     match d {
-        Destination::SameFolder => "Same folder as original photo",
-        Destination::Desktop => "Desktop",
-        Destination::Pictures => "Pictures",
-        Destination::Folder => "Specific folder",
+        Destination::SameFolder => "与原照片相同文件夹",
+        Destination::Desktop => "桌面",
+        Destination::Pictures => "图片",
+        Destination::Folder => "指定文件夹",
     }
 }
 fn existing_label(e: Existing) -> &'static str {
     match e {
-        Existing::Ask => "Ask what to do",
-        Existing::Unique => "Choose a new name for the exported file",
-        Existing::Overwrite => "Overwrite without warning",
-        Existing::Skip => "Skip",
+        Existing::Ask => "询问处理方式",
+        Existing::Unique => "为导出文件选择新名称",
+        Existing::Overwrite => "直接覆盖",
+        Existing::Skip => "跳过",
     }
 }
 
@@ -73,9 +73,9 @@ impl Editor {
                     rect.left_top() + Vec2::new(24., 26.),
                     egui::Align2::LEFT_CENTER,
                     if count == 1 {
-                        "Export One File".to_string()
+                        "导出一个文件".to_string()
                     } else {
-                        format!("Export {count} Files")
+                        format!("导出 {count} 个文件")
                     },
                     egui::FontId::proportional(16.),
                     palette.gray(236),
@@ -95,7 +95,7 @@ impl Editor {
                         .collect::<Vec<_>>()
                         .join(", ");
                     let line = format!(
-                        "{} won't be exported: {reasons}",
+                        "{} 不会导出：{reasons}",
                         crate::app::widgets::plural(left_out.len(), "photo", "photos")
                     );
                     let at = egui::Rect::from_min_size(
@@ -146,11 +146,11 @@ impl Editor {
                         .layout(egui::Layout::right_to_left(egui::Align::Center)),
                 );
                 bar.spacing_mut().button_padding = Vec2::new(18., 6.);
-                if primary_button(&mut bar, "Export").clicked() {
+                if primary_button(&mut bar, "导出").clicked() {
                     confirmed = Some(true);
                 }
                 if bar
-                    .add(egui::Button::new("Cancel").min_size(Vec2::new(84., 30.)))
+                    .add(egui::Button::new("取消").min_size(Vec2::new(84., 30.)))
                     .clicked()
                 {
                     confirmed = Some(false);
@@ -160,7 +160,7 @@ impl Editor {
                     bar.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
                         ui.add(
                             egui::Label::new(
-                                egui::RichText::new(format!("Saves to {}", pretty_path(&target)))
+                                egui::RichText::new(format!("保存到 {}", pretty_path(&target)))
                                     .size(12.)
                                     .color(palette.gray(140)),
                             )
@@ -172,7 +172,7 @@ impl Editor {
             });
         match confirmed.or(response.should_close().then_some(false)) {
             Some(true) if self.exports.draft.target(&source).is_none() => {
-                self.status = "Choose a folder to export to".into();
+                self.status = "选择导出文件夹".into();
             }
             Some(true) => {
                 self.exports.dialog = false;
@@ -188,8 +188,8 @@ impl Editor {
         let picking = self.exports.picking.load(Ordering::Relaxed);
         let s = &mut self.exports.draft;
         let mut choose = false;
-        section(ui, "Export Location");
-        form_row(ui, "Export To", |ui| {
+        section(ui, "导出位置");
+        form_row(ui, "导出到", |ui| {
             egui::ComboBox::from_id_salt("export-to")
                 .width(300.)
                 .selected_text(destination_label(s.destination))
@@ -200,23 +200,21 @@ impl Editor {
                 });
         });
         let folder = s.base_folder(source);
-        form_row(ui, "Folder", |ui| {
+        form_row(ui, "文件夹", |ui| {
             choose = ui
-                .add_enabled(!picking, egui::Button::new("Choose…"))
+                .add_enabled(!picking, egui::Button::new("选择…"))
                 .clicked();
-            let text = folder
-                .as_deref()
-                .map_or("No folder chosen".into(), pretty_path);
+            let text = folder.as_deref().map_or("未选择文件夹".into(), pretty_path);
             ui.add(egui::Label::new(egui::RichText::new(text).color(palette.gray(150))).truncate());
         });
         form_row(ui, "", |ui| {
-            ui.checkbox(&mut s.subfolder, "Put in Subfolder:");
+            ui.checkbox(&mut s.subfolder, "放入子文件夹：");
             ui.add_enabled(
                 s.subfolder,
                 egui::TextEdit::singleline(&mut s.subfolder_name).desired_width(240.),
             );
         });
-        form_row(ui, "Existing Files", |ui| {
+        form_row(ui, "已有文件", |ui| {
             egui::ComboBox::from_id_salt("export-existing")
                 .width(300.)
                 .selected_text(existing_label(s.existing))
@@ -227,15 +225,15 @@ impl Editor {
                 });
         });
 
-        section(ui, "File Naming");
+        section(ui, "文件命名");
         let mut naming = s.naming();
-        form_row(ui, "Rename To", |ui| {
+        form_row(ui, "重命名为", |ui| {
             egui::ComboBox::from_id_salt("export-naming")
                 .width(220.)
-                .selected_text(naming.label())
+                .selected_text(crate::app::chinese::label(naming.label()))
                 .show_ui(ui, |ui| {
                     for n in Naming::ALL {
-                        ui.selectable_value(&mut naming, n, n.label());
+                        ui.selectable_value(&mut naming, n, crate::app::chinese::label(n.label()));
                     }
                 });
         });
@@ -243,39 +241,35 @@ impl Editor {
         if naming != s.naming() {
             s.naming = Some(naming);
         }
-        form_row(ui, "Custom Text", |ui| {
+        form_row(ui, "自定义文字", |ui| {
             ui.add_enabled(
                 naming.uses_text(),
                 egui::TextEdit::singleline(&mut s.custom_text).desired_width(220.),
             );
         });
-        form_row(ui, "Start Number", |ui| {
+        form_row(ui, "起始编号", |ui| {
             ui.add_enabled(
                 naming.uses_sequence(),
                 egui::DragValue::new(&mut s.start_number).range(0..=999_999),
             );
         });
-        form_row(ui, "Example", |ui| {
+        form_row(ui, "示例", |ui| {
             ui.label(
                 egui::RichText::new(s.file_name_for(source, example).0).color(palette.gray(225)),
             );
         });
-        form_row(ui, "Extensions", |ui| {
+        form_row(ui, "扩展名", |ui| {
             egui::ComboBox::from_id_salt("export-case")
                 .width(140.)
-                .selected_text(if s.uppercase {
-                    "Uppercase"
-                } else {
-                    "Lowercase"
-                })
+                .selected_text(if s.uppercase { "大写" } else { "小写" })
                 .show_ui(ui, |ui| {
-                    ui.selectable_value(&mut s.uppercase, false, "Lowercase");
-                    ui.selectable_value(&mut s.uppercase, true, "Uppercase");
+                    ui.selectable_value(&mut s.uppercase, false, "小写");
+                    ui.selectable_value(&mut s.uppercase, true, "大写");
                 });
         });
 
-        section(ui, "File Settings");
-        form_row(ui, "Image Format", |ui| {
+        section(ui, "文件设置");
+        form_row(ui, "图像格式", |ui| {
             egui::ComboBox::from_id_salt("export-format")
                 .width(140.)
                 .selected_text(match s.format {
@@ -289,23 +283,23 @@ impl Editor {
         });
         // One row for either format, so nothing below moves.
         match s.format {
-            Format::Jpeg => form_row(ui, "Quality", |ui| {
+            Format::Jpeg => form_row(ui, "质量", |ui| {
                 ui.spacing_mut().slider_width = 220.;
                 ui.add(egui::Slider::new(&mut s.quality, 1..=100));
             }),
-            Format::Tiff => form_row(ui, "Bit Depth", |ui| {
+            Format::Tiff => form_row(ui, "位深度", |ui| {
                 ui.label(
                     egui::RichText::new("16 bits/component, uncompressed").color(palette.gray(225)),
                 );
             }),
         }
-        form_row(ui, "Color Space", |ui| {
+        form_row(ui, "色彩空间", |ui| {
             ui.label(egui::RichText::new("sRGB").color(palette.gray(225)));
         });
 
-        section(ui, "Image Sizing");
+        section(ui, "图像尺寸");
         form_row(ui, "", |ui| {
-            ui.checkbox(&mut s.resize, "Resize to Fit: Long Edge");
+            ui.checkbox(&mut s.resize, "调整尺寸：长边");
             ui.add_enabled(
                 s.resize,
                 egui::DragValue::new(&mut s.long_edge)
@@ -313,20 +307,20 @@ impl Editor {
                     .suffix(" px"),
             );
         });
-        form_row(ui, "Resolution", |ui| {
+        form_row(ui, "分辨率", |ui| {
             ui.add(
                 egui::DragValue::new(&mut s.ppi)
                     .range(1..=10_000)
-                    .suffix(" pixels per inch"),
+                    .suffix(" 像素/英寸"),
             );
         });
 
-        section(ui, "Watermarking");
+        section(ui, "水印");
         let presets = self.exports.watermarks.clone();
         let simple = crate::watermark::SIMPLE_COPYRIGHT;
         let mut edit = None;
         form_row(ui, "", |ui| {
-            ui.checkbox(&mut s.watermark, "Watermark:");
+            ui.checkbox(&mut s.watermark, "水印：");
             let label = if s.watermark_name == simple {
                 SIMPLE_COPYRIGHT_LABEL.to_string()
             } else {
@@ -346,7 +340,7 @@ impl Editor {
                             ui.selectable_value(&mut s.watermark_name, w.name.clone(), &w.name);
                         }
                         ui.separator();
-                        if ui.selectable_label(false, "Edit Watermarks…").clicked() {
+                        if ui.selectable_label(false, "编辑水印…").clicked() {
                             edit = Some(
                                 presets
                                     .iter()
@@ -366,7 +360,7 @@ impl Editor {
                     .is_some_and(crate::watermark::Watermark::image_missing);
             if missing {
                 ui.label(
-                    egui::RichText::new("Watermark image not found")
+                    egui::RichText::new("未找到水印图像")
                         .size(12.)
                         .color(Color32::from_rgb(230, 120, 100)),
                 );
@@ -378,49 +372,50 @@ impl Editor {
             return;
         }
         let s = &mut self.exports.draft;
-        section(ui, "Metadata");
-        form_row(ui, "Include", |ui| {
+        section(ui, "元数据");
+        form_row(ui, "包含", |ui| {
             egui::ComboBox::from_id_salt("export-include")
                 .width(260.)
-                .selected_text(s.include.label())
+                .selected_text(crate::app::chinese::label(s.include.label()))
                 .show_ui(ui, |ui| {
                     for include in Include::ALL {
                         if include == Include::Custom {
                             ui.separator();
                         }
-                        ui.selectable_value(&mut s.include, include, include.label());
+                        ui.selectable_value(
+                            &mut s.include,
+                            include,
+                            crate::app::chinese::label(include.label()),
+                        );
                     }
                 });
         });
         // Four rows in every mode, so nothing below moves.
         if s.include == Include::Custom {
             form_row(ui, "", |ui| {
-                ui.checkbox(&mut s.capture, "Camera and capture info (EXIF)");
+                ui.checkbox(&mut s.capture, "相机与拍摄信息（EXIF）");
             });
             form_row(ui, "", |ui| {
                 ui.add_space(24.);
                 ui.add_enabled(
                     s.capture,
-                    egui::Checkbox::new(&mut s.location, "Include location info"),
+                    egui::Checkbox::new(&mut s.location, "包含位置信息"),
                 );
             });
             form_row(ui, "", |ui| {
-                ui.checkbox(&mut s.develop, "Develop settings (Camera Raw XMP)");
+                ui.checkbox(&mut s.develop, "显影设置（Camera Raw XMP）");
             });
             form_row(ui, "", |ui| {
                 ui.checkbox(
                     &mut s.descriptive,
-                    "Title, caption, creator, copyright, rating, label and keywords",
+                    "标题、说明、作者、版权、评分、标签及关键词",
                 );
             });
         } else {
             let forced = s.include.removes_location();
             let mut remove = s.remove_location || forced;
             form_row(ui, "", |ui| {
-                ui.add_enabled(
-                    !forced,
-                    egui::Checkbox::new(&mut remove, "Remove Location Info"),
-                );
+                ui.add_enabled(!forced, egui::Checkbox::new(&mut remove, "移除位置信息"));
             });
             if !forced {
                 s.remove_location = remove;
@@ -430,14 +425,18 @@ impl Editor {
             }
         }
         let s = &mut self.exports.draft;
-        section(ui, "Post-Processing");
-        form_row(ui, "After Export", |ui| {
+        section(ui, "后期处理");
+        form_row(ui, "导出后", |ui| {
             egui::ComboBox::from_id_salt("export-after")
                 .width(220.)
-                .selected_text(s.after_export.label())
+                .selected_text(crate::app::chinese::label(s.after_export.label()))
                 .show_ui(ui, |ui| {
                     for after in AfterExport::ALL {
-                        ui.selectable_value(&mut s.after_export, after, after.label());
+                        ui.selectable_value(
+                            &mut s.after_export,
+                            after,
+                            crate::app::chinese::label(after.label()),
+                        );
                     }
                 });
         });
@@ -481,20 +480,20 @@ impl Editor {
             files.push(format!("and {} more", pending.conflicts.len() - shown));
         }
         let detail = format!(
-            "{}\n\nDo you wish to overwrite the existing files, skip the existing files, or rename the exported files to avoid collision?",
+            "{}\n\n覆盖已有文件、跳过已有文件，还是重命名导出文件以避免冲突？",
             files.join("\n")
         );
         let Some(choice) = confirm_modal(
             ctx,
             "export-conflict",
-            "The following files already exist.",
+            "以下文件已存在。",
             &detail,
             false,
             &[
-                ("Cancel", None),
-                ("Skip", Some(Existing::Skip)),
-                ("Use Unique Names", Some(Existing::Unique)),
-                ("Overwrite", Some(Existing::Overwrite)),
+                ("取消", None),
+                ("跳过", Some(Existing::Skip)),
+                ("使用唯一文件名", Some(Existing::Unique)),
+                ("覆盖", Some(Existing::Overwrite)),
             ],
             None,
         ) else {
@@ -505,7 +504,7 @@ impl Editor {
         };
         match choice {
             Some(answer) => self.plan_export(pending, Some(answer)),
-            None => self.status = "Export cancelled".into(),
+            None => self.status = "导出已取消".into(),
         }
     }
 }

@@ -58,15 +58,12 @@ impl Editor {
         // A rename committed by clicking another snapshot comes first, then the click.
         let mut actions = Vec::new();
         let panel = &mut self.document.snapshots;
-        let add = super::widgets::section_with(
-            ui,
-            "Snapshots",
-            super::widgets::HeaderButton::Add,
-            |ui| {
+        let add =
+            super::widgets::section_with(ui, "快照", super::widgets::HeaderButton::Add, |ui| {
                 ui.spacing_mut().item_spacing.y = 0.;
                 if panel.list.is_empty() {
                     ui.label(
-                        egui::RichText::new("+ saves the photo as it is now")
+                        egui::RichText::new("+ 保存照片当前状态")
                             .size(11.)
                             .color(theme::palette(ui.ctx()).gray(125)),
                     );
@@ -100,22 +97,21 @@ impl Editor {
                         actions.push(SnapshotAction::Apply(snapshot.id));
                     }
                     super::widgets::context_menu(&row, |ui| {
-                        if ui.button("Update with Current Settings").clicked() {
+                        if ui.button("使用当前设置更新").clicked() {
                             actions.push(SnapshotAction::Update(snapshot.id));
                         }
-                        if ui.button("Copy Snapshot Settings to Before").clicked() {
+                        if ui.button("将快照设置复制到编辑前").clicked() {
                             actions.push(SnapshotAction::ToBefore(snapshot.id));
                         }
-                        if ui.button("Rename").clicked() {
+                        if ui.button("重命名").clicked() {
                             actions.push(SnapshotAction::StartRename(snapshot.id));
                         }
-                        if ui.button("Delete").clicked() {
+                        if ui.button("删除").clicked() {
                             actions.push(SnapshotAction::Delete(snapshot.id));
                         }
                     });
                 }
-            },
-        );
+            });
         if add {
             actions.push(SnapshotAction::New);
         }
@@ -131,7 +127,7 @@ impl Editor {
         let recipe = self.document.edit.recipe();
         let result = match &action {
             SnapshotAction::New => {
-                let name = format!("Snapshot {}", self.document.snapshots.list.len() + 1);
+                let name = format!("快照 {}", self.document.snapshots.list.len() + 1);
                 catalog.add_snapshot(photo, &name, recipe).map(|id| {
                     self.document.snapshots.renaming = Some(Renaming {
                         id,
@@ -201,7 +197,7 @@ impl Editor {
         }
         self.document
             .edit
-            .name_next_step(Step::new(format!("Snapshot: {name}"), ""));
+            .name_next_step(Step::new(format!("快照：{name}"), ""));
         self.document.edit.replace(recipe);
         self.ensure_upright();
     }
@@ -259,7 +255,7 @@ fn snapshot_row(ui: &mut egui::Ui, name: &str) -> egui::Response {
         );
     response
         .on_hover_cursor(egui::CursorIcon::PointingHand)
-        .on_hover_text("Click to apply · right-click to update, rename or delete")
+        .on_hover_text("点击应用 · 右键更新、重命名或删除")
 }
 
 #[cfg(test)]
@@ -286,7 +282,7 @@ mod tests {
         // + saves the edit as it is and starts naming it.
         e.snapshot_action(SnapshotAction::New);
         let id = e.document.snapshots.list[0].id;
-        assert_eq!(e.document.snapshots.list[0].name, "Snapshot 1");
+        assert_eq!(e.document.snapshots.list[0].name, "快照 1");
         e.snapshot_action(SnapshotAction::Rename(id, "Bright".into()));
         assert_eq!(e.document.snapshots.list[0].name, "Bright");
         // An emptied name keeps the old one.
@@ -299,7 +295,7 @@ mod tests {
         e.commit_edit(before, None);
         assert_eq!(e.document.edit.recipe().exposure, 0.8);
         let (steps, _) = e.document.edit.history().steps();
-        assert_eq!(steps.last().unwrap().name, "Snapshot: Bright");
+        assert_eq!(steps.last().unwrap().name, "快照：Bright");
         // Update with Current Settings, then Delete.
         e.document.edit.setup_mut().exposure = -0.5;
         e.snapshot_action(SnapshotAction::Update(id));
@@ -340,7 +336,7 @@ mod tests {
         ]);
         frame(vec![]);
         assert!(e.document.snapshots.renaming.is_none());
-        assert_eq!(e.document.snapshots.list[0].name, "Snapshot 1 warm");
+        assert_eq!(e.document.snapshots.list[0].name, "快照 1 warm");
         // A name still being typed is kept when the photo is left.
         e.snapshot_action(SnapshotAction::StartRename(e.document.snapshots.list[0].id));
         e.document.snapshots.renaming.as_mut().unwrap().name = "Kept".into();

@@ -37,7 +37,7 @@ impl ImportKind {
     /// Label for the multi-file chooser's filter.
     pub(super) fn filter(self) -> (&'static str, &'static [&'static str]) {
         match self {
-            Self::CameraProfiles => ("Camera profiles", &["dcp", "xmp"]),
+            Self::CameraProfiles => ("相机配置文件", &["dcp", "xmp"]),
             Self::LensProfiles => ("Adobe lens profiles", &["lcp"]),
             Self::Presets => ("Lightroom presets", &["xmp"]),
         }

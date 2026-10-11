@@ -8,7 +8,7 @@ use eframe::egui::{self, Color32, Pos2, Rect, Sense, Stroke, Vec2};
 
 /// Zoom levels the Navigator offers; 0 stands for Fit.
 const LEVELS: [(f32, &str); 5] = [
-    (0., "Fit"),
+    (0., "适合"),
     (0.5, "50%"),
     (1., "100%"),
     (2., "200%"),
@@ -124,7 +124,7 @@ pub(super) fn navigator(
     let palette = theme::palette(ui.ctx());
     let mut change = None;
     ui.spacing_mut().item_spacing.y = 0.;
-    section(ui, "Navigator", false, |ui| {
+    section(ui, "导航器", false, |ui| {
         if let Some(zoom) = zoom {
             let mut level = zoom.shown();
             let w = ui.available_width();
@@ -147,7 +147,7 @@ pub(super) fn navigator(
             ui.painter().text(
                 rect.center(),
                 egui::Align2::CENTER_CENTER,
-                "No photo selected",
+                "未选择照片",
                 egui::FontId::proportional(11.),
                 palette.gray(95),
             );
@@ -188,7 +188,7 @@ pub(super) fn navigator(
         }
         response
             .on_hover_cursor(egui::CursorIcon::Crosshair)
-            .on_hover_text("Click or drag to inspect that area");
+            .on_hover_text("点击或拖动查看该区域");
     });
     change
 }

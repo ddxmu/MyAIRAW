@@ -21,7 +21,7 @@ impl Editor {
         if !self.activity.begin_dialog() {
             return;
         }
-        self.status = "Opening catalog…".into();
+        self.status = "正在打开图库…".into();
         let tx = self.tx.clone();
         let ctx = ctx.clone();
         super::task::spawn(
@@ -79,7 +79,7 @@ impl Editor {
                         }
                         CatalogDialog::ImportLightroom => {
                             let Some(source) = rfd::FileDialog::new()
-                                .add_filter("Lightroom catalog", &["lrcat"])
+                                .add_filter("Lightroom 图库", &["lrcat"])
                                 .pick_file()
                             else {
                                 return Ok(None);
@@ -94,7 +94,7 @@ impl Editor {
                                 return Ok(None);
                             };
                             let _ = tx.send(Event::CatalogWorking(format!(
-                                "Importing {}…",
+                                "正在导入 {}…",
                                 source.file_name().unwrap_or_default().to_string_lossy()
                             )));
                             ctx.request_repaint();
@@ -104,12 +104,11 @@ impl Editor {
                         }
                         CatalogDialog::Folder(action) => {
                             crate::platform::network::prepare_filesystem_bridge();
-                            let current =
-                                current.ok_or_else(|| anyhow::anyhow!("Open a catalog first"))?;
+                            let current = current.ok_or_else(|| anyhow::anyhow!("请先打开图库"))?;
                             let mut cat = crate::catalog::Catalog::open(&current)?;
                             let mut dialog = rfd::FileDialog::new().set_title(match action {
-                                FolderAction::Add => "Add photo folder",
-                                _ => "Find missing folder on this computer",
+                                FolderAction::Add => "添加照片文件夹",
+                                _ => "在本机查找缺失文件夹",
                             });
                             // Where another computer has it, when that is here too.
                             if let Some(there) = suggestion(&cat, action) {
@@ -161,7 +160,7 @@ impl Editor {
                 })();
                 if let Ok(Some(location)) = &result {
                     let _ = tx.send(Event::CatalogWorking(format!(
-                        "Opening {}…",
+                        "正在打开 {}…",
                         location.name()
                     )));
                     ctx.request_repaint();
@@ -216,7 +215,7 @@ impl Editor {
                     folder_added: false,
                 });
             } else {
-                self.status = format!("Open or create a catalog to edit {name}");
+                self.status = format!("请打开或新建图库以编辑 {name}");
             }
             return;
         };
@@ -230,7 +229,7 @@ impl Editor {
             path,
             folder_added: true,
         });
-        self.status = format!("Adding {name}'s folder to the Library…");
+        self.status = format!("正在将 {name} 所在文件夹加入照片库…");
         let tx = self.tx.clone();
         let ctx = self.context.clone();
         super::task::spawn(
@@ -245,7 +244,7 @@ impl Editor {
                     )?;
                     anyhow::ensure!(
                         added.ambiguous.is_empty(),
-                        "{} matches more than one folder of the catalog; add it with Add Folder…",
+                        "{} 匹配图库中的多个文件夹，请通过添加文件夹操作加入。",
                         folder.display()
                     );
                     let mut library = crate::app::library::Library::new(
@@ -298,9 +297,9 @@ impl Editor {
             // Adding its folder may have said why (linked elsewhere).
             self.status = match self.library.as_ref().map(|l| l.message.as_str()) {
                 Some(why) if !why.is_empty() => {
-                    format!("{name} could not be added to the Library · {why}")
+                    format!("无法将 {name} 加入照片库 · {why}")
                 }
-                _ => format!("{name} could not be added to the Library"),
+                _ => format!("无法将 {name} 加入照片库"),
             };
         }
     }
@@ -317,8 +316,7 @@ impl Editor {
             // click did nothing.
             let reason = refusal.detail();
             self.status = reason.clone();
-            self.not_editable =
-                Some((format!("{} can't be opened in Develop", p.filename), reason));
+            self.not_editable = Some((format!("{} 无法在显影中打开", p.filename), reason));
             return;
         }
         // Already open, e.g. in the Loupe: Develop shows it as it is.
@@ -355,10 +353,10 @@ impl Editor {
                 self.document.edit.replace(r);
                 // Short for the status bar; the full list shows on hover.
                 self.document.lightroom_notice = if warnings.is_empty() {
-                    "Lightroom edit applied".into()
+                    "已应用 Lightroom 编辑".into()
                 } else {
                     format!(
-                        "Lightroom edit applied · {} settings not rendered yet\n\n{}",
+                        "已应用 Lightroom 编辑 · {} 项设置暂未渲染\n\n{}",
                         warnings.len(),
                         warnings.join("\n")
                     )
@@ -372,7 +370,7 @@ impl Editor {
                         m,
                         &self.document.profiles,
                     ));
-                self.document.lightroom_notice = format!("Lightroom settings not applied: {e:#}")
+                self.document.lightroom_notice = format!("未应用 Lightroom 设置：{e:#}")
             }
         }
     }
@@ -410,7 +408,7 @@ impl Editor {
                     self.develop_catalog_photo(id);
                 }
             }
-            Err(e) => self.status = format!("Virtual copy failed: {e:#}"),
+            Err(e) => self.status = format!("创建虚拟副本失败：{e:#}"),
         }
     }
     /// Asks before removing a virtual copy, as Lightroom does; a copy shown
@@ -428,11 +426,10 @@ impl Editor {
         let Some(remove) = confirm_modal(
             ctx,
             "remove-virtual-copy",
-            &format!("Remove “{}” of {}?", photo.copy_name, photo.filename),
-            "Its edit, rating and keywords are removed from the catalog. \
-             The photo file and its other copies are not affected.",
+            &format!("移除“{}”（属于 {}）？", photo.copy_name, photo.filename),
+            "将从图库中移除其编辑、评分和关键词。照片原文件及其他副本不会受到影响。",
             false,
-            &[("Cancel", false), ("Remove", true)],
+            &[("取消", false), ("移除", true)],
             false,
         ) else {
             return;
@@ -460,19 +457,17 @@ impl Editor {
         let ids = ids.clone();
         let n = ids.len();
         let title = if n == 1 {
-            "Read metadata from the file?".to_string()
+            "从文件读取元数据？".to_string()
         } else {
-            format!("Read metadata from {n} files?")
+            format!("从 {n} 个文件读取元数据？")
         };
         let Some(read) = confirm_modal(
             ctx,
             "read-metadata",
             &title,
-            "Replaces title, caption, keywords and other metadata in the \
-             catalog with the values in the files, including your edits. \
-             Fields the files don't have are kept. Virtual copies are not read.",
+            "用文件中的值替换图库中的标题、说明、关键词和其他元数据，包括已有编辑。文件中没有的字段会保留，虚拟副本不会读取。",
             false,
-            &[("Cancel", false), ("Read", true)],
+            &[("取消", false), ("读取", true)],
             false,
         ) else {
             return;
@@ -520,13 +515,13 @@ impl Editor {
                     }
                 }
             }
-            Err(e) => self.status = format!("Virtual copy not removed: {e:#}"),
+            Err(e) => self.status = format!("未移除虚拟副本：{e:#}"),
         }
     }
 }
 /// A file dialog for RAWmakase catalogs.
 fn catalog_file_dialog() -> rfd::FileDialog {
-    rfd::FileDialog::new().add_filter("RAWmakase catalog", &["rawmakase"])
+    rfd::FileDialog::new().add_filter("MyAIRAW 图库", &["rawmakase"])
 }
 /// Where another computer has the root or folder of `action`, when that
 /// path is on this computer too: the place Find Missing Folder starts.

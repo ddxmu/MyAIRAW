@@ -161,7 +161,7 @@ pub(crate) fn supported(r: &Recipe) -> bool {
 /// Parameters for `im`'s per-pixel stage with the resolved recipe `r`, or `None` when
 /// the GPU port does not cover it.
 pub(crate) fn pixel_params(im: Source, r: &Recipe) -> Option<PixelParams> {
-    if !supported(r) {
+    if !supported(r) || im.metadata.display_referred {
         return None;
     }
     let matrix = profile_matrix(&im.metadata, r);

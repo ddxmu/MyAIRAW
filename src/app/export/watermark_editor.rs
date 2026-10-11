@@ -44,7 +44,7 @@ impl Notice {
     fn text(&self) -> &str {
         match self {
             Self::None => "",
-            Self::LoadingFonts => "Loading fonts…",
+            Self::LoadingFonts => "正在加载字体…",
             Self::Error(e) => e,
         }
     }
@@ -97,7 +97,7 @@ impl Editor {
                 ui.painter().text(
                     rect.left_top() + Vec2::new(24., 26.),
                     egui::Align2::LEFT_CENTER,
-                    "Watermark Editor",
+                    "水印编辑器",
                     egui::FontId::proportional(16.),
                     palette.gray(236),
                 );
@@ -127,11 +127,11 @@ impl Editor {
                         .layout(egui::Layout::right_to_left(egui::Align::Center)),
                 );
                 bar.spacing_mut().button_padding = Vec2::new(18., 6.);
-                if primary_button(&mut bar, "Save").clicked() {
+                if primary_button(&mut bar, "保存").clicked() {
                     close = Some(true);
                 }
                 if bar
-                    .add(egui::Button::new("Cancel").min_size(Vec2::new(84., 30.)))
+                    .add(egui::Button::new("取消").min_size(Vec2::new(84., 30.)))
                     .clicked()
                 {
                     close = Some(false);
@@ -140,18 +140,18 @@ impl Editor {
                 bar.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
                     if state.original.is_some()
                         && ui
-                            .add(egui::Button::new("Delete").frame(false))
-                            .on_hover_text("Delete this watermark and its image")
+                            .add(egui::Button::new("删除").frame(false))
+                            .on_hover_text("删除此水印及其图像")
                             .clicked()
                     {
                         close = Some(false);
                         delete = true;
                     }
-                    ui.label(egui::RichText::new("Name").color(palette.gray(150)));
+                    ui.label(egui::RichText::new("名称").color(palette.gray(150)));
                     ui.add(
                         egui::TextEdit::singleline(&mut state.watermark.name)
                             .desired_width(200.)
-                            .hint_text("Watermark name"),
+                            .hint_text("水印名称"),
                     );
                     let notice = state.notice.text();
                     if !notice.is_empty() {
@@ -168,7 +168,7 @@ impl Editor {
                 let graphic = state.watermark.style == Style::Graphic;
                 let source = state.source.clone().filter(|_| graphic);
                 if graphic && source.is_none() && state.watermark.image.is_none() {
-                    state.notice = Notice::Error("Choose a PNG or JPEG image".into());
+                    state.notice = Notice::Error("选择 PNG 或 JPEG 图像".into());
                     self.exports.watermark_editor = Some(state);
                     return;
                 }
@@ -209,7 +209,7 @@ impl Editor {
                     && let Err(e) = watermark::delete(&w)
                 {
                     // Nothing else changes; the editor stays open to say so.
-                    state.notice = Notice::Error(format!("Not deleted: {e:#}"));
+                    state.notice = Notice::Error(format!("未删除：{e:#}"));
                     self.exports.watermark_editor = Some(state);
                     return;
                 }
@@ -241,7 +241,7 @@ impl Editor {
         {
             change(&mut previous);
             if let Err(e) = previous.save() {
-                self.status = format!("Export settings not saved: {e:#}");
+                self.status = format!("无法保存导出设置：{e:#}");
             }
         }
     }
@@ -260,7 +260,7 @@ fn draw_preview(
         ui.painter().text(
             area.center(),
             egui::Align2::CENTER_CENTER,
-            "Open a photo to preview the watermark",
+            "打开照片以预览水印",
             egui::FontId::proportional(12.),
             palette.gray(130),
         );
@@ -467,27 +467,27 @@ fn choices<T: PartialEq + Copy>(ui: &mut egui::Ui, value: &mut T, options: &[(T,
 fn controls(ui: &mut egui::Ui, state: &mut WatermarkEditor, ctx: &egui::Context) {
     ui.spacing_mut().item_spacing.y = 4.;
     let w = &mut state.watermark;
-    heading(ui, "Watermark Style");
+    heading(ui, "水印样式");
     row(ui, "", |ui| {
         choices(
             ui,
             &mut w.style,
-            &[(Style::Text, "Text"), (Style::Graphic, "Graphic")],
+            &[(Style::Text, "文字"), (Style::Graphic, "图形")],
         )
     });
     match w.style {
         Style::Graphic => {
-            heading(ui, "Image Options");
-            row(ui, "Image", |ui| {
+            heading(ui, "图像选项");
+            row(ui, "图像", |ui| {
                 let name = state
                     .source
                     .as_ref()
                     .and_then(|p| p.file_name())
                     .map(|n| n.to_string_lossy().into_owned())
                     .or_else(|| w.image.clone())
-                    .unwrap_or_else(|| "A PNG or JPEG image".into());
+                    .unwrap_or_else(|| "PNG 或 JPEG 图像".into());
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    if ui.button("Choose…").clicked() {
+                    if ui.button("选择…").clicked() {
                         let picked = state.picked.clone();
                         let ctx = ctx.clone();
                         std::thread::spawn(move || {
@@ -513,8 +513,8 @@ fn controls(ui: &mut egui::Ui, state: &mut WatermarkEditor, ctx: &egui::Context)
             });
         }
         Style::Text => {
-            heading(ui, "Text Options");
-            row_of(ui, "Text", 52., |ui| {
+            heading(ui, "文字选项");
+            row_of(ui, "文字", 52., |ui| {
                 ui.add_sized(
                     Vec2::new(ui.available_width(), 48.),
                     egui::TextEdit::multiline(&mut w.text).desired_rows(2),
@@ -524,7 +524,7 @@ fn controls(ui: &mut egui::Ui, state: &mut WatermarkEditor, ctx: &egui::Context)
             let listed = watermark::fonts::families_if_listed();
             let inter = [watermark::fonts::inter()];
             let families: &[watermark::fonts::Family] = listed.unwrap_or(&inter);
-            row(ui, "Font", |ui| {
+            row(ui, "字体", |ui| {
                 egui::ComboBox::from_id_salt("watermark-font")
                     .width(ui.available_width())
                     .selected_text(&w.family)
@@ -538,7 +538,7 @@ fn controls(ui: &mut egui::Ui, state: &mut WatermarkEditor, ctx: &egui::Context)
                         }
                     });
             });
-            row(ui, "Style", |ui| {
+            row(ui, "样式", |ui| {
                 let faces = families
                     .iter()
                     .find(|f| f.name == w.family)
@@ -553,18 +553,18 @@ fn controls(ui: &mut egui::Ui, state: &mut WatermarkEditor, ctx: &egui::Context)
                         }
                     });
             });
-            row(ui, "Align", |ui| {
+            row(ui, "对齐", |ui| {
                 choices(
                     ui,
                     &mut w.align,
                     &[
-                        (Align::Left, "Left"),
-                        (Align::Center, "Center"),
-                        (Align::Right, "Right"),
+                        (Align::Left, "左"),
+                        (Align::Center, "居中"),
+                        (Align::Right, "右"),
                     ],
                 )
             });
-            row(ui, "Color", |ui| {
+            row(ui, "彩色", |ui| {
                 // The picker in sRGB, as the color is stored and laid over
                 // the photo.
                 let mut srgb = w.color.map(unit_to_u8);
@@ -572,28 +572,26 @@ fn controls(ui: &mut egui::Ui, state: &mut WatermarkEditor, ctx: &egui::Context)
                     w.color = srgb.map(|c| c as f32 / 255.);
                 }
             });
-            heading(ui, "Shadow");
-            row(ui, "", |ui| {
-                ui.checkbox(&mut w.shadow.enabled, "Drop shadow")
-            });
+            heading(ui, "阴影");
+            row(ui, "", |ui| ui.checkbox(&mut w.shadow.enabled, "投影"));
             ui.add_enabled_ui(w.shadow.enabled, |ui| {
-                percent_slider(ui, "Opacity", &mut w.shadow.opacity, 0.0..=100.);
-                percent_slider(ui, "Offset", &mut w.shadow.offset, 0.0..=40.);
-                percent_slider(ui, "Radius", &mut w.shadow.radius, 0.0..=40.);
-                slider(ui, "Angle", &mut w.shadow.angle, -180.0..=180., "°");
+                percent_slider(ui, "不透明度", &mut w.shadow.opacity, 0.0..=100.);
+                percent_slider(ui, "偏移", &mut w.shadow.offset, 0.0..=40.);
+                percent_slider(ui, "半径", &mut w.shadow.radius, 0.0..=40.);
+                slider(ui, "角度", &mut w.shadow.angle, -180.0..=180., "°");
             });
         }
     }
-    heading(ui, "Watermark Effects");
-    percent_slider(ui, "Opacity", &mut w.opacity, 0.0..=100.);
-    row(ui, "Size", |ui| {
+    heading(ui, "水印效果");
+    percent_slider(ui, "不透明度", &mut w.opacity, 0.0..=100.);
+    row(ui, "大小", |ui| {
         ui.spacing_mut().item_spacing.x = 4.;
         let proportional = matches!(w.size, Size::Proportional(_));
-        if ui.selectable_label(proportional, "Proportional").clicked() && !proportional {
+        if ui.selectable_label(proportional, "按比例").clicked() && !proportional {
             w.size = Size::default();
         }
-        ui.selectable_value(&mut w.size, Size::Fit, "Fit");
-        ui.selectable_value(&mut w.size, Size::Fill, "Fill");
+        ui.selectable_value(&mut w.size, Size::Fit, "适合");
+        ui.selectable_value(&mut w.size, Size::Fill, "填充");
     });
     // Always a row, so choosing Fit or Fill moves nothing below.
     let mut percent = match w.size {
@@ -601,16 +599,16 @@ fn controls(ui: &mut egui::Ui, state: &mut WatermarkEditor, ctx: &egui::Context)
         _ => 0.2,
     };
     ui.add_enabled_ui(matches!(w.size, Size::Proportional(_)), |ui| {
-        percent_slider(ui, "Amount", &mut percent, 1.0..=100.);
+        percent_slider(ui, "数量", &mut percent, 1.0..=100.);
     });
     if let Size::Proportional(p) = &mut w.size {
         *p = percent;
     }
-    heading(ui, "Inset");
-    percent_slider(ui, "Horizontal", &mut w.inset[0], 0.0..=50.);
-    percent_slider(ui, "Vertical", &mut w.inset[1], 0.0..=50.);
-    heading(ui, "Position");
-    row_of(ui, "Anchor", 3. * 20. + 4., |ui| {
+    heading(ui, "内缩");
+    percent_slider(ui, "水平", &mut w.inset[0], 0.0..=50.);
+    percent_slider(ui, "垂直", &mut w.inset[1], 0.0..=50.);
+    heading(ui, "位置");
+    row_of(ui, "锚点", 3. * 20. + 4., |ui| {
         ui.vertical(|ui| {
             ui.spacing_mut().item_spacing = Vec2::new(6., 2.);
             for v in 0..3 {
@@ -622,17 +620,17 @@ fn controls(ui: &mut egui::Ui, state: &mut WatermarkEditor, ctx: &egui::Context)
             }
         });
     });
-    row(ui, "Rotate", |ui| {
+    row(ui, "旋转", |ui| {
         if ui
             .add(egui::Button::new("⟲").frame(false))
-            .on_hover_text("Rotate left")
+            .on_hover_text("向左旋转")
             .clicked()
         {
             w.rotation = (w.rotation + 1) % 4;
         }
         if ui
             .add(egui::Button::new("⟳").frame(false))
-            .on_hover_text("Rotate right")
+            .on_hover_text("向右旋转")
             .clicked()
         {
             w.rotation = (w.rotation + 3) % 4;

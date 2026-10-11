@@ -157,7 +157,7 @@ pub(super) fn listen(
                     reset_connection(&status, &ctx);
                 }
                 last = Instant::now();
-                if let Ok(input) = MidiInput::new("RAWmakase") {
+                if let Ok(input) = MidiInput::new("MyAIRAW") {
                     let ports = input.ports();
                     let named = |p: &midir::MidiInputPort| input.port_name(p).unwrap_or_default();
                     match &connected {

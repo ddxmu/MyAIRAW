@@ -108,8 +108,8 @@ impl BatchChange {
     /// The History step and Undo name.
     pub(crate) fn name(&self) -> &'static str {
         match self {
-            BatchChange::Settings(_) => "Synchronize Settings",
-            BatchChange::MatchTotalExposures => "Match Total Exposures",
+            BatchChange::Settings(_) => "同步设置",
+            BatchChange::MatchTotalExposures => "匹配总曝光",
         }
     }
 }
@@ -208,8 +208,8 @@ fn prepare(
 ) -> Result<Prepared> {
     // Read first, so a file replaced while its settings are worked out is noticed.
     let identity = crate::storage::Identity::read(&target.path)?;
-    let raw = crate::photo::open(&target.path)
-        .with_context(|| format!("{} can't be read", target.name))?;
+    let raw =
+        crate::photo::open(&target.path).with_context(|| format!("无法读取 {}", target.name))?;
     let metadata = raw.metadata.clone();
     let (profiles, _) = crate::camera_profiles::installed(&metadata);
     let record = catalog.edit_record(target.id)?;
@@ -499,7 +499,7 @@ impl Editor {
                 notes: Vec::new(),
                 synced: Vec::new(),
                 failed: vec![SyncFailure {
-                    name: "Catalog".into(),
+                    name: "图库".into(),
                     reason: format!("{e:#}"),
                 }],
             });
@@ -619,7 +619,7 @@ mod tests {
             let saved = c.load_edit(*id, path)?.unwrap().recipe;
             assert_eq!((saved.exposure, saved.effects.clarity), (0.5, 0.2));
             let history = c.load_history(*id)?.unwrap();
-            assert_eq!(history.steps.last().unwrap().name, "Synchronize Settings");
+            assert_eq!(history.steps.last().unwrap().name, "同步设置");
         }
         let path = |id: PhotoId| {
             photos
@@ -636,7 +636,7 @@ mod tests {
         // Redo brings the edit back with its History step.
         restore(&mut c, &result.synced, SyncSide::After, path)?;
         let history = c.load_history(photos[1].0)?.unwrap();
-        assert_eq!(history.steps.last().unwrap().name, "Synchronize Settings");
+        assert_eq!(history.steps.last().unwrap().name, "同步设置");
         // A photo removed since makes the command unusable rather than wrong.
         assert!(matches!(
             restore(&mut c, &result.synced, SyncSide::Before, |_| None),
@@ -656,7 +656,7 @@ mod tests {
         let earlier = SavedHistory {
             origin: Recipe::default(),
             steps: vec![crate::catalog::SavedStep {
-                name: "Exposure".into(),
+                name: "曝光".into(),
                 value: "-0.30".into(),
                 recipe: edited.clone(),
             }],

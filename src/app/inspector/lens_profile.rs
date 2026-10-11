@@ -14,10 +14,10 @@ pub(super) fn profile_menus(ui: &mut egui::Ui, r: &mut Recipe, m: Option<&Metada
         // Default or Auto.
         ui.add_enabled_ui(r.lens_profile && r.engine >= 4, |ui| setup_row(ui, r, None));
         let builtin = m.and_then(|m| m.lens.as_ref());
-        control_row(ui, "Profile", |ui| {
+        control_row(ui, "配置文件", |ui| {
             muted(
                 ui,
-                builtin.map_or("No matching profile", |l| l.source.as_str()),
+                builtin.map_or("没有匹配的配置文件", |l| l.source.as_str()),
             );
         });
         return;
@@ -37,10 +37,10 @@ pub(super) fn profile_menus(ui: &mut egui::Ui, r: &mut Recipe, m: Option<&Metada
         let (make, model, name) = match (&in_use, &named) {
             (Some(p), _) => (p.lens_make.as_str(), p.lens_model.as_str(), p.name.as_str()),
             (None, Some(named)) => ("", "", named.as_str()),
-            (None, None) => ("", "", "None"),
+            (None, None) => ("", "", "无"),
         };
         let mut chosen = None;
-        control_row(ui, "Make", |ui| {
+        control_row(ui, "品牌", |ui| {
             egui::ComboBox::from_id_salt("lens-profile-make")
                 .width(ui.available_width())
                 .selected_text(make)
@@ -52,7 +52,7 @@ pub(super) fn profile_menus(ui: &mut egui::Ui, r: &mut Recipe, m: Option<&Metada
                     }
                 });
         });
-        control_row(ui, "Model", |ui| {
+        control_row(ui, "型号", |ui| {
             egui::ComboBox::from_id_salt("lens-profile-model")
                 .width(ui.available_width())
                 .selected_text(model)
@@ -64,7 +64,7 @@ pub(super) fn profile_menus(ui: &mut egui::Ui, r: &mut Recipe, m: Option<&Metada
                     }
                 });
         });
-        control_row(ui, "Profile", |ui| {
+        control_row(ui, "配置文件", |ui| {
             egui::ComboBox::from_id_salt("lens-profile-name")
                 .width(ui.available_width())
                 .selected_text(name)
@@ -93,14 +93,14 @@ fn setup_row(
     r: &mut Recipe,
     in_use: Option<&crate::optics::lcp::ImportedProfile>,
 ) {
-    control_row(ui, "Setup", |ui| {
+    control_row(ui, "设置", |ui| {
         let mut setup = r.lens_profile_choice.setup;
         egui::ComboBox::from_id_salt("lens-profile-setup")
             .width(ui.available_width())
-            .selected_text(setup.label())
+            .selected_text(crate::app::chinese::label(setup.label()))
             .show_ui(ui, |ui| {
                 for s in LensProfileSetup::ALL {
-                    ui.selectable_value(&mut setup, s, s.label());
+                    ui.selectable_value(&mut setup, s, crate::app::chinese::label(s.label()));
                 }
             });
         if setup != r.lens_profile_choice.setup {

@@ -7,7 +7,7 @@ use rawmakase::model::recipe::Recipe;
 use rawmakase::{camera_data, develop, export_settings::ExportOptions, raw};
 use std::{path::PathBuf, sync::atomic::AtomicBool, time::Instant};
 #[derive(Parser)]
-#[command(version, about = "A personal RAW photo editor")]
+#[command(name = "myairaw", version, about = "MyAIRAW 中文版照片编辑器")]
 struct Args {
     #[command(subcommand)]
     command: Option<Command>,

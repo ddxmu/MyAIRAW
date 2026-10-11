@@ -114,7 +114,7 @@ fn adobe_cameras(profiles: &std::path::Path) -> Vec<String> {
             .map(|e| e.file_name().to_string_lossy().into_owned())
             .collect::<Vec<_>>()
     };
-    let mut cameras = names(profiles.join("Camera"));
+    let mut cameras = names(profiles.join("相机"));
     cameras.extend(
         names(profiles.join("Adobe Standard"))
             .into_iter()
@@ -164,7 +164,7 @@ impl Found {
                     self.adobe_profiles.push(base);
                 }
                 self.adobe_profiles.extend(find_files(
-                    &profiles.join("Camera").join(camera),
+                    &profiles.join("相机").join(camera),
                     &["dcp"],
                     &[],
                 ));
@@ -242,7 +242,7 @@ impl Found {
             .collect();
         self.user_presets = user
             .as_ref()
-            .map(|d| find_files(&d.join("Settings"), &["xmp"], &["Defaults", "GPU"]))
+            .map(|d| find_files(&d.join("设置"), &["xmp"], &["Defaults", "GPU"]))
             .unwrap_or_default();
     }
 }
@@ -287,11 +287,11 @@ impl Editor {
     fn onboarding_steps(&mut self, ui: &mut egui::Ui, ctx: &egui::Context) {
         let palette = theme::palette(ui.ctx());
         ui.spacing_mut().item_spacing = Vec2::new(8., 0.);
-        text(ui, "Set up RAWmakase", 24., 240);
+        text(ui, "设置 MyAIRAW", 24., 240);
         ui.add_space(6.);
         text(
             ui,
-            "Pick a catalog, then bring over your Lightroom look. Steps 2 to 4 are optional.",
+            "选择图库，然后导入 Lightroom 的配置与预设。第 2 至 4 步为可选步骤。",
             13.,
             150,
         );
@@ -300,29 +300,27 @@ impl Editor {
         let busy = self.activity.is_busy();
         let catalog = self.library.as_ref().map(|l| {
             format!(
-                "{} · {} photos",
+                "{} · {} 张照片",
                 l.session.catalog.location().name(),
                 l.session.photos.len()
             )
         });
         let has_catalog = catalog.is_some();
-        step(ui, 1, "Catalog", catalog.as_deref(), |ui| {
+        step(ui, 1, "图库", catalog.as_deref(), |ui| {
             body(
                 ui,
-                "Import your Lightroom Classic catalog to keep folders, ratings, flags, \
-                 labels, keywords and edits. Your .lrcat is only read, and photos stay \
-                 where they are.",
+                "导入 Lightroom Classic 图库，保留文件夹、评分、旗标、标签、关键词和编辑。只读取 .lrcat 文件，照片保留在原位置。",
             );
             ui.add_space(12.);
             ui.horizontal(|ui| {
                 ui.add_enabled_ui(!busy, |ui| {
-                    if primary(ui, "Import Lightroom catalog…").clicked() {
+                    if primary(ui, "导入 Lightroom 图库…").clicked() {
                         self.catalog_dialog(CatalogDialog::ImportLightroom, ctx);
                     }
-                    if secondary(ui, "New empty catalog…").clicked() {
+                    if secondary(ui, "新建空图库…").clicked() {
                         self.catalog_dialog(CatalogDialog::Create, ctx);
                     }
-                    if secondary(ui, "Open RAWmakase catalog…").clicked() {
+                    if secondary(ui, "打开 MyAIRAW 图库…").clicked() {
                         self.catalog_dialog(CatalogDialog::Open, ctx);
                     }
                 });
@@ -331,10 +329,7 @@ impl Editor {
                 ui.add_space(10.);
                 ui.horizontal(|ui| {
                     ui.add(egui::Spinner::new().size(12.).color(palette.gray(170)));
-                    hint(
-                        ui,
-                        &format!("{work} This can take a few minutes for a large catalog."),
-                    );
+                    hint(ui, &format!("{work} 大型图库可能需要几分钟。"));
                 });
             }
         });
@@ -354,12 +349,10 @@ impl Editor {
             .cloned()
             .collect::<Vec<_>>()
             .join(", ");
-        step(ui, 2, "Camera profiles", None, |ui| {
+        step(ui, 2, "相机配置文件", None, |ui| {
             body(
                 ui,
-                "Profiles set the starting look, such as Adobe Color. Choose a folder \
-                 and RAWmakase imports the .dcp profiles and .xmp looks in it and its \
-                 subfolders.",
+                "配置文件决定初始色彩，例如 Adobe Color。选择文件夹后，MyAIRAW 会导入其中及子文件夹内的 .dcp 配置和 .xmp 风格。",
             );
             ui.add_space(10.);
             let shared = shared_camera_raw();
@@ -368,36 +361,33 @@ impl Editor {
                 location(ui, "Adobe", &pretty_path(&shared.join("CameraProfiles")));
             }
             if let Some(user) = &user {
-                location(ui, "Yours", &pretty_path(&user.join("CameraProfiles")));
+                location(ui, "你的文件", &pretty_path(&user.join("CameraProfiles")));
             }
             ui.add_space(8.);
             if scanning && (shared.is_some() || user.is_some()) {
-                looking(ui, "Looking for profiles for your cameras…");
+                looking(ui, "正在查找相机配置文件…");
             } else {
                 hint(
                     ui,
                     &if shared.is_none() && user.is_none() {
-                        "Lightroom keeps them in CameraRaw/CameraProfiles, under \
-                     /Library/Application Support/Adobe on a Mac and C:\\ProgramData\\Adobe \
-                     on Windows. Copy that folder here, or any folder of profiles."
+                        "Lightroom 将其保存在 CameraRaw/CameraProfiles 中，Mac 上位于 /Library/Application Support/Adobe。可选择该文件夹或其他包含配置文件的文件夹。"
                             .to_string()
                     } else if self.onboarding.found.cameras.is_empty() {
                         format!(
-                            "Found {user_profiles} of your profiles. Choose a catalog to also \
-                         find Adobe's profiles and narrow yours to your cameras."
+                            "找到 {user_profiles} 个用户配置。选择图库后，还可查找 Adobe 配置并筛选对应相机。"
                         )
                     } else if adobe + user_profiles == 0 {
-                        format!("No profiles found for {cameras}.")
+                        format!("未找到适用于 {cameras} 的配置文件。")
                     } else {
                         format!(
-                            "Found {adobe} Adobe and {user_profiles} of your profiles for {cameras}"
+                            "已找到适用于 {cameras} 的 {adobe} 个 Adobe 配置和 {user_profiles} 个用户配置"
                         )
                     },
                 );
             }
             ui.add_space(10.);
             let found = (adobe + user_profiles > 0)
-                .then(|| format!("Import {} profiles", adobe + user_profiles));
+                .then(|| format!("导入 {} 个配置文件", adobe + user_profiles));
             if let Some(choice) = import_buttons(ui, found, enabled) {
                 chosen = Some((ImportKind::CameraProfiles, choice));
             }
@@ -414,12 +404,10 @@ impl Editor {
             .cloned()
             .collect::<Vec<_>>()
             .join(", ");
-        step(ui, 3, "Lens profiles", None, |ui| {
+        step(ui, 3, "镜头配置文件", None, |ui| {
             body(
                 ui,
-                "Lens profiles correct distortion and vignetting, like Lightroom's Enable \
-                 Profile Corrections. Choose a folder and RAWmakase imports the .lcp \
-                 profiles in it and its subfolders.",
+                "镜头配置文件可校正畸变和暗角，相当于 Lightroom 的启用配置文件校正。选择文件夹后，MyAIRAW 会导入其中及子文件夹内的 .lcp 文件。",
             );
             ui.add_space(10.);
             let shared = shared_camera_raw();
@@ -428,52 +416,48 @@ impl Editor {
                 location(ui, "Adobe", &pretty_path(&shared.join("LensProfiles")));
             }
             if let Some(user) = &user {
-                location(ui, "Yours", &pretty_path(&user.join("LensProfiles")));
+                location(ui, "你的文件", &pretty_path(&user.join("LensProfiles")));
             }
             ui.add_space(8.);
             if scanning && (shared.is_some() || user.is_some()) {
-                looking(ui, "Looking for lens profiles for your cameras…");
+                looking(ui, "正在查找镜头配置文件…");
             } else {
                 hint(
                     ui,
                     &if shared.is_none() && user.is_none() {
-                        "Lightroom keeps them in CameraRaw/LensProfiles. Adobe's cover thousands \
-                     of lenses; the folders of your camera maker and lens brands are enough."
+                        "Lightroom 将其保存在 CameraRaw/LensProfiles 中。Adobe 提供数千种镜头配置，只需选择你的相机或镜头品牌文件夹。"
                             .to_string()
                     } else if self.onboarding.found.makers.is_empty() {
-                        "Choose a catalog to find lens profiles for your cameras.".to_string()
+                        "请选择图库，以便查找对应相机的镜头配置。".to_string()
                     } else if lenses == 0 {
-                        format!("No lens profiles found for {makers}.")
+                        format!("未找到适用于 {makers} 的镜头配置。")
                     } else {
-                        format!("Found {lenses} lens profiles for {makers} and third-party lenses")
+                        format!("找到 {lenses} 个适用于 {makers} 及第三方镜头的配置")
                     },
                 );
             }
             ui.add_space(10.);
-            let found = (lenses > 0).then(|| format!("Import {lenses} lens profiles"));
+            let found = (lenses > 0).then(|| format!("导入 {lenses} 个镜头配置"));
             if let Some(choice) = import_buttons(ui, found, enabled) {
                 chosen = Some((ImportKind::LensProfiles, choice));
             }
         });
 
-        step(ui, 4, "Presets", None, |ui| {
+        step(ui, 4, "预设", None, |ui| {
             body(
                 ui,
-                "Your Lightroom develop presets are .xmp files. Choose a folder and \
-                 RAWmakase imports the presets in it and its subfolders, keeping their \
-                 groups. Presets that need something RAWmakase lacks still appear and \
-                 apply what they can.",
+                "Lightroom 显影预设为 .xmp 文件。选择文件夹后，MyAIRAW 会导入其中及子文件夹内的预设并保留分组；部分不支持的设置会保留记录，支持的部分仍可应用。",
             );
             ui.add_space(10.);
             if let Some(user) = user_camera_raw() {
-                location(ui, "Yours", &pretty_path(&user.join("Settings")));
+                location(ui, "你的文件", &pretty_path(&user.join("设置")));
             }
             if presets > 0 {
                 ui.add_space(8.);
-                hint(ui, &format!("{presets} presets already in RAWmakase."));
+                hint(ui, &format!("MyAIRAW 中已有 {presets} 个预设。"));
             }
             ui.add_space(10.);
-            let found = (found > 0).then(|| format!("Import {found} presets"));
+            let found = (found > 0).then(|| format!("导入 {found} 个预设"));
             if let Some(choice) = import_buttons(ui, found, enabled) {
                 chosen = Some((ImportKind::Presets, choice));
             }
@@ -492,7 +476,7 @@ impl Editor {
                         // The folder rather than its files, to skip Defaults and
                         // keep preset folders.
                         ImportKind::Presets => user_camera_raw()
-                            .map(|user| vec![user.join("Settings")])
+                            .map(|user| vec![user.join("设置")])
                             .unwrap_or_default(),
                     };
                     self.import(kind, paths, ctx);
@@ -509,11 +493,11 @@ impl Editor {
             }
         }
 
-        step(ui, 5, "Good to know", None, |ui| {
+        step(ui, 5, "使用须知", None, |ui| {
             for line in [
-                "AI and color-range masks aren't rendered yet; they stay in the catalog.",
-                "Export presets, watermarks and plug-ins don't carry over.",
-                "Calibrated display? Set it in Develop under Settings › Monitor Profile.",
+                "部分 AI 和颜色范围蒙版尚不支持渲染，但会保留在图库中。",
+                "Lightroom 的导出预设、水印和插件不会一同导入。",
+                "已校准显示器？请在偏好设置 › 显示中选择显示器 ICC 配置文件。",
             ] {
                 body(ui, line);
                 ui.add_space(4.);
@@ -538,22 +522,22 @@ impl Editor {
                 .add_enabled(
                     has_catalog,
                     egui::Button::new(
-                        egui::RichText::new("Start")
+                        egui::RichText::new("开始使用")
                             .size(14.)
                             .color(palette.on_accent()),
                     )
                     .fill(palette.accent())
                     .min_size(Vec2::new(120., 34.)),
                 )
-                .on_disabled_hover_text("Choose a catalog first")
+                .on_disabled_hover_text("请先选择图库")
                 .clicked()
             {
                 self.finish_onboarding(true);
             }
             ui.add_space(8.);
             if ui
-                .add(egui::Button::new(egui::RichText::new("Skip for now").size(13.)).frame(false))
-                .on_hover_text("Reopen it any time from the catalog menu › Setup assistant")
+                .add(egui::Button::new(egui::RichText::new("暂时跳过").size(13.)).frame(false))
+                .on_hover_text("可随时从图库菜单 › 设置向导重新打开")
                 .clicked()
             {
                 self.finish_onboarding(has_catalog);
@@ -755,17 +739,17 @@ fn import_buttons(ui: &mut egui::Ui, found: Option<String>, enabled: bool) -> Op
                 choice = Some(Choice::Found);
             }
             let folder = if found.is_some() {
-                secondary(ui, "Choose folder…")
+                secondary(ui, "选择文件夹…")
             } else {
-                primary(ui, "Choose folder…")
+                primary(ui, "选择文件夹…")
             };
             if folder
-                .on_hover_text("Imports every file in the folder and its subfolders")
+                .on_hover_text("导入文件夹及全部子文件夹中的文件")
                 .clicked()
             {
                 choice = Some(Choice::Folder);
             }
-            if secondary(ui, "Choose files…").clicked() {
+            if secondary(ui, "选择文件…").clicked() {
                 choice = Some(Choice::Files);
             }
         });

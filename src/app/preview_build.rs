@@ -38,10 +38,10 @@ pub(super) const DEFAULT_STANDARD_SIZE: u32 = 2048;
 /// Preferences > Automatically Discard 1:1 Previews: the choices, in days
 /// unused, as Lightroom offers them; `None` is Never.
 pub(super) const DISCARD_CHOICES: [(Option<u32>, &str); 4] = [
-    (Some(1), "After One Day"),
-    (Some(7), "After One Week"),
-    (Some(30), "After 30 Days"),
-    (None, "Never"),
+    (Some(1), "一天后"),
+    (Some(7), "一周后"),
+    (Some(30), "30 天后"),
+    (None, "从不"),
 ];
 pub(super) const DEFAULT_DISCARD_DAYS: Option<u32> = Some(30);
 /// The longest side a JPEG can hold.
@@ -125,7 +125,7 @@ fn build_one(
     cancel: &AtomicBool,
 ) -> Outcome {
     let Some(cache) = cache else {
-        return Outcome::Failed("the preview cache can't be opened".into());
+        return Outcome::Failed("无法打开预览缓存".into());
     };
     if cache
         .sized_fresh(&item.path, &item.identity, item.kind, item.edge)
@@ -149,9 +149,7 @@ fn build_one(
         return Outcome::Cancelled;
     }
     if image.width().max(image.height()) > JPEG_LIMIT {
-        return Outcome::Failed(format!(
-            "it is larger than a preview can be ({JPEG_LIMIT} pixels a side)"
-        ));
+        return Outcome::Failed(format!("尺寸超过预览上限（每边 {JPEG_LIMIT} 像素）"));
     }
     if let Err(e) = cache.store_sized(
         &item.path,
@@ -161,7 +159,7 @@ fn build_one(
         item.edge,
         &image,
     ) {
-        return Outcome::Failed(format!("it could not be kept: {e:#}"));
+        return Outcome::Failed(format!("无法保留：{e:#}"));
     }
     // Recorded again with the row: an automatic discard that ran while this
     // waited may have forgotten the request.
@@ -189,7 +187,7 @@ fn thumbnail(image: &image::RgbImage) -> image::RgbImage {
 /// back to the defaults), Upright completed, then a cancellable render.
 pub(super) fn render(item: &Item, cancel: &AtomicBool) -> anyhow::Result<image::RgbImage> {
     let raw = crate::photo::open(&item.path)
-        .with_context(|| format!("{} can't be read", item.path.display()))?;
+        .with_context(|| format!("无法读取 {}", item.path.display()))?;
     let (profiles, _) = crate::camera_profiles::installed(&raw.metadata);
     let mut recipe = item_recipe(item, &raw.metadata, &profiles)?;
     let image = if needs_full(&recipe, &raw.metadata, item.edge) {
@@ -197,7 +195,7 @@ pub(super) fn render(item: &Item, cancel: &AtomicBool) -> anyhow::Result<image::
     } else {
         raw.develop(Decode::Half, cancel)?
     };
-    ensure!(!cancel.load(Ordering::Relaxed), "Cancelled");
+    ensure!(!cancel.load(Ordering::Relaxed), "已取消");
     develop(&mut recipe, &image, item.edge, cancel)
 }
 
@@ -219,7 +217,7 @@ fn develop(
 ) -> anyhow::Result<image::RgbImage> {
     crate::develop::upright::complete(recipe, image);
     let out = crate::develop::render_cancellable(image, &recipe.checked()?, edge, cancel)?;
-    image::RgbImage::from_raw(out.width, out.height, out.rgb8()).context("Invalid preview size")
+    image::RgbImage::from_raw(out.width, out.height, out.rgb8()).context("预览尺寸无效")
 }
 
 /// Whether the photo needs its full-size decode for `edge`: the half-size one,
@@ -342,7 +340,7 @@ impl Builder {
                     // The cache may have been left mid-write.
                     cache = PreviewCache::open(&cache_path).ok();
                     let message = crate::app::worker::panic_message(&*panic);
-                    Outcome::Failed(format!("stopped unexpectedly: {message}"))
+                    Outcome::Failed(format!("意外停止：{message}"))
                 });
                 let finished = Finished { item, outcome };
                 worker.finish(&finished);
@@ -363,12 +361,7 @@ impl Builder {
     /// place, and one being built queues behind itself. Returns how many were
     /// added.
     pub(super) fn submit(&self, items: Vec<Item>) -> usize {
-        let added = self
-            .shared
-            .state
-            .lock()
-            .expect("preview builds")
-            .enqueue(items);
+        let added = self.shared.state.lock().expect("预览生成").enqueue(items);
         self.shared.wake.notify_one();
         added
     }
@@ -376,7 +369,7 @@ impl Builder {
     /// Stops the build under way if it is of `kind` (and of one of `photos`,
     /// when given); the others carry on.
     fn cancel_running(&self, photos: Option<&[PhotoId]>, kind: PreviewKind) {
-        let mut state = self.shared.state.lock().expect("preview builds");
+        let mut state = self.shared.state.lock().expect("预览生成");
         if state.running.is_some_and(|(photo, running)| {
             running == kind && photos.is_none_or(|p| p.contains(&photo))
         }) {
@@ -388,7 +381,7 @@ impl Builder {
     /// Queues `expire` in place of any expiry not run yet, which an earlier
     /// setting asked for; `None` (Never) only removes those.
     fn replace_expiry(&self, expire: Option<Op>) {
-        let mut state = self.shared.state.lock().expect("preview builds");
+        let mut state = self.shared.state.lock().expect("预览生成");
         state.ops.retain(|op| !matches!(op, Op::Expire(..)));
         state.ops.extend(expire);
         drop(state);
@@ -399,7 +392,7 @@ impl Builder {
         self.shared
             .state
             .lock()
-            .expect("preview builds")
+            .expect("预览生成")
             .ops
             .push_back(op);
         self.shared.wake.notify_one();
@@ -408,7 +401,7 @@ impl Builder {
     /// Cancel: nothing waiting starts, and the photo being built stops without
     /// storing anything.
     pub(super) fn cancel(&self) {
-        let mut state = self.shared.state.lock().expect("preview builds");
+        let mut state = self.shared.state.lock().expect("预览生成");
         let dropped = state.waiting.len();
         state.waiting.clear();
         // A refresh not yet looked at, or being looked at, would queue builds again.
@@ -422,7 +415,7 @@ impl Builder {
     /// Drops the builds not started of `photos` (all of them when `None`), of
     /// `kinds`.
     fn drop_waiting(&self, photos: Option<&[PhotoId]>, kinds: &[PreviewKind]) {
-        let mut state = self.shared.state.lock().expect("preview builds");
+        let mut state = self.shared.state.lock().expect("预览生成");
         let before = state.waiting.len();
         state.waiting.retain(|item| {
             !(kinds.contains(&item.kind) && photos.is_none_or(|p| p.contains(&item.photo)))
@@ -440,17 +433,12 @@ impl Builder {
     }
 
     pub(super) fn progress(&self) -> Progress {
-        self.shared
-            .state
-            .lock()
-            .expect("preview builds")
-            .progress
-            .clone()
+        self.shared.state.lock().expect("预览生成").progress.clone()
     }
 
     /// A finished report is put away; a running one stays.
     fn dismiss(&self) {
-        let mut state = self.shared.state.lock().expect("preview builds");
+        let mut state = self.shared.state.lock().expect("预览生成");
         if !state.progress.running() {
             state.progress = Progress::default();
         }
@@ -706,10 +694,7 @@ impl Editor {
             // Unsaved, the build would show the open photo's edit as last saved.
             && !self.flush()
         {
-            return Err(format!(
-                "the open photo's edit could not be saved: {}",
-                self.status
-            ));
+            return Err(format!("无法保存当前照片的编辑：{}", self.status));
         }
         let (items, skipped) = self.build_items(ids, kind, Files::Check)?;
         let catalog = self
@@ -781,7 +766,7 @@ impl Editor {
             .session
             .catalog
             .photo_records(&photo_ids)
-            .map_err(|e| format!("The catalog could not be read: {e:#}"))?;
+            .map_err(|e| format!("无法读取图库：{e:#}"))?;
         let edge = self.preview_builds.edge(kind);
         let items = chosen
             .into_iter()
@@ -844,7 +829,7 @@ impl Editor {
     pub(super) fn build_previews_from_menu(&mut self, ids: &[PhotoId], kind: PreviewKind) {
         self.status = match self.build_previews(ids, kind) {
             Ok(queued) => queued_message(queued),
-            Err(e) => format!("Previews not built: {e}"),
+            Err(e) => format!("未生成预览：{e}"),
         };
     }
 
@@ -871,10 +856,7 @@ impl Editor {
         } else {
             "previews"
         };
-        self.status = format!(
-            "Discarded the {which} of {}",
-            plural(ids.len(), "photo", "photos")
-        );
+        self.status = format!("已丢弃 {} 的{which}", plural(ids.len(), "photo", "photos"));
     }
 
     /// A photo leaving the catalog takes its requests along, so a later photo
@@ -939,7 +921,7 @@ impl Editor {
                     // The worker is gone: nothing more will finish.
                     builds.builder = None;
                     builds.catalog = None;
-                    self.status = "Previews stopped being built".into();
+                    self.status = "已停止生成预览".into();
                     break;
                 }
             }
@@ -987,7 +969,7 @@ impl Editor {
                 return;
             }
             let line = egui::RichText::new(format!(
-                "{} could not be built",
+                "无法生成 {}",
                 plural(progress.failed.len(), "preview", "previews")
             ))
             .size(11.)
@@ -1014,7 +996,7 @@ impl Editor {
         painter.text(
             egui::pos2(rect.left(), rect.top() + 7.),
             egui::Align2::LEFT_CENTER,
-            format!("Building previews {current} / {}", progress.total),
+            format!("正在生成预览 {current} / {}", progress.total),
             egui::FontId::proportional(11.),
             palette.gray(190),
         );
@@ -1035,7 +1017,7 @@ impl Editor {
         );
         let cancel = ui
             .interact(close, ui.id().with("cancel-preview-build"), Sense::click())
-            .on_hover_text("Stop building previews");
+            .on_hover_text("停止生成预览");
         let color = palette.gray(if cancel.hovered() { 235 } else { 150 });
         crate::app::icons::paint_at(
             ui.painter(),
@@ -1055,12 +1037,12 @@ impl Editor {
 /// "Building 12 previews · 3 skipped (offline or not RAW)".
 pub(super) fn queued_message(queued: Queued) -> String {
     let mut line = match queued.queued {
-        0 => "No previews to build".to_string(),
-        n => format!("Building {}", plural(n, "preview", "previews")),
+        0 => "没有需要生成的预览".to_string(),
+        n => format!("正在生成 {}", plural(n, "preview", "previews")),
     };
     if queued.skipped > 0 {
         line.push_str(&format!(
-            " · {} skipped (offline or not a RAW file)",
+            " · 已跳过 {} 张（离线或不是 RAW 文件）",
             queued.skipped
         ));
     }

@@ -33,9 +33,9 @@ pub(super) enum Feature {
 impl Feature {
     pub(super) fn name(self) -> &'static str {
         match self {
-            Self::Subject => "Subject",
-            Self::Sky => "Sky",
-            Self::Background => "Background",
+            Self::Subject => "主体",
+            Self::Sky => "天空",
+            Self::Background => "背景",
         }
     }
     fn invert(self) -> bool {
@@ -102,9 +102,9 @@ pub(crate) enum Failure {
 impl Failure {
     fn message(&self) -> String {
         match self {
-            Self::Cancelled => "Cancelled".into(),
-            Self::NoSubject => "No person or animal found".into(),
-            Self::NoSky => "No sky found".into(),
+            Self::Cancelled => "已取消".into(),
+            Self::NoSubject => "未找到人物或动物".into(),
+            Self::NoSky => "未找到天空".into(),
             Self::NothingThere => "Nothing selected there; click on the subject itself".into(),
             Self::ModelMissing => "The selection model is not installed".into(),
             Self::RuntimeUnavailable(why) => format!("Selection is unavailable here: {why}"),
@@ -337,13 +337,13 @@ impl Editor {
     /// Why Subject and Background cannot be made now, for the drawer to say.
     pub(super) fn selection_unavailable(&self) -> Option<&'static str> {
         if self.library.is_none() || self.document.catalog_photo.is_none() {
-            return Some("Add this photo to a catalog to use AI masks");
+            return Some("将照片加入图库后可使用 AI 蒙版");
         }
         if self.document.full().is_none() {
-            return Some("Available once the photo has finished developing");
+            return Some("照片显影完成后可用");
         }
         if self.document.edit.save_state().is_protected() {
-            return Some("This edit is protected and cannot be changed here");
+            return Some("此编辑已受保护，无法在此修改");
         }
         None
     }
@@ -548,7 +548,7 @@ impl Editor {
         self.context.request_repaint();
         self.status = match &action {
             Action::Auto(feature) => format!("Finding the {}…", feature.name().to_lowercase()),
-            Action::Click(_) => "Selecting…".into(),
+            Action::Click(_) => "正在选择…".into(),
         };
         let (generation, cancel) = self.selection.task.start();
         let recipe = self.document.edit.recipe().clone();
@@ -573,7 +573,7 @@ impl Editor {
     pub(super) fn cancel_selection(&mut self) {
         self.context.request_repaint();
         self.selection.cancel();
-        self.status = "Selection cancelled".into();
+        self.status = "选择已取消".into();
     }
     /// A selection finished: apply it if it is still the one wanted and the edit it
     /// was made for still stands, else drop it.
@@ -638,8 +638,8 @@ impl Editor {
             source: Some(generated.source),
         });
         let name = match request.target {
-            Target::Regenerate { .. } => format!("Refine {}", request.feature.name()),
-            _ => format!("Select {}", request.feature.name()),
+            Target::Regenerate { .. } => format!("细化{}", request.feature.name()),
+            _ => format!("选择{}", request.feature.name()),
         };
         let selected = self.change_edit(
             Some(super::history::Step::new(name, "")),
@@ -723,7 +723,7 @@ impl Editor {
     pub(super) fn model_installed(&mut self, result: Result<(), String>) {
         match result {
             Ok(()) => {
-                self.status = "Selection model installed".into();
+                self.status = "选区模型已安装".into();
                 if let Some(Prompt::Model(request)) = self.selection.prompt.take() {
                     self.request_selection(request);
                 }

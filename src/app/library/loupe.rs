@@ -279,7 +279,7 @@ fn stored(path: &std::path::Path, identity: &str) -> anyhow::Result<image::RgbIm
         Some(image) => Ok(image),
         None => cache
             .load_sized(path, identity, PreviewKind::OneToOne)?
-            .ok_or_else(|| anyhow::anyhow!("No stored preview")),
+            .ok_or_else(|| anyhow::anyhow!("无缓存预览")),
     }
 }
 fn key(photo: &Photo, edge: u32) -> Key {
@@ -313,8 +313,10 @@ impl Library {
     /// The offline RAW the Loupe shows, which a stored preview can stand in for.
     pub(in crate::app) fn loupe_offline_raw(&self) -> Option<PhotoId> {
         let photo = self.selection.active.and_then(|id| self.photo(id))?;
-        (self.loupe.open && crate::storage::is_raw(&photo.path) && !self.is_available(&photo.path))
-            .then_some(photo.id)
+        (self.loupe.open
+            && crate::storage::is_editable(&photo.path)
+            && !self.is_available(&photo.path))
+        .then_some(photo.id)
     }
     /// The identity of the stored preview the Loupe shows for an offline RAW.
     pub(in crate::app) fn set_loupe_stored(&mut self, stored: Option<(PhotoId, String)>) {
@@ -325,8 +327,19 @@ impl Library {
     }
     pub(crate) fn loupe_develops(&self) -> Option<PhotoId> {
         let photo = self.selection.active.and_then(|id| self.photo(id))?;
-        (self.loupe.open && crate::storage::is_raw(&photo.path) && self.is_available(&photo.path))
+        (self.loupe.open && self.loupe_uses_develop(photo) && self.is_available(&photo.path))
             .then_some(photo.id)
+    }
+    fn loupe_uses_develop(&self, photo: &Photo) -> bool {
+        crate::storage::is_raw(&photo.path)
+            || (crate::storage::is_editable(&photo.path)
+                && self
+                    .session
+                    .catalog
+                    .edit_texts(photo.id)
+                    .map_or(true, |(saved, lightroom)| {
+                        saved.is_some() || lightroom.is_some()
+                    }))
     }
     /// The zoom level at which the photo in the Loupe's own view fits, for
     /// stepping through the levels from it.
@@ -442,7 +455,7 @@ impl Library {
                     .and_then(|n| self.photo(n).cloned())
                 && self.is_available(&next.path)
                 // A RAW opens through Develop's pipeline, which prefetches it.
-                && !crate::storage::is_raw(&next.path)
+                && !self.loupe_uses_develop(&next)
             {
                 self.loupe.prepare_ahead(&next, edge);
             }
@@ -568,7 +581,7 @@ impl Library {
         let note = match (&self.loupe.state, available, texture.is_some()) {
             _ if zoom.on && stored.is_some() => match &self.loupe.regions.error {
                 Some(e) => format!("Zoom unavailable offline: {e}"),
-                None if self.loupe.regions.pending || full.is_none() => "Loading…".into(),
+                None if self.loupe.regions.pending || full.is_none() => "正在加载…".into(),
                 None => "Offline: showing the 1:1 preview".into(),
             },
             (_, false, true) => {
@@ -579,8 +592,8 @@ impl Library {
                 "Zoom unavailable: {}",
                 self.loupe.regions.error.clone().unwrap_or_default()
             ),
-            _ if zoom.on && (self.loupe.regions.pending || full.is_none()) => "Loading…".into(),
-            (State::Loading, ..) => "Loading…".into(),
+            _ if zoom.on && (self.loupe.regions.pending || full.is_none()) => "正在加载…".into(),
+            (State::Loading, ..) => "正在加载…".into(),
             (State::Ready, ..) => String::new(),
             (State::Failed(e), ..) => format!("Preview unavailable: {e}"),
         };

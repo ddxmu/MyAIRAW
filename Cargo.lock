@@ -1297,7 +1297,6 @@ dependencies = [
 [[package]]
 name = "fastframe-update"
 version = "0.1.7"
-source = "git+https://github.com/crmne/fastframe?tag=v0.1.7#9cb28309097ef313ca38570e4d9d53faed92bdd1"
 dependencies = [
  "anyhow",
  "ring",
@@ -3245,7 +3244,7 @@ dependencies = [
 
 [[package]]
 name = "rawmakase"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -3268,6 +3267,7 @@ dependencies = [
  "midir",
  "objc2 0.6.4",
  "objc2-app-kit 0.3.2",
+ "objc2-foundation 0.3.2",
  "pollster 1.0.1",
  "rawmakase-catalog",
  "rawmakase-ctl",

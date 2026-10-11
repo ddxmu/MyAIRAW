@@ -115,7 +115,7 @@ fn a_selection_becomes_one_named_mask_and_one_history_step() {
     ));
     let masks = &e.document.edit.recipe().masks;
     assert_eq!(masks.len(), 1);
-    assert_eq!(masks[0].name, "Subject");
+    assert_eq!(masks[0].name, "主体");
     assert!(masks[0].adjust.is_neutral());
     let MaskShape::Bitmap(b) = &masks[0].components[0].shape else {
         panic!("not a raster")
@@ -123,10 +123,7 @@ fn a_selection_becomes_one_named_mask_and_one_history_step() {
     assert_eq!((b.width, b.height, b.sampling), (4, 3, BITMAP_SAMPLING));
     assert!(!masks[0].components[0].invert);
     assert_eq!(e.document.edit.history().steps().1, 1);
-    assert_eq!(
-        e.document.edit.history().steps().0[0].name,
-        "Select Subject"
-    );
+    assert_eq!(e.document.edit.history().steps().0[0].name, "选择主体");
     assert_eq!(e.view.masking.selected, Some(0));
     assert!(e.view.masking.overlay);
     assert!(e.document.edit.save_state().needs_save());
@@ -147,12 +144,9 @@ fn background_is_an_inverted_component_not_an_inverted_mask() {
     let g = begin(e, request);
     finish(e, g, Ok(generated(20)));
     let mask = &e.document.edit.recipe().masks[0];
-    assert_eq!(mask.name, "Background");
+    assert_eq!(mask.name, "背景");
     assert!(mask.components[0].invert && !mask.invert);
-    assert_eq!(
-        e.document.edit.history().steps().0[0].name,
-        "Select Background"
-    );
+    assert_eq!(e.document.edit.history().steps().0[0].name, "选择背景");
 }
 
 #[test]
@@ -190,7 +184,7 @@ fn failures_and_cancellation_record_no_edit() {
         e.selection.failure.as_ref().map(|f| &f.1),
         Some(&Failure::NoSubject)
     );
-    assert_eq!(e.status, "No person or animal found");
+    assert_eq!(e.status, "未找到人物或动物");
     assert!(e.selection.running().is_none());
 
     e.selection.failure = None;
@@ -287,7 +281,7 @@ fn a_result_is_not_applied_over_masks_that_changed_meanwhile() {
     e.change_edit(None, |r| {
         r.exposure = 1.;
         r.masks[0].adjust.exposure = 0.5;
-        r.masks[0].name = "Sky".into();
+        r.masks[0].name = "天空".into();
         r.masks[0].hidden = true;
     });
     finish(e, g, Ok(generated(51)));
@@ -299,7 +293,7 @@ fn a_result_is_not_applied_over_masks_that_changed_meanwhile() {
             r.masks[0].adjust.exposure,
             r.masks[0].name.as_str()
         ),
-        (1., 0.5, "Sky")
+        (1., 0.5, "天空")
     );
 }
 
@@ -368,7 +362,7 @@ fn regeneration_replaces_only_the_raster() {
     );
     assert_eq!(
         e.document.edit.history().steps().0.last().unwrap().name,
-        "Refine Subject"
+        "细化主体"
     );
 
     // A failed regeneration leaves the old result in place.
@@ -437,7 +431,7 @@ fn a_selection_needs_a_catalog_an_upgraded_one_and_the_model() {
     e.selection.prompt = None;
     e.request_selection(SUBJECT);
     assert!(e.selection.prompt.is_none());
-    assert_eq!(e.status, "Add this photo to a catalog to use AI masks");
+    assert_eq!(e.status, "将照片加入图库后可使用 AI 蒙版");
 }
 
 #[test]
@@ -631,7 +625,7 @@ fn aiming_starts_with_nothing_and_each_click_refines_the_same_mask() {
     assert_eq!(e.document.edit.recipe().masks.len(), 1);
     assert_eq!(
         e.document.edit.history().steps().0.last().unwrap().name,
-        "Refine Subject"
+        "细化主体"
     );
     // Done ends aiming and leaves the mask; leaving the photo does too.
     e.selection.end_prompting();
@@ -662,7 +656,7 @@ fn sky_is_a_plain_mask_of_its_own_and_background_is_the_inverted_subject() {
     made.source.feature = FEATURE_SKY.into();
     finish(e, g, Ok(made));
     let m = &e.document.edit.recipe().masks[0];
-    assert_eq!(m.name, "Sky");
+    assert_eq!(m.name, "天空");
     assert!(!m.components[0].invert);
     assert_eq!(m.components[0].shape.kind(), "Sky");
     let MaskShape::Bitmap(b) = &m.components[0].shape else {
@@ -670,11 +664,11 @@ fn sky_is_a_plain_mask_of_its_own_and_background_is_the_inverted_subject() {
     };
     assert_eq!(feature_of(b, false), Feature::Sky);
     assert_eq!(feature_of(b, true), Feature::Sky);
-    assert_eq!(e.document.edit.history().steps().0[0].name, "Select Sky");
+    assert_eq!(e.document.edit.history().steps().0[0].name, "选择天空");
     // A photo without sky says so and adds nothing.
     let g = begin(e, sky);
     finish(e, g, Err(Failure::NoSky));
-    assert_eq!(e.status, "No sky found");
+    assert_eq!(e.status, "未找到天空");
     assert_eq!(e.document.edit.recipe().masks.len(), 1);
 }
 

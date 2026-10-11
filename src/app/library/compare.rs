@@ -20,8 +20,8 @@ pub(super) enum Side {
 impl Side {
     fn name(self) -> &'static str {
         match self {
-            Self::Select => "Select",
-            Self::Candidate => "Candidate",
+            Self::Select => "选片",
+            Self::Candidate => "候选",
         }
     }
 }
@@ -377,14 +377,14 @@ impl Library {
             self.view_buttons(ui);
             ui.add_space(12.);
             let two = self.compare.candidate.is_some();
-            if button(ui, "Swap", "Swap the select and the candidate (Down)", two) {
+            if button(ui, "交换", "Swap the select and the candidate (Down)", two) {
                 self.swap_compare();
             }
-            if button(ui, "Make Select", "Make the candidate the select (Up)", two) {
+            if button(ui, "设为选片", "Make the candidate the select (Up)", two) {
                 self.make_select();
             }
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                if button(ui, "Done", "Back to the grid (Esc)", true) {
+                if button(ui, "完成", "返回网格（Esc）", true) {
                     self.close_compare();
                 }
                 ui.label(filter_caption(
@@ -403,7 +403,7 @@ impl Library {
             ui.painter().text(
                 rect.center(),
                 egui::Align2::CENTER_CENTER,
-                "No other photo to compare",
+                "没有其他照片可比较",
                 egui::FontId::proportional(12.),
                 theme::palette(ui.ctx()).gray(120),
             );

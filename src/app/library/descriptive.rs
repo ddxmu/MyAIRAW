@@ -124,10 +124,10 @@ impl Library {
         }
         let place_before = place.clone().unwrap_or_else(|| self.place());
         let what = match &edit {
-            DescriptiveEdit::Text(TextField::Title, _) => "Title",
-            DescriptiveEdit::Text(TextField::Caption, _) => "Caption",
-            DescriptiveEdit::Text(TextField::Copyright, _) => "Copyright",
-            DescriptiveEdit::Creators(_) => "Creator",
+            DescriptiveEdit::Text(TextField::Title, _) => "标题",
+            DescriptiveEdit::Text(TextField::Caption, _) => "说明",
+            DescriptiveEdit::Text(TextField::Copyright, _) => "版权",
+            DescriptiveEdit::Creators(_) => "作者",
             DescriptiveEdit::ClearLocation => "Location cleared",
             DescriptiveEdit::AddKeywords(_) => "Keywords added",
             DescriptiveEdit::RemoveKeyword(_) => "Keyword removed",

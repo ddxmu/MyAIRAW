@@ -600,6 +600,9 @@ impl Recipe {
         recipe.set_color_noise_defaults(crate::model::operators::NoiseModel::Measured);
         recipe.use_camera_baseline(m);
         recipe.reset_white_balance(m);
+        if m.display_referred {
+            recipe.sharpening = 0.;
+        }
         recipe
     }
     pub fn validate(&self) -> Result<()> {

@@ -558,20 +558,20 @@ impl Library {
     /// Creates a virtual copy of `id` and selects it.
     pub(super) fn create_virtual_copy(&mut self, id: PhotoId) -> Result<Committed<PhotoId>> {
         let made = self.session.create_virtual_copy(id)?;
-        if self.listed_after(&made.listed, "Copy made") {
+        if self.listed_after(&made.listed, "已创建副本") {
             self.show(made.value);
             if let Some(p) = self.photo(made.value) {
-                self.message = format!("Created {} of {}", p.copy_name, p.filename);
+                self.message = format!("已创建 {} / {}", p.copy_name, p.filename);
             }
         }
         Ok(made)
     }
     pub(super) fn set_copy_as_master(&mut self, id: PhotoId) -> Result<Committed<()>> {
         let made = self.session.set_copy_as_master(id)?;
-        if self.listed_after(&made.listed, "Master changed") {
+        if self.listed_after(&made.listed, "已更换主副本") {
             self.show(id);
             if let Some(p) = self.photo(id) {
-                self.message = format!("This copy is now the master of {}", p.filename);
+                self.message = format!("此副本现为 {} 的主副本", p.filename);
             }
         }
         Ok(made)
@@ -586,7 +586,7 @@ impl Library {
                 true
             }
             Err(e) => {
-                self.message = format!("{done}, but the catalog could not be read again: {e:#}");
+                self.message = format!("{done}，但无法重新读取图库：{e:#}");
                 false
             }
         }
@@ -604,12 +604,12 @@ impl Library {
         self.screen.forget(id);
         let removed = self.session.remove_virtual_copy(id)?;
         let master = photo.as_ref().and_then(|p| p.master);
-        if self.listed_after(&removed.listed, "Copy removed") {
+        if self.listed_after(&removed.listed, "已移除副本") {
             if let Some(master) = master {
                 self.show(master);
             }
             if let Some(p) = photo {
-                self.message = format!("Removed {} of {}", p.copy_name, p.filename);
+                self.message = format!("已移除 {} / {}", p.copy_name, p.filename);
             }
         }
         Ok(Committed {
@@ -774,13 +774,10 @@ impl Refusal {
     /// The reason in full, with what to do about it.
     pub(in crate::app) fn detail(&self) -> String {
         match self {
-            Self::Offline => {
-                "The photo is offline. Use Locate root folder or right-click its folder to relink it."
-                    .into()
+            Self::Offline => "照片已离线。请定位根文件夹或右键点击文件夹重新关联。".into(),
+            Self::NotRaw(format) => {
+                format!("暂不支持编辑 {format} 格式。支持 RAW、JPG、PNG、TIFF。")
             }
-            Self::NotRaw(format) => format!(
-                "{format} files can be browsed in Library; Develop edits camera RAW files."
-            ),
         }
     }
 }
@@ -798,7 +795,7 @@ pub(in crate::app) struct DevelopSource {
 pub(in crate::app) fn develop_refusal(photo: &Photo, available: bool) -> Option<Refusal> {
     if !available {
         Some(Refusal::Offline)
-    } else if !crate::storage::is_raw(&photo.path) {
+    } else if !crate::storage::is_editable(&photo.path) {
         Some(Refusal::NotRaw(photo.format.clone()))
     } else {
         None

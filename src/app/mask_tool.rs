@@ -33,11 +33,11 @@ pub(super) enum Kind {
 }
 impl Kind {
     const ALL: [(Kind, &'static str, &'static str); 5] = [
-        (Kind::Brush, "Brush", "K"),
-        (Kind::Linear, "Linear Gradient", "M"),
-        (Kind::Radial, "Radial Gradient", "Shift+M"),
-        (Kind::Color, "Color Range", "Shift+J"),
-        (Kind::Luminance, "Luminance Range", ""),
+        (Kind::Brush, "画笔", "K"),
+        (Kind::Linear, "线性渐变", "M"),
+        (Kind::Radial, "径向渐变", "Shift+M"),
+        (Kind::Color, "颜色范围", "Shift+J"),
+        (Kind::Luminance, "明亮度范围", ""),
     ];
 }
 /// Brush settings; Lightroom keeps two sets, A and B, and one for erasing.
@@ -555,10 +555,7 @@ impl Editor {
         ui.add_space(4.);
         self.mask_list(ui);
         let Some(m) = self.selected_mask() else {
-            hint(
-                ui,
-                "Create a mask, or click a pin on the photo to select one. Shift+W closes.",
-            );
+            hint(ui, "创建蒙版，或点击照片上的图钉选择蒙版。Shift+W 关闭。");
             self.masking_done(ui);
             return;
         };
@@ -572,11 +569,11 @@ impl Editor {
     /// Closes the Masking tool, as Lightroom's Done: the masks and their adjustments stay.
     fn masking_done(&mut self, ui: &mut egui::Ui) {
         indented(ui, |ui| {
-            let done = egui::Button::new(egui::RichText::new("Done").strong())
+            let done = egui::Button::new(egui::RichText::new("完成").strong())
                 .fill(egui::Color32::from_rgb(52, 98, 170));
             if ui
                 .add(done)
-                .on_hover_text("Close Masking · Shift+W or Escape")
+                .on_hover_text("关闭蒙版 · Shift+W 或 Esc")
                 .clicked()
             {
                 self.close_masking();
@@ -591,7 +588,7 @@ impl Editor {
     fn create_row(&mut self, ui: &mut egui::Ui) {
         let pending = self.view.masking.pending;
         let palette = theme::palette(ui.ctx());
-        control_label(ui, "Create", |ui| {
+        control_label(ui, "创建", |ui| {
             let w = (ui.available_width() - 4. * 4.) / 5.;
             for (kind, name, key) in Kind::ALL {
                 let active = pending.is_some_and(|p| p.kind == kind && p.op.is_none());
@@ -614,9 +611,9 @@ impl Editor {
                     active || response.hovered(),
                 );
                 let tip = if key.is_empty() {
-                    format!("New {name} mask")
+                    format!("新建{name}蒙版")
                 } else {
-                    format!("New {name} mask · {key}")
+                    format!("新建{name}蒙版 · {key}")
                 };
                 if response
                     .on_hover_text(tip)
@@ -630,15 +627,15 @@ impl Editor {
         // One line, always there, so the panel does not jump when a tool waits for
         // the photo.
         let what = match pending.map(|p| p.kind) {
-            Some(Kind::Linear) => "Drag on the photo to draw the gradient",
-            Some(Kind::Radial) => "Drag on the photo from the centre outward",
-            Some(_) => "Click the photo to pick a colour",
+            Some(Kind::Linear) => "在照片上拖动绘制渐变",
+            Some(Kind::Radial) => "从中心向外拖动绘制",
+            Some(_) => "点击照片选取颜色",
             None => "",
         };
         hint(ui, what);
         indented(ui, |ui| {
-            ui.checkbox(&mut self.view.masking.overlay, "Show Overlay")
-                .on_hover_text("O: the selected mask in red");
+            ui.checkbox(&mut self.view.masking.overlay, "显示叠加")
+                .on_hover_text("O：以红色显示所选蒙版");
         });
     }
     fn mask_list(&mut self, ui: &mut egui::Ui) {
@@ -711,17 +708,11 @@ impl Editor {
                     !mask.hidden,
                     eye_response.hovered(),
                 );
-                if eye_response
-                    .on_hover_text("Show or hide this mask's effect")
-                    .clicked()
-                {
+                if eye_response.on_hover_text("显示或隐藏此蒙版效果").clicked() {
                     self.document.edit.recipe_mut().masks[i].hidden ^= true;
                 } else if response.double_clicked() {
                     self.view.masking.renaming = Some((i, mask.name.clone()));
-                } else if response
-                    .on_hover_text("Click to select · double-click to rename")
-                    .clicked()
-                {
+                } else if response.on_hover_text("点击选择 · 双击重命名").clicked() {
                     select = Some(i);
                 }
             });
@@ -747,8 +738,8 @@ impl Editor {
                         };
                         let invert = if c.invert { " (inverted)" } else { "" };
                         let kind = match &c.shape {
-                            MaskShape::Bitmap(_) if c.shape.kind() == "Subject" && c.invert => {
-                                "Background".to_string()
+                            MaskShape::Bitmap(_) if c.shape.kind() == "主体" && c.invert => {
+                                "背景".to_string()
                             }
                             shape => format!("{}{invert}", shape.kind()),
                         };
@@ -788,9 +779,9 @@ impl Editor {
         indented(ui, |ui| {
             ui.add_space(14.);
             for (op, label) in [
-                (MaskOp::Add, "Add"),
-                (MaskOp::Subtract, "Subtract"),
-                (MaskOp::Intersect, "Intersect"),
+                (MaskOp::Add, "添加"),
+                (MaskOp::Subtract, "减去"),
+                (MaskOp::Intersect, "交集"),
             ] {
                 ui.menu_button(label, |ui| {
                     for (kind, name, _) in Kind::ALL {
@@ -807,14 +798,11 @@ impl Editor {
         });
         indented(ui, |ui| {
             ui.add_space(14.);
-            ui.checkbox(
-                &mut self.document.edit.recipe_mut().masks[i].invert,
-                "Invert",
-            )
-            .on_hover_text("Apply the adjustment outside the mask");
+            ui.checkbox(&mut self.document.edit.recipe_mut().masks[i].invert, "反转")
+                .on_hover_text("将调整应用到蒙版外");
             let full = self.document.edit.recipe().masks.len() >= MAX_GROUPS;
             if ui
-                .add_enabled(!full, egui::Button::new("Duplicate"))
+                .add_enabled(!full, egui::Button::new("复制蒙版"))
                 .clicked()
             {
                 let mut copy = self.document.edit.recipe().masks[i].clone();
@@ -825,8 +813,8 @@ impl Editor {
                 self.view.masking.select(Some(i + 1), Some(0));
             }
             if ui
-                .button("Delete")
-                .on_hover_text("Delete this mask · Delete")
+                .button("删除")
+                .on_hover_text("删除此蒙版 · Delete")
                 .clicked()
             {
                 self.document.edit.recipe_mut().masks.remove(i);
@@ -847,32 +835,29 @@ impl Editor {
         );
         if is_brush {
             let t = &mut self.view.masking;
-            control_label(ui, "Brush", |ui| {
+            control_label(ui, "画笔", |ui| {
                 let w = ui.available_width();
-                segmented(ui, &mut t.brush, &[(0, "A"), (1, "B"), (2, "Erase")], w);
+                segmented(ui, &mut t.brush, &[(0, "A"), (1, "B"), (2, "擦除")], w);
             });
             let b = &mut t.brushes[t.brush];
             let percent = Some((100., 0));
             slider_with(
                 ui,
-                "Size",
+                "大小",
                 &mut b.size,
                 0.002..=0.5,
                 0.03,
                 Some((1000., 0)),
                 None,
             );
-            slider_with(ui, "Feather", &mut b.feather, 0. ..=1., 0.5, percent, None);
-            slider_with(ui, "Flow", &mut b.flow, 0. ..=1., 1., percent, None);
-            slider_with(ui, "Density", &mut b.density, 0. ..=1., 1., percent, None);
+            slider_with(ui, "羽化", &mut b.feather, 0. ..=1., 0.5, percent, None);
+            slider_with(ui, "流量", &mut b.flow, 0. ..=1., 1., percent, None);
+            slider_with(ui, "密度", &mut b.density, 0. ..=1., 1., percent, None);
             indented(ui, |ui| {
-                ui.checkbox(&mut b.auto_mask, "Auto Mask")
-                    .on_hover_text("Keep the brush within areas like the colour under its centre");
+                ui.checkbox(&mut b.auto_mask, "自动蒙版")
+                    .on_hover_text("将画笔限制在与中心颜色相似的区域");
             });
-            hint(
-                ui,
-                "Drag to paint · Option/Alt erases · [ ] size · / switches A and B",
-            );
+            hint(ui, "拖动绘制 · Option/Alt 擦除 · [ ] 调整大小 · / 切换 A/B");
         }
         let generated = match &self.document.edit.recipe().masks[m].components[c] {
             MaskComponent {
@@ -892,14 +877,14 @@ impl Editor {
         let component = &mut self.document.edit.recipe_mut().masks[m].components[c];
         match &mut component.shape {
             MaskShape::Radial { feather, .. } => {
-                slider_with(ui, "Feather", feather, 0. ..=1., 0.5, percent, None);
+                slider_with(ui, "羽化", feather, 0. ..=1., 0.5, percent, None);
                 hint(
                     ui,
                     "Drag the centre to move it, the edge handles to size and turn it",
                 );
             }
             MaskShape::ColorRange { amount, samples } => {
-                slider_with(ui, "Refine", amount, 0. ..=1., 0.5, percent, None);
+                slider_with(ui, "微调", amount, 0. ..=1., 0.5, percent, None);
                 let text = format!(
                     "{} sampled · click the photo to pick again, Shift-click adds",
                     samples.len()
@@ -907,30 +892,22 @@ impl Editor {
                 hint(ui, &text);
             }
             MaskShape::LuminanceRange { low, high, falloff } => {
-                slider_with(ui, "Range Low", low, 0. ..=1., 0.5, percent, None);
-                slider_with(ui, "Range High", high, 0. ..=1., 1., percent, None);
+                slider_with(ui, "范围下限", low, 0. ..=1., 0.5, percent, None);
+                slider_with(ui, "范围上限", high, 0. ..=1., 1., percent, None);
                 slider_with(
                     ui,
-                    "Falloff Low",
+                    "过渡下限",
                     &mut falloff[0],
                     0. ..=1.,
                     0.15,
                     percent,
                     None,
                 );
-                slider_with(
-                    ui,
-                    "Falloff High",
-                    &mut falloff[1],
-                    0. ..=1.,
-                    0.,
-                    percent,
-                    None,
-                );
+                slider_with(ui, "过渡上限", &mut falloff[1], 0. ..=1., 0., percent, None);
                 if *low > *high {
                     std::mem::swap(low, high);
                 }
-                hint(ui, "Click the photo to select tones like the one there");
+                hint(ui, "点击照片选择相似明亮度");
             }
             MaskShape::Linear { .. } => hint(
                 ui,
@@ -941,11 +918,8 @@ impl Editor {
         }
         let mut remove = false;
         indented(ui, |ui| {
-            ui.checkbox(&mut component.invert, "Invert component");
-            remove = ui
-                .button("Remove")
-                .on_hover_text("Remove this part of the mask")
-                .clicked();
+            ui.checkbox(&mut component.invert, "反转分量");
+            remove = ui.button("移除").on_hover_text("移除此蒙版分量").clicked();
         });
         if remove {
             let mask = &mut self.document.edit.recipe_mut().masks[m];
@@ -966,7 +940,7 @@ impl Editor {
         set_edit_context(ui, &format!("{}:", mask_name(mask, m)));
         slider_with(
             ui,
-            "Amount",
+            "数量",
             &mut mask.amount,
             0. ..=2.,
             1.,
@@ -983,8 +957,8 @@ impl Editor {
         ui.add_space(4.);
         indented(ui, |ui| {
             if ui
-                .button("Reset Sliders")
-                .on_hover_text("Set this mask's adjustments back to zero")
+                .button("重置滑块")
+                .on_hover_text("将此蒙版调整恢复为零")
                 .clicked()
             {
                 *a = LocalAdjust::default();
@@ -1007,7 +981,7 @@ const LOCAL_GROUPS: [&[LocalParameterId]; 6] = {
 /// "Mask 2", or the name the user gave it.
 fn mask_name(m: &MaskGroup, i: usize) -> String {
     if m.name.is_empty() {
-        format!("Mask {}", i + 1)
+        format!("蒙版 {}", i + 1)
     } else {
         m.name.clone()
     }

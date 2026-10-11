@@ -172,7 +172,7 @@ impl Editor {
         }
         self.panels.set(self.module, next);
         if let Err(e) = self.save_session() {
-            self.status = format!("Panel layout not saved: {e:#}");
+            self.status = format!("无法保存面板布局：{e:#}");
         }
         true
     }
@@ -294,8 +294,8 @@ fn edge_arrow(ui: &mut egui::Ui, panel: WorkspacePanel, visibility: Visibility) 
         WorkspacePanel::Filmstrip => ("the filmstrip", "F6"),
     };
     let verb = match visibility {
-        Visibility::Shown => "Hide",
-        Visibility::Hidden => "Show",
+        Visibility::Shown => "隐藏",
+        Visibility::Hidden => "显示",
     };
     response
         .on_hover_cursor(egui::CursorIcon::PointingHand)

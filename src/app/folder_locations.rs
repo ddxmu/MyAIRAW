@@ -122,13 +122,13 @@ impl Editor {
             .preferences
             .locations
             .get_or_insert_with(|| LocationsView::load(&library.session.catalog, &ctx));
-        group(ui, "Folder locations");
+        group(ui, "文件夹位置");
         if let Some(error) = &view.error {
             form_row(ui, "", |ui| hint(ui, error));
             return;
         }
         let mut renamed = false;
-        form_row(ui, "This computer", |ui| {
+        form_row(ui, "本机", |ui| {
             let field = ui.add(egui::TextEdit::singleline(&mut view.computer).desired_width(220.));
             view.computer_dirty |= field.changed();
             renamed = field.lost_focus();
@@ -136,8 +136,7 @@ impl Editor {
         form_row(ui, "", |ui| {
             hint(
                 ui,
-                "Each computer keeps its own location for the catalog's folders. \
-                 Changing one here never moves them on another computer.",
+                "每台电脑分别记录图库文件夹的位置。在此更改不会移动其他电脑上的文件夹。",
             );
         });
         let found = view.found.lock().unwrap().clone();
@@ -164,7 +163,7 @@ impl Editor {
                 .show(ui, |ui| {
                     ui.set_width(ui.available_width());
                     let note = if root.location.is_some() {
-                        "Located on this computer".to_string()
+                        "已在本机定位".to_string()
                     } else {
                         "Where it was added; not located on this computer".to_string()
                     };
@@ -233,7 +232,7 @@ impl Editor {
                 });
         }
         if view.roots.is_empty() {
-            form_row(ui, "", |ui| hint(ui, "No folders yet."));
+            form_row(ui, "", |ui| hint(ui, "尚无文件夹。"));
         }
         gap(ui);
         if renamed {
@@ -311,13 +310,13 @@ impl Editor {
                 let Some(choice) = confirm_modal(
                     ctx,
                     "folder-overrides",
-                    "Keep the folders located separately?",
+                    "保留文件夹的单独位置？",
                     &detail,
                     false,
                     &[
-                        ("Cancel", None),
-                        ("Clear Overrides", Some(Overrides::Clear)),
-                        ("Keep Overrides", Some(Overrides::Keep)),
+                        ("取消", None),
+                        ("清除单独位置", Some(Overrides::Clear)),
+                        ("保留单独位置", Some(Overrides::Keep)),
                     ],
                     None,
                 ) else {
@@ -377,7 +376,7 @@ impl Editor {
                         }
                     })
                     .collect();
-                let mut buttons: Vec<(&str, Option<usize>)> = vec![("Cancel", None)];
+                let mut buttons: Vec<(&str, Option<usize>)> = vec![("取消", None)];
                 buttons.extend(
                     labels
                         .iter()
@@ -387,7 +386,7 @@ impl Editor {
                 let Some(choice) = confirm_modal(
                     ctx,
                     "folder-ambiguous",
-                    "Which folder of the catalog is this?",
+                    "这是图库中的哪个文件夹？",
                     &detail,
                     false,
                     &buttons,
@@ -487,13 +486,13 @@ fn entry(
     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
         if clearable
             && ui
-                .button("Clear")
-                .on_hover_text("Forget this location on this computer")
+                .button("清除")
+                .on_hover_text("清除此文件夹的本机位置")
                 .clicked()
         {
             clicked = Some(Button::Clear);
         }
-        if ui.button("Change…").clicked() {
+        if ui.button("更改…").clicked() {
             clicked = Some(Button::Change);
         }
         ui.add_space(6.);

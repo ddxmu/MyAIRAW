@@ -25,12 +25,12 @@ impl Guide {
     ];
     pub(super) fn name(self) -> &'static str {
         match self {
-            Guide::Grid => "Grid",
-            Guide::Thirds => "Thirds",
-            Guide::Diagonal => "Diagonal",
-            Guide::Triangle => "Triangle",
-            Guide::GoldenRatio => "Golden Ratio",
-            Guide::GoldenSpiral => "Golden Spiral",
+            Guide::Grid => "网格",
+            Guide::Thirds => "三分法",
+            Guide::Diagonal => "对角线",
+            Guide::Triangle => "三角形",
+            Guide::GoldenRatio => "黄金比例",
+            Guide::GoldenSpiral => "黄金螺旋",
         }
     }
     /// Its name in the session file, which stays the same across versions.
@@ -69,9 +69,9 @@ impl GuideShow {
     pub(super) const ALL: [GuideShow; 3] = [GuideShow::Always, GuideShow::Auto, GuideShow::Never];
     pub(super) fn name(self) -> &'static str {
         match self {
-            GuideShow::Always => "Always",
-            GuideShow::Auto => "Auto",
-            GuideShow::Never => "Never",
+            GuideShow::Always => "始终",
+            GuideShow::Auto => "自动",
+            GuideShow::Never => "从不",
         }
     }
     fn key(self) -> &'static str {
@@ -466,7 +466,7 @@ impl super::Editor {
         if self.document.edit.history().in_gesture() {
             self.document.edit.finish_gesture();
         }
-        self.change_edit(Some(super::history::Step::new("Straighten", "Auto")), |r| {
+        self.change_edit(Some(super::history::Step::new("拉直", "自动")), |r| {
             r.straighten = angle;
         });
     }

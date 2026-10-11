@@ -18,10 +18,10 @@ use rawmakase_protocol::paths::{home, xdg_data_home};
 /// Windows's local rather than roaming AppData.
 pub fn local_data_dir() -> PathBuf {
     if cfg!(target_os = "macos") {
-        home().join("Library/Application Support/RAWmakase")
+        home().join("Library/Application Support/MyAIRAW")
     } else if cfg!(windows) {
         std::env::var_os("LOCALAPPDATA")
-            .map(|p| PathBuf::from(p).join("RAWmakase"))
+            .map(|p| PathBuf::from(p).join("MyAIRAW"))
             .unwrap_or_else(|| home().join(".local/share/rawmakase"))
     } else {
         xdg_data_home().join("rawmakase")
@@ -119,6 +119,17 @@ pub fn is_raw(p: &Path) -> bool {
         && p.extension()
             .and_then(|v| v.to_str())
             .is_some_and(|v| RAW_EXTENSIONS.iter().any(|ext| v.eq_ignore_ascii_case(ext)))
+}
+
+/// Formats that MyAIRAW can develop, including already-rendered photographs.
+pub fn is_editable(p: &Path) -> bool {
+    is_raw(p)
+        || (!is_hidden(p)
+            && p.extension().and_then(|v| v.to_str()).is_some_and(|v| {
+                ["jpg", "jpeg", "png", "tif", "tiff"]
+                    .iter()
+                    .any(|ext| v.eq_ignore_ascii_case(ext))
+            }))
 }
 
 /// Search locations for user-installed assets, including the legacy Linux location.

@@ -263,7 +263,7 @@ fn toggle_solo(ui: &egui::Ui, group: &str, title: &str) {
 /// they open and close as one panel.
 fn section_key(title: &str) -> &str {
     match title {
-        "B&W" => "Color Mixer",
+        "B&W" => "颜色混合器",
         title => title,
     }
 }
@@ -323,7 +323,7 @@ fn section_header(
         },
     );
     let reset = match button {
-        HeaderButton::Reset => reset.on_hover_text(format!("Reset {title}")),
+        HeaderButton::Reset => reset.on_hover_text(format!("重置{title}")),
         HeaderButton::Add => reset.on_hover_text(format!("New {}", title.trim_end_matches('s'))),
         HeaderButton::None => reset,
     };
@@ -384,8 +384,8 @@ fn section_header(
             .interact(switch_rect, id.with("switch"), Sense::click())
             .on_hover_cursor(egui::CursorIcon::PointingHand)
             .on_hover_text(match state {
-                PanelState::On => format!("Turn {title} off"),
-                PanelState::Off => format!("Turn {title} on"),
+                PanelState::On => format!("关闭{title}"),
+                PanelState::Off => format!("启用{title}"),
             });
         paint_switch(
             ui.painter(),
@@ -402,7 +402,7 @@ fn section_header(
     }
     if let Some(group) = group {
         context_menu(&toggle, |ui| {
-            if menu_item(ui, "Solo Mode", "", true, solo(ui, group)) {
+            if menu_item(ui, "单独模式", "", true, solo(ui, group)) {
                 toggle_solo(ui, group, key);
                 ui.close();
             }
@@ -416,7 +416,7 @@ fn section_header(
         }
     }
     if button == HeaderButton::Reset && reset.clicked() {
-        name_history_step(ui, format!("Reset {title}"), String::new());
+        name_history_step(ui, format!("重置{title}"), String::new());
     }
     if open {
         set_edit_context(ui, title);
@@ -609,7 +609,7 @@ pub(super) fn parametric_curve_ui(
         .collect();
     ui.painter()
         .add(egui::Shape::line(pts, Stroke::new(2., palette.gray(255))));
-    let name = hovered_region.map(|i| ["Shadows", "Darks", "Lights", "Highlights"][i]);
+    let name = hovered_region.map(|i| ["阴影", "暗调", "亮调", "高光"][i]);
     response
         .on_hover_cursor(egui::CursorIcon::ResizeVertical)
         .on_hover_text(name.map_or(String::new(), |n| {
@@ -794,7 +794,7 @@ pub(super) fn tone_curve_ui(
         let mut point = curve.points[i].map(|v| v * 255.);
         let changed = ui
             .horizontal(|ui| {
-                ui.label("Input");
+                ui.label("输入");
                 let x = ui
                     .add(
                         egui::DragValue::new(&mut point[0])
@@ -804,7 +804,7 @@ pub(super) fn tone_curve_ui(
                             .fixed_decimals(0),
                     )
                     .changed();
-                ui.label("Output");
+                ui.label("输出");
                 let y = ui
                     .add(
                         egui::DragValue::new(&mut point[1])
@@ -822,7 +822,7 @@ pub(super) fn tone_curve_ui(
         }
     }
     ui.label(
-        egui::RichText::new("Click to add · drag to shape · right-click to remove")
+        egui::RichText::new("点击添加 · 拖动调整形状 · 右键移除")
             .size(10.)
             .color(palette.gray(125)),
     );
@@ -966,7 +966,14 @@ fn descriptor_slider<Id>(
         hue_rail: false,
         typed: Some((*d.valid.start(), *d.valid.end())),
     };
-    slider_styled(ui, d.label, value, d.interactive.clone(), default, style)
+    slider_styled(
+        ui,
+        super::chinese::label(d.label),
+        value,
+        d.interactive.clone(),
+        default,
+        style,
+    )
 }
 /// How a slider's number field was changed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1219,18 +1226,13 @@ pub(super) fn slider_styled(
         );
         ui.painter()
             .circle_stroke(center, 3.5, Stroke::new(1., palette.gray(26)));
-        response.on_hover_text(
-            "Drag to adjust · double-click to reset. Drag or type the number for precise edits.",
-        );
+        response.on_hover_text("拖动调整 · 双击重置。拖动数值或直接输入可精细调整。");
     });
     if *value != before {
         let context = edit_context(ui);
         let name = if label.is_empty() {
             context
-        } else if matches!(
-            context.as_str(),
-            "" | "Basic" | "Tone" | "Presence" | "Tone Curve"
-        ) {
+        } else if matches!(context.as_str(), "" | "基本" | "色调" | "质感" | "色调曲线") {
             label.to_string()
         } else {
             format!("{context} {label}")

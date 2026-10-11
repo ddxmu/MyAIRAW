@@ -55,10 +55,7 @@ pub(super) fn raster(path: &std::path::Path) -> Result<image::RgbImage> {
         .with_guessed_format()?
         .into_decoder()?;
     let (w, h) = decoder.dimensions();
-    anyhow::ensure!(
-        (w as u64) * (h as u64) <= 150_000_000,
-        "Image too large to preview"
-    );
+    anyhow::ensure!((w as u64) * (h as u64) <= 150_000_000, "图像太大，无法预览");
     let orientation = decoder.orientation()?;
     let mut image = image::DynamicImage::from_decoder(decoder)?;
     image.apply_orientation(orientation);

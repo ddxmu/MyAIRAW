@@ -162,7 +162,7 @@ fn worker(
             Request::Install => {
                 let result = match prepared.take() {
                     Some(p) => updater.handoff(p, Vec::new()),
-                    None => Err(anyhow::anyhow!("The update is no longer ready")),
+                    None => Err(anyhow::anyhow!("更新已不可用")),
                 };
                 reply(Reply::Installing(result.map_err(|e| format!("{e:#}"))))
             }
@@ -297,7 +297,7 @@ impl Editor {
 
     fn install_update(&mut self) {
         if self.exporting() {
-            self.status = "Finish exporting before updating".into();
+            self.status = "请先完成导出再更新".into();
             return;
         }
         // Edits are saved before the app quits for the helper.
@@ -315,10 +315,7 @@ impl Editor {
             return;
         }
         if let Some(release) = self.updates.available.clone() {
-            if ui
-                .button(format!("Update to {}", release.version))
-                .clicked()
-            {
+            if ui.button(format!("更新至 {}", release.version)).clicked() {
                 if self.updates.unsupported.is_some() {
                     let _ = crate::platform::web::open(&release.url);
                 } else {
@@ -336,7 +333,7 @@ impl Editor {
         let updates = &mut self.updates;
         let checking = matches!(updates.manual, Some(None));
         if ui
-            .add_enabled(!checking, egui::Button::new("Check Now"))
+            .add_enabled(!checking, egui::Button::new("立即检查"))
             .clicked()
         {
             updates.manual = Some(None);
@@ -345,32 +342,44 @@ impl Editor {
         match &updates.manual {
             Some(None) => {
                 ui.add(egui::Spinner::new().size(12.));
-                note(ui, "Checking…");
+                note(ui, "正在检查…");
             }
             Some(Some(Ok(()))) => {
-                note(ui, "RAWmakase is up to date.");
+                note(ui, "MyAIRAW 已是最新版本。");
             }
             Some(Some(Err(error))) => {
-                note(ui, "Couldn’t reach GitHub.").on_hover_text(error);
+                note(ui, "无法连接 GitHub。").on_hover_text(error);
             }
             None => {}
         }
     }
 
     pub(super) fn automatic_updates_checkbox(&mut self, ui: &mut egui::Ui) {
-        let updates = &mut self.updates;
-        if ui
-            .checkbox(&mut updates.automatic, "Check for updates automatically")
-            .changed()
-        {
-            updates
-                .automatic_flag
-                .store(updates.automatic, Ordering::Relaxed);
-            if updates.automatic {
-                updates.send(Request::Check { manual: false });
+        ui.vertical(|ui| {
+            let updates = &mut self.updates;
+            if ui
+                .checkbox(&mut updates.automatic, "自动检查更新")
+                .changed()
+            {
+                updates
+                    .automatic_flag
+                    .store(updates.automatic, Ordering::Relaxed);
+                if updates.automatic {
+                    updates.send(Request::Check { manual: false });
+                }
+                let _ = self.save_session();
             }
-            let _ = self.save_session();
-        }
+            ui.hyperlink_to(
+                "更新源：ddxmu/MyAIRAW",
+                "https://github.com/ddxmu/MyAIRAW/releases",
+            );
+            ui.add(
+                egui::Label::new(
+                    egui::RichText::new("优先增量更新；没有适用的增量包时下载完整安装包。").small(),
+                )
+                .wrap(),
+            );
+        });
     }
 }
 
@@ -380,12 +389,12 @@ fn notice_contents(ui: &mut egui::Ui, updates: &Updates, release: &Release) -> O
     let mut action = None;
     ui.horizontal(|ui| {
         ui.label(
-            egui::RichText::new("Update available")
+            egui::RichText::new("有可用更新")
                 .size(14.)
                 .color(palette.gray(236)),
         );
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            if close_button(ui).on_hover_text("Remind me later").clicked() {
+            if close_button(ui).on_hover_text("稍后提醒").clicked() {
                 action = Some(Action::Dismiss);
             }
         });
@@ -393,7 +402,7 @@ fn notice_contents(ui: &mut egui::Ui, updates: &Updates, release: &Release) -> O
     note(
         ui,
         &format!(
-            "RAWmakase {} is available. You have {}.",
+            "MyAIRAW {} 已发布，当前版本为 {}。",
             release.version,
             crate::updates::config().current_version
         ),
@@ -412,18 +421,18 @@ fn notice_contents(ui: &mut egui::Ui, updates: &Updates, release: &Release) -> O
                     .desired_height(6.)
                     .fill(palette.accent()),
             );
-            note(ui, "Downloading…");
+            note(ui, "正在下载…");
         }
         Download::Ready => {
-            note(ui, "Ready to install. RAWmakase restarts to finish.");
-            if primary_button(ui, "Restart to Update").clicked() {
+            note(ui, "已准备好安装，将重启 MyAIRAW 完成更新。");
+            if primary_button(ui, "重启并更新").clicked() {
                 action = Some(Action::Install);
             }
         }
         Download::Installing => {
             ui.horizontal(|ui| {
                 ui.add(egui::Spinner::new().size(12.));
-                note(ui, "Preparing to restart…");
+                note(ui, "正在准备重启…");
             });
         }
         Download::Idle | Download::Failed(_) => {
@@ -436,14 +445,14 @@ fn notice_contents(ui: &mut egui::Ui, updates: &Updates, release: &Release) -> O
             }
             ui.horizontal(|ui| {
                 let (label, pressed) = match (&updates.unsupported, failed) {
-                    (Some(_), _) => ("Download", Action::OpenPage),
-                    (None, true) => ("Try Again", Action::Download),
-                    (None, false) => ("Update", Action::Download),
+                    (Some(_), _) => ("下载", Action::OpenPage),
+                    (None, true) => ("重试", Action::Download),
+                    (None, false) => ("更新", Action::Download),
                 };
                 if primary_button(ui, label).clicked() {
                     action = Some(pressed);
                 }
-                let skip = egui::Button::new("Skip This Version").min_size(Vec2::new(0., 30.));
+                let skip = egui::Button::new("跳过此版本").min_size(Vec2::new(0., 30.));
                 if ui.add(skip).clicked() {
                     action = Some(Action::Skip);
                 }

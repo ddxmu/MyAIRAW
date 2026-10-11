@@ -42,7 +42,7 @@ impl Default for PresetForm {
     fn default() -> Self {
         Self {
             name: String::new(),
-            group: "User Presets".into(),
+            group: "用户预设".into(),
         }
     }
 }
@@ -58,16 +58,16 @@ pub(super) enum Transfer {
 impl Transfer {
     fn title(self) -> &'static str {
         match self {
-            Transfer::Copy => "Copy Settings",
-            Transfer::Sync => "Synchronize Settings",
-            Transfer::NewPreset => "New Develop Preset",
+            Transfer::Copy => "复制设置",
+            Transfer::Sync => "同步设置",
+            Transfer::NewPreset => "新建显影预设",
         }
     }
     fn button(self) -> &'static str {
         match self {
-            Transfer::Copy => "Copy",
-            Transfer::Sync => "Synchronize",
-            Transfer::NewPreset => "Create",
+            Transfer::Copy => "复制",
+            Transfer::Sync => "同步",
+            Transfer::NewPreset => "创建",
         }
     }
 }
@@ -100,7 +100,7 @@ impl Editor {
             return;
         };
         self.clipboard = Some(Clipboard { settings, groups });
-        self.status = "Settings copied".into();
+        self.status = "设置已复制".into();
     }
     /// Opens Copy Settings, or Synchronize Settings, with the groups chosen last time.
     pub(super) fn open_copy_dialog(&mut self, purpose: Transfer) {
@@ -162,17 +162,17 @@ impl Editor {
                 ui.add_space(16.);
                 ui.horizontal(|ui| {
                     ui.spacing_mut().button_padding = Vec2::new(14., 6.);
-                    if ui.button("Check All").clicked() {
+                    if ui.button("全选").clicked() {
                         dialog.groups = GroupSelection::all();
                     }
-                    if ui.button("Check None").clicked() {
+                    if ui.button("全不选").clicked() {
                         dialog.groups = GroupSelection::none();
                     }
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         if primary_button(ui, dialog.purpose.button()).clicked() {
                             choice = Some(CopyChoice::Confirm);
                         }
-                        if ui.button("Cancel").clicked() {
+                        if ui.button("取消").clicked() {
                             choice = Some(CopyChoice::Cancel);
                         }
                     });
@@ -212,14 +212,14 @@ impl Editor {
     /// stay as they were, as with Lightroom's default Paste Settings.
     pub(super) fn paste_settings(&mut self) {
         if let Some(Clipboard { settings, groups }) = self.clipboard.clone() {
-            self.apply_settings(&settings, &groups, "Paste Settings");
+            self.apply_settings(&settings, &groups, "粘贴设置");
         }
     }
     /// Lightroom's Paste Settings from Previous: the settings of the photo open before
     /// this one, with the groups Paste uses by default.
     pub(super) fn paste_previous(&mut self) {
         if let Some(previous) = self.previous_settings.clone() {
-            self.apply_settings(&previous, &GroupSelection::default(), "Paste from Previous");
+            self.apply_settings(&previous, &GroupSelection::default(), "粘贴上一张设置");
         }
     }
     /// `from`'s settings in `groups` over the open photo's, as one History step.
@@ -245,9 +245,9 @@ impl Editor {
         self.document.edit.replace(out.recipe);
         self.ensure_upright();
         self.status = if out.notes.is_empty() {
-            "Settings pasted".into()
+            "设置已粘贴".into()
         } else {
-            format!("Settings pasted · {}", out.notes.join(" · "))
+            format!("设置已粘贴 · {}", out.notes.join(" · "))
         };
     }
 }
@@ -275,7 +275,7 @@ fn section_checkboxes(
         .collect();
     let chosen = shown.iter().filter(|g| groups.contains(**g)).count();
     let mut all = chosen == shown.len();
-    let checkbox = egui::Checkbox::new(&mut all, section.title)
+    let checkbox = egui::Checkbox::new(&mut all, super::chinese::label(section.title))
         .indeterminate(chosen > 0 && chosen < shown.len());
     if ui.add(checkbox).changed() {
         let inclusion = if all {
@@ -291,7 +291,10 @@ fn section_checkboxes(
         ui.indent(section.title, |ui| {
             for group in &shown {
                 let mut on = groups.contains(*group);
-                if ui.checkbox(&mut on, group.label()).changed() {
+                if ui
+                    .checkbox(&mut on, super::chinese::label(group.label()))
+                    .changed()
+                {
                     let inclusion = if on {
                         GroupInclusion::Included
                     } else {
@@ -308,10 +311,10 @@ fn section_checkboxes(
 /// New Develop Preset's name and group, as form rows; the group can be typed or picked
 /// from the groups presets already use.
 fn preset_fields(ui: &mut egui::Ui, form: &mut PresetForm, library: &crate::presets::Library) {
-    super::widgets::form_row(ui, "Preset Name", |ui| {
+    super::widgets::form_row(ui, "预设名称", |ui| {
         ui.add(egui::TextEdit::singleline(&mut form.name).desired_width(260.));
     });
-    super::widgets::form_row(ui, "Group", |ui| {
+    super::widgets::form_row(ui, "分组", |ui| {
         ui.add(egui::TextEdit::singleline(&mut form.group).desired_width(220.));
         let mut groups: Vec<&str> = library
             .presets

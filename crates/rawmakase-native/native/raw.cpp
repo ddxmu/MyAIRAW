@@ -310,6 +310,13 @@ int ora_display(const char* path, unsigned char* rgb, unsigned count) {
     if(t) { cmsDoTransform(t,rgb,rgb,count); cmsDeleteTransform(t); }
     cmsCloseProfile(src); cmsCloseProfile(dst); return t?0:-1;
 }
+int ora_input_profile(const unsigned char* profile, unsigned size, float* rgb, unsigned count) {
+    auto src=cmsOpenProfileFromMem(profile,size); auto dst=cmsCreate_sRGBProfile();
+    if(!src || !dst) { if(src) cmsCloseProfile(src); if(dst) cmsCloseProfile(dst); return -1; }
+    auto t=cmsCreateTransform(src,TYPE_RGB_FLT,dst,TYPE_RGB_FLT,INTENT_RELATIVE_COLORIMETRIC,cmsFLAGS_BLACKPOINTCOMPENSATION);
+    if(t) { cmsDoTransform(t,rgb,rgb,count); cmsDeleteTransform(t); }
+    cmsCloseProfile(src); cmsCloseProfile(dst); return t?0:-1;
+}
 }
 extern "C" int ora_scale_probe(float wb, float* error) {
     Raw r;

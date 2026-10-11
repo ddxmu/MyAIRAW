@@ -79,7 +79,11 @@ fn listing(dir: &std::path::Path) -> Vec<String> {
 #[test]
 fn export_acts_on_the_selection_and_reports_what_it_left_out() -> anyhow::Result<()> {
     let (dir, mut e, ids, ctx) = editor()?;
+    // Format eligibility no longer refuses JPEGs. An offline photo still must be left out.
+    std::fs::remove_file(dir.path().join("photos/c.jpg"))?;
     let library = e.library.as_mut().unwrap();
+    library.refresh()?;
+    library.wait_for_availability();
     library.select(Some(ids[0]));
     library.select_range_to(ids[2]);
     let scope = e.export_scope().expect("photos to export");
@@ -97,11 +101,11 @@ fn export_acts_on_the_selection_and_reports_what_it_left_out() -> anyhow::Result
     export(&mut e, scope.clone(), settings(&out))?;
     wait(&mut e, &ctx);
     assert_eq!(listing(&out), ["a.tif", "b.tif"]);
-    assert_eq!(e.status, "Exported 2 of 3 · 1 not exported");
-    // Kept in the top bar until read: the JPEG, and why.
+    assert_eq!(e.status, "已导出 2 / 3 · 1 个未导出");
+    // Kept in the top bar until read: the offline JPEG, and why.
     let summary = e.exports.summary.clone().expect("a report");
     assert_eq!(summary.problems.len(), 1);
-    assert!(summary.problems[0].1.contains("can't be exported"));
+    assert!(summary.problems[0].1.contains("无法导出"));
 
     // Again into the same folder: Ask asks once for both files.
     export(&mut e, scope, settings(&out))?;
@@ -113,8 +117,8 @@ fn export_acts_on_the_selection_and_reports_what_it_left_out() -> anyhow::Result
     // That export went well, but the first one's report is unread: it stays, and
     // the two add up until it is dismissed.
     let summary = e.exports.summary.clone().expect("the unread report");
-    // The JPEG was left out of both.
-    assert_eq!(summary.line(), "Exported 4 of 6 · 2 not exported");
+    // The offline JPEG was left out of both jobs; JPEG export is covered separately.
+    assert_eq!(summary.line(), "已导出 4 / 6 · 2 个未导出");
     Ok(())
 }
 
@@ -149,11 +153,7 @@ fn an_open_photo_whose_edit_isnt_final_holds_back_only_its_own_export() -> anyho
     let library = e.library.as_mut().unwrap();
     library.select(Some(ids[0]));
     assert!(e.export_scope().is_none());
-    assert!(
-        e.status.starts_with("Export waits for the open photo"),
-        "{}",
-        e.status
-    );
+    assert!(e.status.starts_with("导出正在等待当前照片"), "{}", e.status);
     // A Library selection without it goes ahead.
     e.module = Module::Library;
     e.library.as_mut().unwrap().select(Some(ids[1]));
@@ -172,7 +172,7 @@ fn an_open_photo_whose_edit_isnt_final_holds_back_only_its_own_export() -> anyho
     // decoded again from the file.
     std::fs::remove_file(e.document.path.clone().unwrap())?;
     assert!(e.export_scope().is_none());
-    assert!(e.status.contains("can't be exported"), "{}", e.status);
+    assert!(e.status.contains("无法导出"), "{}", e.status);
     Ok(())
 }
 
@@ -205,7 +205,7 @@ fn a_photo_opened_without_a_catalog_is_exported_only_while_its_file_is_there() -
     assert!(scope.photos[0].open && scope.photos[0].id.is_none());
     std::fs::remove_file(&path)?;
     assert!(e.export_scope().is_none());
-    assert!(e.status.contains("Offline"), "{}", e.status);
+    assert!(e.status.contains("离线"), "{}", e.status);
     Ok(())
 }
 

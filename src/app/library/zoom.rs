@@ -84,7 +84,7 @@ impl Regions {
             let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 region(&job, &mut held, &cache)
             }))
-            .unwrap_or_else(|_| Err(anyhow::anyhow!("The zoomed view could not be built")));
+            .unwrap_or_else(|_| Err(anyhow::anyhow!("无法生成放大视图")));
             if job.cancel.load(Ordering::Relaxed) {
                 return;
             }
@@ -212,9 +212,7 @@ fn region(
                 use crate::catalog::preview_cache::{PreviewCache, PreviewKind};
                 PreviewCache::open(cache)?
                     .load_sized(&job.path, identity, PreviewKind::OneToOne)?
-                    .ok_or_else(|| {
-                        anyhow::anyhow!("no 1:1 preview; build one while the photo is online")
-                    })?
+                    .ok_or_else(|| anyhow::anyhow!("没有 1:1 预览，请在照片在线时生成"))?
             }
             None => super::thumbnails::raster(&job.path)?,
         };

@@ -108,7 +108,7 @@ impl Editor {
             .show(ctx, |ui| {
                 ui.set_width(380.);
                 ui.label(
-                    egui::RichText::new("Rename Preset")
+                    egui::RichText::new("重命名预设")
                         .size(17.)
                         .color(palette.gray(235)),
                 );
@@ -122,10 +122,10 @@ impl Editor {
                 ui.horizontal(|ui| {
                     ui.spacing_mut().button_padding = Vec2::new(14., 6.);
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        if primary_button(ui, "Rename").clicked() {
+                        if primary_button(ui, "重命名").clicked() {
                             choice = Some(RenameChoice::Rename);
                         }
-                        if ui.button("Cancel").clicked() {
+                        if ui.button("取消").clicked() {
                             choice = Some(RenameChoice::Cancel);
                         }
                     });
@@ -183,7 +183,7 @@ mod tests {
         let mut e = Editor::with_context(&ctx, None, crate::app::session::Session::default(), None);
         let d = tempfile::tempdir().unwrap();
         let user = UserPresets {
-            dir: d.path().join("User Presets"),
+            dir: d.path().join("用户预设"),
         };
         // Without a loaded photo there is nothing to save.
         let form = PresetForm {

@@ -704,11 +704,7 @@ impl Editor {
                 };
                 if *current != curve {
                     *current = curve;
-                    super::widgets::name_frame_step(
-                        ctx,
-                        "Point Curve".into(),
-                        format!("{channel:?}"),
-                    );
+                    super::widgets::name_frame_step(ctx, "点曲线".into(), format!("{channel:?}"));
                 }
             }
             Operation::ControlValue(param, value) => {

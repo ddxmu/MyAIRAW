@@ -88,6 +88,7 @@ unsafe extern "C" {
     -> c_int;
     fn ora_srgb_profile(data: *mut u8, size: u32) -> u32;
     fn ora_display(path: *const c_char, data: *mut u8, count: u32) -> c_int;
+    fn ora_input_profile(profile: *const u8, size: u32, data: *mut f32, count: u32) -> c_int;
 }
 
 /// LibRaw's version string.
@@ -301,6 +302,16 @@ pub fn display_transform(path: &Path, data: &mut [u8]) -> Result<()> {
     if rc != 0 {
         bail!("Cannot use monitor ICC profile {}", path.display());
     }
+    Ok(())
+}
+
+pub(super) fn input_transform(profile: &[u8], pixels: &mut [[f32; 3]]) -> Result<()> {
+    let size = u32::try_from(profile.len())?;
+    let count = u32::try_from(pixels.len())?;
+    // SAFETY: the profile and RGB triples stay live; Little CMS writes exactly count triples.
+    let rc =
+        unsafe { ora_input_profile(profile.as_ptr(), size, pixels.as_mut_ptr().cast(), count) };
+    ensure!(rc == 0, "无法转换图像的 ICC 颜色配置");
     Ok(())
 }
 

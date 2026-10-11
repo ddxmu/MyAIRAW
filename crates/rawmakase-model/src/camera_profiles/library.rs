@@ -40,6 +40,9 @@ pub fn library_dirs() -> Vec<std::path::PathBuf> {
 }
 
 pub fn installed(m: &Metadata) -> (Vec<Arc<CameraProfile>>, Vec<String>) {
+    if m.display_referred {
+        return (Vec::new(), Vec::new());
+    }
     let mut profiles = Vec::new();
     let mut errors = Vec::new();
     if let Some(p) = builtin(m) {

@@ -36,19 +36,19 @@ pub(super) enum Region {
 impl Region {
     fn title(self) -> &'static str {
         match self {
-            Region::Shadows => "Shadows",
-            Region::Midtones => "Midtones",
-            Region::Highlights => "Highlights",
-            Region::Global => "Global",
+            Region::Shadows => "阴影",
+            Region::Midtones => "中间调",
+            Region::Highlights => "高光",
+            Region::Global => "全局",
         }
     }
-    /// The word Lightroom's History starts this wheel's steps with: "Shadow Hue".
+    /// The word Lightroom's History starts this wheel's steps with: "阴影 色相".
     fn step(self) -> &'static str {
         match self {
-            Region::Shadows => "Shadow",
-            Region::Midtones => "Midtone",
-            Region::Highlights => "Highlight",
-            Region::Global => "Global",
+            Region::Shadows => "阴影",
+            Region::Midtones => "中间调",
+            Region::Highlights => "高光",
+            Region::Global => "全局",
         }
     }
     /// The wheel's [hue, saturation, luminance].
@@ -93,7 +93,7 @@ pub(super) fn color_grading_ui(ui: &mut egui::Ui, r: &mut Recipe, view: &mut Gra
         GradingView::Single(region) => single(ui, r, region),
     }
     ui.add_space(4.);
-    set_edit_context(ui, "Color Grading");
+    set_edit_context(ui, "颜色分级");
     // The wheels' own sliders stay with them: their rails follow the wheel's color.
     for (id, default) in [
         (ParameterId::GradingBlending, 0.5),
@@ -112,7 +112,7 @@ fn view_buttons(ui: &mut egui::Ui, view: &mut GradingView) {
     let mut x = row.center().x - total / 2.;
     for option in VIEWS {
         let name = match option {
-            GradingView::ThreeWay => "3-Way",
+            GradingView::ThreeWay => "三向",
             GradingView::Single(region) => region.title(),
         };
         let rect = Rect::from_min_size(Pos2::new(x, row.center().y - size.y / 2.), size);
@@ -232,14 +232,14 @@ fn single(ui: &mut egui::Ui, r: &mut Recipe, region: Region) {
             hue_rail: true,
             ..SliderStyle::default()
         };
-        slider_styled(ui, "Hue", &mut degrees, 0. ..=360., 0., wheel);
+        slider_styled(ui, "色相", &mut degrees, 0. ..=360., 0., wheel);
         if degrees != grade[0] * 360. {
             grade[0] = degrees / 360.;
         }
         let tint = hue_color(grade[0], 1.);
         slider_with(
             ui,
-            "Saturation",
+            "饱和度",
             &mut grade[1],
             0. ..=1.,
             0.,
@@ -248,7 +248,7 @@ fn single(ui: &mut egui::Ui, r: &mut Recipe, region: Region) {
         );
         slider_with(
             ui,
-            "Luminance",
+            "明亮度",
             &mut grade[2],
             -1. ..=1.,
             0.,
@@ -573,17 +573,17 @@ fn wheel(ui: &mut egui::Ui, rect: Rect, grade: &mut [f32; 3], region: Region) {
     ));
 }
 
-/// History's name for a wheel edit from `start` to `end`: "Shadow Hue", "Shadow
+/// History's name for a wheel edit from `start` to `end`: "阴影 色相", "Shadow
 /// Saturation", or both when the puck moved both ways.
 fn wheel_step(region: Region, start: HueSat, end: HueSat) -> (String, String) {
     let hue = format!("{:.0}", end.hue * 360.);
     let saturation = format!("{:.0}", end.saturation * 100.);
     let step = region.step();
     match (start.hue != end.hue, start.saturation != end.saturation) {
-        (true, false) => (format!("{step} Hue"), hue),
-        (false, true) => (format!("{step} Saturation"), saturation),
+        (true, false) => (format!("{step} 色相"), hue),
+        (false, true) => (format!("{step} 饱和度"), saturation),
         _ => (
-            format!("{step} Hue & Saturation"),
+            format!("{step} 色相与饱和度"),
             format!("{hue} / {saturation}"),
         ),
     }
@@ -613,7 +613,7 @@ fn hue_saturation_fields(ui: &mut egui::Ui, rect: Rect, grade: &mut [f32; 3], re
                 .max_decimals(0)
                 .prefix("H "),
         )
-        .on_hover_text(format!("{step} Hue"));
+        .on_hover_text(format!("{step} 色相"));
     let saturation = ui
         .put(
             right,
@@ -623,14 +623,14 @@ fn hue_saturation_fields(ui: &mut egui::Ui, rect: Rect, grade: &mut [f32; 3], re
                 .max_decimals(0)
                 .prefix("S "),
         )
-        .on_hover_text(format!("{step} Saturation"));
+        .on_hover_text(format!("{step} 饱和度"));
     if hue.changed() {
         grade[0] = degrees / 360.;
-        name_history_step(ui, format!("{step} Hue"), format!("{degrees:.0}"));
+        name_history_step(ui, format!("{step} 色相"), format!("{degrees:.0}"));
     }
     if saturation.changed() {
         grade[1] = percent / 100.;
-        name_history_step(ui, format!("{step} Saturation"), format!("{percent:.0}"));
+        name_history_step(ui, format!("{step} 饱和度"), format!("{percent:.0}"));
     }
 }
 
@@ -659,7 +659,7 @@ fn luminance_rail(ui: &mut egui::Ui, rect: Rect, value: &mut f32, region: Region
     let response = ui
         .interact(area, id, Sense::click_and_drag())
         .on_hover_text(format!(
-            "{} Luminance: drag · double-click to reset",
+            "{} 明亮度: drag · double-click to reset",
             region.title()
         ));
     // As with the wheel, wait out a possible double-click before applying a click.
@@ -751,7 +751,7 @@ fn luminance_rail(ui: &mut egui::Ui, rect: Rect, value: &mut f32, region: Region
     if *value != before {
         name_history_step(
             ui,
-            format!("{} Luminance", region.step()),
+            format!("{} 明亮度", region.step()),
             format!("{:.0}", *value * 100.),
         );
     }
@@ -971,10 +971,7 @@ mod tests {
             egui::Modifiers::NONE,
         );
         assert_eq!(grade, [210. / 360., 0.4, 0.25]);
-        assert_eq!(
-            step,
-            Some(("Shadow Hue & Saturation".into(), "210 / 40".into()))
-        );
+        assert_eq!(step, Some(("阴影 色相与饱和度".into(), "210 / 40".into())));
         // Shift outwards from the puck: saturation alone, named so.
         let step = h.drag(
             &mut grade,
@@ -983,7 +980,7 @@ mod tests {
         );
         assert_eq!(grade[0], 210. / 360.);
         assert!(grade[1] > 0.55 && grade[1] < 0.65, "{grade:?}");
-        assert_eq!(step.map(|s| s.0), Some("Shadow Saturation".into()));
+        assert_eq!(step.map(|s| s.0), Some("阴影 饱和度".into()));
         // A plain click moves the puck under the pointer.
         let left = h.at(Vec2::new(-0.3, 0.));
         let press = |pressed| egui::Event::PointerButton {
@@ -1149,7 +1146,7 @@ mod tests {
         }
         assert_eq!(recipe.grading[0], [0.25, 0.4, 0.]);
         assert_eq!(history.steps().1, 1);
-        assert_eq!(history.steps().0[0].name, "Shadow Luminance");
+        assert_eq!(history.steps().0[0].name, "阴影 明亮度");
         assert!(history.undo(&mut recipe));
         assert_eq!(recipe, original);
         h.frame(&mut recipe.grading[0], vec![], egui::Modifiers::NONE);

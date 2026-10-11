@@ -1,1 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024"><defs><clipPath id="mk"><circle cx="512" cy="512" r="158"/></clipPath></defs><rect x="100" y="100" width="824" height="824" rx="185" fill="#23272C"/><circle cx="512" cy="512" r="318" fill="#101814"/><circle cx="512" cy="512" r="262" fill="#F2EDE3"/><circle cx="512" cy="512" r="158" fill="#EB7449"/><g clip-path="url(#mk)"><line x1="492.0" y1="454.0" x2="912.0" y2="454.0" stroke="#C4532F" stroke-width="14" stroke-linecap="round"/><line x1="552.2" y1="465.7" x2="762.2" y2="829.4" stroke="#C4532F" stroke-width="14" stroke-linecap="round"/><line x1="572.2" y1="523.7" x2="362.2" y2="887.4" stroke="#C4532F" stroke-width="14" stroke-linecap="round"/><line x1="532.0" y1="570.0" x2="112.0" y2="570.0" stroke="#C4532F" stroke-width="14" stroke-linecap="round"/><line x1="471.8" y1="558.3" x2="261.8" y2="194.6" stroke="#C4532F" stroke-width="14" stroke-linecap="round"/><line x1="451.8" y1="500.3" x2="661.8" y2="136.6" stroke="#C4532F" stroke-width="14" stroke-linecap="round"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="warm" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ff793d"/>
+      <stop offset="0.38" stop-color="#ed3e24"/>
+      <stop offset="0.75" stop-color="#511915"/>
+      <stop offset="1" stop-color="#090a0e"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.18"/>
+      <stop offset="0.5" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#warm)"/>
+  <rect x="101" y="101" width="822" height="822" rx="184" fill="url(#shine)" stroke="#ffffff" stroke-opacity="0.14" stroke-width="2"/>
+  <text x="512" y="601" text-anchor="middle" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="275" font-weight="900" letter-spacing="-10">RAW</text>
+</svg>

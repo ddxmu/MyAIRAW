@@ -100,7 +100,7 @@ mod mapping_tests {
         assert_eq!(Param::Band(2).turn(&mut r, 5, 1), "+5");
         assert!((r.hsl[2][1] - 0.05).abs() < 1e-6);
         assert_eq!((r.hsl[2][0], r.hsl[2][2]), (0., 0.));
-        assert_eq!(Param::Band(2).label(1), "Yellow Saturation");
+        assert_eq!(Param::Band(2).label(1), "黄色 饱和度");
         r.effects.monochrome = true;
         Param::Band(7).turn(&mut r, -3, 1);
         assert!((r.effects.gray_mix[7] + 0.03).abs() < 1e-6);
@@ -130,8 +130,8 @@ mod mapping_tests {
         Param::Gray(2).set(&mut r, 10., 0);
         assert!((r.hsl[2][1] + 0.4).abs() < 1e-6);
         assert!((r.effects.gray_mix[2] - 0.1).abs() < 1e-6);
-        assert_eq!(Param::Gray(2).label(0), "Yellow Gray");
-        assert_eq!(Param::Hsl(2, 1).label(0), "Yellow Saturation");
+        assert_eq!(Param::Gray(2).label(0), "黄色 灰度");
+        assert_eq!(Param::Hsl(2, 1).label(0), "黄色 饱和度");
     }
     #[test]
     fn straighten_is_set_and_turned_in_degrees() {
@@ -149,7 +149,7 @@ mod mapping_tests {
             Param::Setting(ParameterId::Straighten).turn(&mut r, 5, 0),
             "-2.00"
         );
-        assert_eq!(Param::Setting(ParameterId::Straighten).label(0), "Angle");
+        assert_eq!(Param::Setting(ParameterId::Straighten).label(0), "角度");
         Param::Setting(ParameterId::Straighten).set(&mut r, 90., 0);
         assert_eq!(r.straighten, 45.);
         Param::Setting(ParameterId::Straighten).turn(&mut r, -1000, 0);
@@ -168,7 +168,7 @@ mod mapping_tests {
     #[test]
     fn slider_names_parse_with_bands_and_channels() {
         assert_eq!(
-            Param::parse("Temp"),
+            Param::parse("Temperature"),
             Some(Param::Setting(ParameterId::Temperature))
         );
         assert_eq!(

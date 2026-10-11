@@ -34,7 +34,7 @@ impl Library {
                         ui.add(
                             egui::Slider::new(&mut self.thumb_size, 110. ..=360.).show_value(false),
                         );
-                        ui.label(filter_caption(&palette, "Thumbnails"));
+                        ui.label(filter_caption(&palette, "缩略图"));
                     });
                 });
             });
@@ -212,12 +212,12 @@ impl Library {
             PhotoAction::SetReference => {}
             PhotoAction::Reveal => {
                 if let Err(e) = crate::platform::reveal::reveal(&photo.path) {
-                    self.message = format!("Could not show {}: {e}", photo.filename);
+                    self.message = format!("无法显示 {}：{e}", photo.filename);
                 }
             }
             PhotoAction::CopyPath => {
                 ctx.copy_text(photo.path.display().to_string());
-                self.message = format!("Copied {}", photo.path.display());
+                self.message = format!("已复制 {}", photo.path.display());
             }
             PhotoAction::Edit(edit) => {
                 let ids = if whole_selection && self.selection.selected.contains(&photo.id) {
@@ -226,7 +226,7 @@ impl Library {
                     vec![photo.id]
                 };
                 if let Err(e) = self.edit_photos(&ids, edit, false) {
-                    self.message = format!("Metadata could not be saved: {e}");
+                    self.message = format!("无法保存元数据：{e}");
                 }
             }
             PhotoAction::Copy(copy) => self.copy_request = Some(copy),
@@ -268,7 +268,7 @@ impl Library {
     /// Lightroom's Sort: the order from a menu, its direction from the arrow.
     fn sort_menu(&mut self, ui: &mut egui::Ui) {
         let palette = theme::palette(ui.ctx());
-        ui.label(filter_caption(&palette, "Sort"));
+        ui.label(filter_caption(&palette, "排序"));
         let mut changed = false;
         ui.menu_button(
             egui::RichText::new(self.filters.sort.name()).size(11.),
@@ -286,7 +286,7 @@ impl Library {
             },
         )
         .response
-        .on_hover_text("Sort the photos by");
+        .on_hover_text("照片排序方式");
         let arrow = if self.filters.reverse { "↓" } else { "↑" };
         if ui
             .add(
@@ -294,7 +294,7 @@ impl Library {
                     .small()
                     .frame(false),
             )
-            .on_hover_text("Reverse the sort order")
+            .on_hover_text("反转排序顺序")
             .clicked()
         {
             self.filters.reverse = !self.filters.reverse;
@@ -325,7 +325,7 @@ impl Library {
             },
         )
         .response
-        .on_hover_text(format!("How grid cells show their photos ({keys} cycles)"));
+        .on_hover_text(format!("网格照片的显示方式（{keys} 切换）"));
     }
 }
 pub(super) fn filter_caption(palette: &theme::Palette, text: &str) -> egui::RichText {

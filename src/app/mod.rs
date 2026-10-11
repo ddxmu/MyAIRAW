@@ -278,7 +278,7 @@ impl Editor {
             pending_photo: None,
             prefetch_cancel: Default::default(),
             demosaic: session.demosaic,
-            status: "Pick a photo in the Library to begin".into(),
+            status: "从照片库选择照片以开始".into(),
             catalog_work: None,
             importing: None,
             close_confirm: false,
@@ -457,7 +457,7 @@ impl eframe::App for Editor {
 pub fn run(path: Option<PathBuf>, launch: crate::updates::Launch) -> anyhow::Result<()> {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_title("RAWmakase")
+            .with_title("MyAIRAW")
             // An empty icon keeps the bundle's and desktop entry's icon;
             // otherwise eframe replaces it with egui's logo while running.
             .with_icon(egui::IconData::default())
@@ -481,7 +481,7 @@ pub fn run(path: Option<PathBuf>, launch: crate::updates::Launch) -> anyhow::Res
     }
     let mut event_loop = winit::event_loop::EventLoop::with_user_event().build()?;
     let mut app = SurfaceGate(eframe::create_native(
-        "RAWmakase",
+        "MyAIRAW",
         options,
         Box::new(move |cc| {
             // The event loop has built the app menu by now.
@@ -687,6 +687,7 @@ mod before_after;
 mod brush_scroll;
 mod bulk_import;
 mod catalog;
+mod chinese;
 mod clipping;
 mod color_grading;
 mod commands;
@@ -763,6 +764,17 @@ mod events;
 /// rendered as the desktop renders text.
 fn install_fonts(ctx: &egui::Context, text: &fastframe_text::TextRendering) {
     let mut fonts = fastframe_fonts::FontSetup::default().definitions();
+    fonts.font_data.insert(
+        "myairaw-chinese".into(),
+        egui::FontData::from_static(include_bytes!("../../assets/NotoSansSC.ttf")).into(),
+    );
+    for family in [egui::FontFamily::Proportional, egui::FontFamily::Monospace] {
+        fonts
+            .families
+            .entry(family)
+            .or_default()
+            .insert(1, "myairaw-chinese".into());
+    }
     text.apply_to(&mut fonts);
     ctx.set_fonts(fonts);
 }

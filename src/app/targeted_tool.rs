@@ -51,7 +51,7 @@ impl Editor {
         if let Some(steps) =
             super::point_color_panel::point_color_steps(self.document.edit.recipe())
         {
-            self.status = format!("{steps} in Calibration to use targeted adjustments");
+            self.status = format!("请在校准中{steps}，以使用目标调整");
             return;
         }
         if !self.targeted_available(target) {
@@ -538,10 +538,7 @@ mod tests {
         e.document.edit.setup_mut().reference_curves = false;
         e.toggle_targeted(Target::ToneCurve);
         assert_eq!(e.view.tool, Tool::None);
-        assert_eq!(
-            e.status,
-            "Turn on Reference tone curves in Calibration to use targeted adjustments"
-        );
+        assert_eq!(e.status, "请在校准中开启参考色调曲线，以使用目标调整");
     }
 
     #[test]

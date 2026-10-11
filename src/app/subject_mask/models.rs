@@ -135,7 +135,7 @@ impl Installer {
     pub(in crate::app) fn finished(&mut self, result: &Result<(), String>) {
         self.progress = None;
         self.thread = None;
-        self.failed = result.clone().err().filter(|e| e != "Cancelled");
+        self.failed = result.clone().err().filter(|e| e != "已取消");
         self.forget();
     }
     /// Starts fetching the model, or copying `import`; one install at a time.
@@ -227,7 +227,7 @@ fn install(import: Option<&Path>, progress: &Progress) -> Result<(), String> {
         let kept =
             has(&dir, file) && digest_of(&dir.join(file.name)).as_deref() == Some(file.sha256);
         if progress.cancel.load(Ordering::Relaxed) {
-            return Err("Cancelled".into());
+            return Err("已取消".into());
         }
         if kept {
             finished += file.size_bytes;
@@ -257,7 +257,7 @@ fn install(import: Option<&Path>, progress: &Progress) -> Result<(), String> {
             }
             // Cancelled while the last bytes were written out: not published.
             if progress.cancel.load(Ordering::Relaxed) {
-                return Err("Cancelled".to_string());
+                return Err("已取消".to_string());
             }
             let target = dir.join(file.name);
             // Windows will not rename over a file; only a damaged one can be there.
@@ -272,7 +272,7 @@ fn install(import: Option<&Path>, progress: &Progress) -> Result<(), String> {
         progress.done.store(finished, Ordering::Relaxed);
     }
     if progress.cancel.load(Ordering::Relaxed) {
-        return Err("Cancelled".into());
+        return Err("已取消".into());
     }
     crate::storage::write_atomic(
         &dir.join(RECEIPT),
@@ -302,7 +302,7 @@ fn lock(dir: &Path, progress: &Progress) -> Result<std::fs::File, String> {
             Ok(()) => return Ok(lock),
             Err(std::fs::TryLockError::WouldBlock) => {
                 if progress.cancel.load(Ordering::Relaxed) {
-                    return Err("Cancelled".into());
+                    return Err("已取消".into());
                 }
                 std::thread::sleep(Duration::from_millis(100));
             }
@@ -365,7 +365,7 @@ fn append(
     let mut buffer = vec![0u8; 256 << 10];
     loop {
         if progress.cancel.load(Ordering::Relaxed) {
-            return Err("Cancelled".into());
+            return Err("已取消".into());
         }
         let n = source.read(&mut buffer).map_err(|e| e.to_string())?;
         if n == 0 {
@@ -430,7 +430,7 @@ impl Partial {
                 before,
             ) {
                 Ok(()) => {}
-                Err(e) if e == "Cancelled" => return Err(e),
+                Err(e) if e == "已取消" => return Err(e),
                 Err(_) => partial.len = 0,
             }
         }
@@ -492,7 +492,7 @@ fn download(
                     continue;
                 }
             }
-            Err(e) if e == "Cancelled" || e.contains("disk is full") => return Err(e),
+            Err(e) if e == "已取消" || e.contains("disk is full") => return Err(e),
             Err(e) => last = e,
         }
         sources.next();
@@ -535,13 +535,13 @@ fn fetch(
             // Back off, a second more each time, noticing a cancel meanwhile.
             for _ in 0..(10 * failures) {
                 if progress.cancel.load(Ordering::Relaxed) {
-                    return Err("Cancelled".into());
+                    return Err("已取消".into());
                 }
                 std::thread::sleep(BACKOFF_TICK);
             }
         }
         if progress.cancel.load(Ordering::Relaxed) {
-            return Err("Cancelled".into());
+            return Err("已取消".into());
         }
         match request(agent, url, partial, progress, file, before) {
             Ok(()) => {}
@@ -566,7 +566,7 @@ enum Failed {
 
 impl From<String> for Failed {
     fn from(why: String) -> Self {
-        if why == "Cancelled" || why.contains("disk is full") {
+        if why == "已取消" || why.contains("disk is full") {
             Self::Final(why)
         } else {
             Self::Retry(why)
@@ -651,7 +651,7 @@ mod tests {
         // Cancelled before the first chunk.
         progress.cancel.store(true, Ordering::Relaxed);
         let error = copy_checked(&b"abc"[..], &mut Vec::new(), &progress, &FILE, 0).unwrap_err();
-        assert_eq!(error, "Cancelled");
+        assert_eq!(error, "已取消");
     }
 
     /// How the test host answers one request.
@@ -884,7 +884,7 @@ mod tests {
         progress.cancel.store(true, Ordering::Relaxed);
         assert_eq!(
             download(&part, &progress, &file, 0, BODY_BUDGET),
-            Err("Cancelled".into())
+            Err("已取消".into())
         );
         assert_eq!(std::fs::read(&part).unwrap(), &body()[..60_000]);
         // Nothing is asked of the host once cancelled.
@@ -900,7 +900,7 @@ mod tests {
         progress.cancel.store(true, Ordering::Relaxed);
         assert_eq!(
             Partial::open(&part, &file, &progress, 0).err().as_deref(),
-            Some("Cancelled")
+            Some("已取消")
         );
         assert_eq!(std::fs::read(&part).unwrap(), &body()[..60_000]);
     }
@@ -948,7 +948,7 @@ mod tests {
         cancelled.cancel.store(true, Ordering::Relaxed);
         assert_eq!(
             lock(dir.path(), &cancelled).err().as_deref(),
-            Some("Cancelled")
+            Some("已取消")
         );
         // And once the other install ends, this one goes on.
         let path = dir.path().to_owned();
@@ -965,7 +965,7 @@ mod tests {
             installer.failure(),
             Some("could not download the model: timed out")
         );
-        installer.finished(&Err("Cancelled".into()));
+        installer.finished(&Err("已取消".into()));
         assert_eq!(installer.failure(), None);
     }
 

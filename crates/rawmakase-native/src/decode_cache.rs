@@ -34,11 +34,11 @@ pub fn cache_dir() -> PathBuf {
     if cfg!(windows)
         && let Some(local) = std::env::var_os("LOCALAPPDATA")
     {
-        return PathBuf::from(local).join("RAWmakase").join("Cache");
+        return PathBuf::from(local).join("MyAIRAW").join("Cache");
     }
     let home = PathBuf::from(std::env::var_os("HOME").unwrap_or_default());
     if cfg!(target_os = "macos") {
-        return home.join("Library/Caches/RAWmakase");
+        return home.join("Library/Caches/MyAIRAW");
     }
     std::env::var_os("XDG_CACHE_HOME")
         .map(|p| PathBuf::from(p).join("rawmakase"))

@@ -152,7 +152,7 @@ pub(crate) fn controls(ui: &mut egui::Ui, photo: &Photo, labels: &[String]) -> O
                 );
             }
             ui.add_space(12.);
-            for (flag, tip) in [(1, "Pick · P"), (-1, "Reject · X")] {
+            for (flag, tip) in [(1, "选中 · P"), (-1, "拒绝 · X")] {
                 let (rect, response) = ui.allocate_exact_size(Vec2::new(24., 22.), Sense::click());
                 let active = photo.flag == flag;
                 if active || response.hovered() {
@@ -185,7 +185,10 @@ pub(crate) fn controls(ui: &mut egui::Ui, photo: &Photo, labels: &[String]) -> O
                         StrokeKind::Outside,
                     );
                 }
-                if response.on_hover_text(label).clicked() {
+                if response
+                    .on_hover_text(super::chinese::label(label))
+                    .clicked()
+                {
                     edit = Some(Edit::Label(if active {
                         String::new()
                     } else {
@@ -208,7 +211,7 @@ pub(crate) fn controls(ui: &mut egui::Ui, photo: &Photo, labels: &[String]) -> O
                             ui.close();
                         }
                     }
-                    if ui.button("No label").clicked() {
+                    if ui.button("无标签").clicked() {
                         edit = Some(Edit::Label(String::new()));
                         ui.close();
                     }
@@ -216,9 +219,9 @@ pub(crate) fn controls(ui: &mut egui::Ui, photo: &Photo, labels: &[String]) -> O
             )
             .response
             .on_hover_text(if photo.label.is_empty() {
-                "Other labels".to_string()
+                "其他标签".to_string()
             } else {
-                format!("Label: {}", photo.label)
+                format!("标签：{}", super::chinese::label(&photo.label))
             });
         });
     });

@@ -13,6 +13,9 @@ pub struct NeutralCalibration {
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct Metadata {
+    /// Already rendered RGB (JPEG/PNG/TIFF), not scene-referred camera samples.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub display_referred: bool,
     pub make: String,
     pub model: String,
     pub width: u32,

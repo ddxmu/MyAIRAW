@@ -138,9 +138,9 @@ impl Editor {
             let response = ui
                 .interact(hit, ui.id().with(("clip", left)), Sense::click())
                 .on_hover_text(if left {
-                    "Show shadow clipping · J shows both"
+                    "显示阴影剪裁 · J 同时显示高光"
                 } else {
-                    "Show highlight clipping · J shows both"
+                    "显示高光剪裁 · J 同时显示阴影"
                 });
             if response.clicked() {
                 self.view.clipping.toggle(side);
@@ -196,7 +196,7 @@ impl Editor {
             });
         ui.vertical_centered(|ui| {
             ui.label(egui::RichText::new(exif).size(11.).color(palette.gray(170)))
-                .on_hover_text("Output histogram of the whole photo");
+                .on_hover_text("整张照片的输出直方图");
         });
     }
     /// Lightroom's tool strip: Crop, Remove, Red Eye and Masking, with the open tool's
@@ -206,10 +206,10 @@ impl Editor {
         ui.add_space(6.);
         // Red Eye has no shortcut, as in Lightroom.
         const TOOLS: [(Tool, &str, &str); 4] = [
-            (Tool::Crop, "Crop", "Crop & Straighten · R"),
-            (Tool::Remove, "Remove", "Spot Removal: Heal and Clone · Q"),
-            (Tool::RedEye, "Red Eye", "Red Eye Correction"),
-            (Tool::Mask, "Masking", "Masking · Shift+W"),
+            (Tool::Crop, "裁剪", "裁剪与拉直 · R"),
+            (Tool::Remove, "移除", "污点移除：修复与仿制 · Q"),
+            (Tool::RedEye, "红眼", "红眼校正"),
+            (Tool::Mask, "蒙版", "蒙版 · Shift+W"),
         ];
         let (strip, _) =
             ui.allocate_exact_size(Vec2::new(ui.available_width(), 28.), Sense::hover());
@@ -309,7 +309,7 @@ impl Editor {
             })
             .show(ui, |ui| {
                 ui.spacing_mut().item_spacing = Vec2::new(4., 6.);
-                control_row(ui, "Aspect", |ui| {
+                control_row(ui, "比例", |ui| {
                     let swap = 26.;
                     egui::ComboBox::from_id_salt("crop-aspect")
                         .width(ui.available_width() - swap - 4.)
@@ -321,45 +321,41 @@ impl Editor {
                         });
                     if ui
                         .add_sized([swap, 20.], egui::Button::new("⇄"))
-                        .on_hover_text("Swap portrait and landscape · X")
+                        .on_hover_text("交换横竖方向 · X")
                         .clicked()
                     {
                         action = Some(CropAction::Swap);
                     }
                 });
                 setting_slider(ui, ParameterId::Straighten, &mut r.straighten, 0.);
-                control_row(ui, "Straighten", |ui| {
+                control_row(ui, "拉直", |ui| {
                     let w = (ui.available_width() - 4.) / 2.;
                     let armed = self.view.ruler == Ruler::Armed;
                     if ui
-                        .add_sized([w, 20.], egui::Button::new("Ruler").selected(armed))
-                        .on_hover_text(
-                            "Drag along a horizon or vertical to level it · or Cmd-drag on the photo",
-                        )
+                        .add_sized([w, 20.], egui::Button::new("标尺").selected(armed))
+                        .on_hover_text("沿水平或垂直线拖动拉直 · 也可在照片上 Cmd 拖动")
                         .clicked()
                     {
                         self.view.ruler = if armed { Ruler::Off } else { Ruler::Armed };
                     }
                     if ui
-                        .add_enabled(!analysing, egui::Button::new("Auto").min_size(Vec2::new(w, 20.)))
-                        .on_hover_text("Level the photo as Upright's Level would, by its angle alone")
+                        .add_enabled(
+                            !analysing,
+                            egui::Button::new("自动").min_size(Vec2::new(w, 20.)),
+                        )
+                        .on_hover_text("仅按倾斜角度拉平照片，相当于 Upright 水平校正")
                         .clicked()
                     {
                         action = Some(CropAction::AutoStraighten);
                     }
                 });
-                control_row(ui, "Orientation", |ui| {
+                control_row(ui, "方向", |ui| {
                     let w = ui.available_width();
                     let mut none = usize::MAX;
                     segmented(
                         ui,
                         &mut none,
-                        &[
-                            (0, "Rotate L"),
-                            (1, "Rotate R"),
-                            (2, "Flip H"),
-                            (3, "Flip V"),
-                        ],
+                        &[(0, "左旋"), (1, "右旋"), (2, "水平翻转"), (3, "垂直翻转")],
                         w,
                     );
                     use crate::develop::{Mirror, QuarterTurn, mirror, turn};
@@ -371,7 +367,7 @@ impl Editor {
                         _ => {}
                     }
                 });
-                control_row(ui, "Overlay", |ui| {
+                control_row(ui, "叠加", |ui| {
                     let show = 78.;
                     egui::ComboBox::from_id_salt("crop-guide")
                         .width(ui.available_width() - show - 4.)
@@ -388,7 +384,7 @@ impl Editor {
                             }
                         })
                         .response
-                        .on_hover_text("O cycles the overlays, Shift+O turns them");
+                        .on_hover_text("O 切换参考线，Shift+O 旋转");
                     egui::ComboBox::from_id_salt("crop-guide-show")
                         .width(show)
                         .selected_text(guides.show.name())
@@ -398,12 +394,12 @@ impl Editor {
                             }
                         })
                         .response
-                        .on_hover_text("When the overlay shows: always, with the pointer over the photo, or never");
+                        .on_hover_text("叠加显示时机：始终、指针在照片上或从不");
                 });
                 ui.horizontal(|ui| {
                     ui.add_space(83.);
                     ui.label(
-                        egui::RichText::new("Drag the frame on the photo; changes apply live.")
+                        egui::RichText::new("拖动照片上的裁剪框，修改实时生效。")
                             .size(10.)
                             .color(palette.gray(125)),
                     );
@@ -412,8 +408,8 @@ impl Editor {
                     ui.add_space(83.);
                     let w = (ui.available_width() - 4.) / 2.;
                     if ui
-                        .add_sized([w, 22.], egui::Button::new("Reset"))
-                        .on_hover_text("Remove the crop, straightening, rotation and flips")
+                        .add_sized([w, 22.], egui::Button::new("重置"))
+                        .on_hover_text("移除裁剪、拉直、旋转与翻转")
                         .clicked()
                     {
                         r.crop = [0., 0., 1., 1.];
@@ -426,11 +422,11 @@ impl Editor {
                         .add_sized(
                             [w, 22.],
                             egui::Button::new(
-                                egui::RichText::new("Done").color(palette.on_accent_text(245)),
+                                egui::RichText::new("完成").color(palette.on_accent_text(245)),
                             )
                             .fill(palette.accent()),
                         )
-                        .on_hover_text("Finish cropping · Enter or R")
+                        .on_hover_text("完成裁剪 · Enter 或 R")
                         .clicked()
                     {
                         self.view.tool = Tool::None;
@@ -500,7 +496,7 @@ impl Editor {
         let view = &mut self.view;
         let (r, photo) = self.document.recipe_and_colors();
 
-        if adjustment_section(ui, "Basic", |ui| {
+        if adjustment_section(ui, "基本", |ui| {
             let shortcut = if cfg!(target_os = "macos") {
                 "⌘⇧U"
             } else {
@@ -515,12 +511,12 @@ impl Editor {
                     .layout(egui::Layout::right_to_left(egui::Align::Center)),
                 |ui| {
                     let tip = if auto_in_effect {
-                        "Auto settings are applied".to_owned()
+                        "已应用自动设置".to_owned()
                     } else {
-                        format!("Set the tone sliders automatically · {shortcut}")
+                        format!("自动设置色调滑块 · {shortcut}")
                     };
                     let auto =
-                        toolbar_action(ui, "Auto", 52., false, auto_ready && !auto_in_effect, 0);
+                        toolbar_action(ui, "自动", 52., false, auto_ready && !auto_in_effect, 0);
                     if auto.on_hover_text(tip).clicked() {
                         auto_request = Some(AutoKind::Settings);
                     }
@@ -530,15 +526,12 @@ impl Editor {
             // A conversion waiting for the photo to decode shows as made.
             let shown = pending_treatment.unwrap_or_else(|| r.treatment());
             let mut treatment = shown;
-            control_row(ui, "Treatment", |ui| {
+            control_row(ui, "处理方式", |ui| {
                 let w = ui.available_width();
                 segmented(
                     ui,
                     &mut treatment,
-                    &[
-                        (Treatment::Color, "Color"),
-                        (Treatment::BlackWhite, "Black & White"),
-                    ],
+                    &[(Treatment::Color, "彩色"), (Treatment::BlackWhite, "黑白")],
                     w,
                 );
             });
@@ -548,21 +541,21 @@ impl Editor {
             let old_profile = r.profile.clone();
             // From engine 4 the matrix path renders through the DNG default look.
             let matrix = if r.engine >= 4 {
-                "Default (camera matrix)"
+                "默认（相机矩阵）"
             } else {
-                "Camera matrix"
+                "相机矩阵"
             };
-            control_row(ui, "Profile", |ui| {
+            control_row(ui, "配置文件", |ui| {
                 egui::ComboBox::from_id_salt("camera-profile")
                     .width(ui.available_width())
-                    .selected_text(r.profile.as_ref().map_or(matrix, |p| p.name.as_str()))
+                    .selected_text(r.profile.as_ref().map_or(matrix, |p| super::chinese::label(&p.name)))
                     .show_ui(ui, |ui| {
                         if ui.selectable_value(&mut r.profile, None, matrix).changed() {
                             r.engine = r.engine.max(3);
                         }
                         for profile in &profiles {
                             if ui
-                                .selectable_value(&mut r.profile, Some(profile.clone()), &profile.name)
+                                .selectable_value(&mut r.profile, Some(profile.clone()), super::chinese::label(&profile.name))
                                 .on_hover_text(&profile.copyright)
                                 .changed()
                             {
@@ -572,9 +565,9 @@ impl Editor {
                         ui.separator();
                         if !adobe.is_empty()
                             && ui
-                                .button("Import Adobe profiles for this camera")
+                                .button("导入此相机的 Adobe 配置")
                                 .on_hover_text(format!(
-                                    "Adds Adobe Standard and the Camera Matching profiles from Lightroom's installation ({} files), which Adobe Color and the other Adobe looks build on.",
+                                    "从 Lightroom 安装目录添加 Adobe Standard 和相机匹配配置（{} 个文件），为 Adobe Color 等风格提供基础。",
                                     adobe.len()
                                 ))
                                 .clicked()
@@ -583,16 +576,16 @@ impl Editor {
                             ui.close();
                         }
                         if ui
-                            .button("Import profiles…")
-                            .on_hover_text("Import DCP camera profiles and XMP look profiles. Select the matching base DCP and XMP together.")
+                            .button("导入配置文件…")
+                            .on_hover_text("导入 DCP 相机配置与 XMP 风格，请同时选择匹配的基础 DCP 和 XMP。")
                             .clicked()
                         {
                             import_profiles = true;
                             ui.close();
                         }
                         if ui
-                            .button("Import profiles from folder…")
-                            .on_hover_text("Import every DCP profile and XMP look in a folder and its subfolders")
+                            .button("从文件夹导入配置…")
+                            .on_hover_text("导入文件夹及子文件夹内全部 DCP 配置和 XMP 风格")
                             .clicked()
                         {
                             import_folder = Some(ImportKind::CameraProfiles);
@@ -611,17 +604,17 @@ impl Editor {
                     &mut fixed
                 };
                 ui.push_id("profile-amount", |ui| {
-                    slider_with(ui, "Amount", amount, 0. ..=2., 1., Some((100., 0)), None)
+                    slider_with(ui, "数量", amount, 0. ..=2., 1., Some((100., 0)), None)
                 });
             })
             .response
-            .on_disabled_hover_text("This profile has no Amount");
+            .on_disabled_hover_text("此配置不支持强度调整");
             if !profile_errors.is_empty() {
                 ui.horizontal(|ui| {
                     ui.add_space(88.);
-                    ui.small(format!("{} profiles unavailable", profile_errors.len()))
+                    ui.small(format!("{} 个配置文件不可用", profile_errors.len()))
                         .on_hover_text(profile_errors.join("\n"));
-                    if !adobe.is_empty() && ui.small_button("Import Adobe base profile").clicked() {
+                    if !adobe.is_empty() && ui.small_button("导入 Adobe 基础配置").clicked() {
                         import_adobe = true;
                     }
                 });
@@ -643,19 +636,19 @@ impl Editor {
                 shot.reset_white_balance(m);
                 (shot.temperature, shot.tint)
             });
-            control_row(ui, "WB", |ui| {
+            control_row(ui, "白平衡", |ui| {
                 let current = (r.temperature, r.tint);
                 let near =
                     |(t, n): (f32, f32)| (t - current.0).abs() < 1. && (n - current.1).abs() < 0.5;
                 let selected = if r.auto_white_balance.is_some_and(|[t, n]| near((t, n))) {
-                    "Auto"
+                    "自动"
                 } else if as_shot.is_some_and(near) {
-                    "As Shot"
+                    "拍摄时"
                 } else {
                     NamedWhiteBalance::ALL
                         .into_iter()
                         .find(|w| near((w.values().temperature, w.values().tint)))
-                        .map_or("Custom", NamedWhiteBalance::name)
+                        .map_or("自定义", |w| super::chinese::label(w.name()))
                 };
                 // The selector sits at the row's far left, so the menu lines up
                 // with Profile's.
@@ -671,7 +664,7 @@ impl Editor {
                 }
                 eyedropper_icon(ui.painter(), rect.center(), picking || response.hovered());
                 if response
-                    .on_hover_text("White balance selector (W): click a neutral area of the photo")
+                    .on_hover_text("白平衡吸管（W）：点击照片中的中性区域")
                     .clicked()
                 {
                     view.toggle(Tool::WhiteBalance);
@@ -681,7 +674,7 @@ impl Editor {
                     .selected_text(selected)
                     .show_ui(ui, |ui| {
                         if ui
-                            .selectable_label(selected == "As Shot", "As Shot")
+                            .selectable_label(selected == "拍摄时", "拍摄时")
                             .clicked()
                             && let Some(m) = &metadata
                         {
@@ -691,16 +684,19 @@ impl Editor {
                         if ui
                             .add_enabled(
                                 auto_ready,
-                                egui::Button::selectable(selected == "Auto", "Auto"),
+                                egui::Button::selectable(selected == "自动", "自动"),
                             )
-                            .on_hover_text("Make the photo's near-neutral areas neutral")
+                            .on_hover_text("将照片中接近中性的区域调整为中性")
                             .clicked()
                         {
                             auto_request = Some(AutoKind::WhiteBalance);
                         }
                         for named in NamedWhiteBalance::ALL {
                             if ui
-                                .selectable_label(selected == named.name(), named.name())
+                                .selectable_label(
+                                    selected == super::chinese::label(named.name()),
+                                    super::chinese::label(named.name()),
+                                )
                                 .clicked()
                                 && let Some(m) = &metadata
                             {
@@ -713,14 +709,14 @@ impl Editor {
                         }
                         ui.add_enabled(
                             false,
-                            egui::Button::selectable(selected == "Custom", "Custom"),
+                            egui::Button::selectable(selected == "自定义", "自定义"),
                         );
                     });
             });
             let photo = metadata.as_ref();
             setting_control(ui, r, ParameterId::Temperature, 6500., photo);
             setting_control(ui, r, ParameterId::Tint, 0., photo);
-            subheading(ui, "Tone");
+            subheading(ui, "色调");
             for id in [
                 ParameterId::Exposure,
                 ParameterId::Contrast,
@@ -731,7 +727,7 @@ impl Editor {
             ] {
                 setting_control(ui, r, id, 0., photo);
             }
-            subheading(ui, "Presence");
+            subheading(ui, "质感");
             for id in [
                 ParameterId::Texture,
                 ParameterId::Clarity,
@@ -762,7 +758,7 @@ impl Editor {
         }
 
         let mut switch = PanelSwitch::new(r, Panel::ToneCurve);
-        if switched_section(ui, "Tone Curve", &mut switch.state, |ui| {
+        if switched_section(ui, "色调曲线", &mut switch.state, |ui| {
             ui.horizontal(|ui| {
                 ui.spacing_mut().item_spacing.x = 6.;
                 let (button, _) = ui.allocate_exact_size(Vec2::new(22., 22.), Sense::hover());
@@ -770,14 +766,17 @@ impl Editor {
                     ui,
                     button,
                     view.is(Tool::Targeted(Target::ToneCurve)),
-                    &format!("Targeted adjustment: drag up or down on the photo to move the region of the tone curve there · {}", targeted_shortcut("T")),
+                    &format!(
+                        "目标调整：在照片上上下拖动，调整对应区域的色调曲线 · {}",
+                        targeted_shortcut("T")
+                    ),
                 ) {
                     targeted_request = Some(Target::ToneCurve);
                 }
                 segmented(
                     ui,
                     &mut view.parametric_curve,
-                    &[(true, "Parametric"), (false, "Point")],
+                    &[(true, "参数"), (false, "点")],
                     112.,
                 );
                 if !view.parametric_curve {
@@ -800,7 +799,7 @@ impl Editor {
                     &histogram,
                     moving.and_then(|w| (0..4).find(|i| w.shares[*i] > 0.)),
                 );
-                subheading(ui, "Region");
+                subheading(ui, "区域");
                 // Lightroom lists them lightest first.
                 for (i, id) in ParameterId::PARAMETRIC.into_iter().enumerate().rev() {
                     let row = ui.push_id(("parametric", i), |ui| {
@@ -825,10 +824,10 @@ impl Editor {
                 use crate::presets::curves::ShownCurve;
                 let chosen = ShownCurve::of(r, &saved_curves);
                 let shown = chosen.name(&saved_curves).to_string();
-                control_row(ui, "Point Curve", |ui| {
+                control_row(ui, "点曲线", |ui| {
                     egui::ComboBox::from_id_salt("point-curve")
                         .width(ui.available_width())
-                        .selected_text(&shown)
+                        .selected_text(super::chinese::label(&shown))
                         .show_ui(ui, |ui| {
                             use super::curve_menu::CurveChoice;
                             use crate::presets::curves::BuiltinCurve;
@@ -836,7 +835,7 @@ impl Editor {
                                 if ui
                                     .selectable_label(
                                         chosen == ShownCurve::Builtin(curve),
-                                        curve.name(),
+                                        super::chinese::label(curve.name()),
                                     )
                                     .clicked()
                                 {
@@ -856,10 +855,8 @@ impl Editor {
                             }
                             ui.separator();
                             if ui
-                                .selectable_label(false, "Save…")
-                                .on_hover_text(
-                                    "Save the RGB, Red, Green and Blue curves under a name",
-                                )
+                                .selectable_label(false, "保存…")
+                                .on_hover_text("命名保存 RGB、红、绿、蓝曲线")
                                 .clicked()
                             {
                                 curve_choice = Some(CurveChoice::Save);
@@ -868,7 +865,7 @@ impl Editor {
                 });
                 // Lightroom's Refine Saturation, under the RGB point curve it acts on;
                 // the channel curves keep the same height so nothing below moves.
-                subheading(ui, "Refine");
+                subheading(ui, "微调");
                 // Camera Raw renders 101–200 as 100: shown there, and kept as imported
                 // until the slider is moved.
                 let mut shown = r.curve_saturation.min(1.);
@@ -880,17 +877,17 @@ impl Editor {
                     r.curve_saturation = shown;
                 }
             }
-            subheading(ui, "Levels");
+            subheading(ui, "色阶");
             slider(
                 ui,
-                "Black point",
+                "黑场",
                 &mut r.black_point,
                 0. ..=r.white_point - 0.01,
                 0.,
             );
             slider(
                 ui,
-                "White point",
+                "白场",
                 &mut r.white_point,
                 r.black_point + 0.01..=1.,
                 1.,
@@ -913,12 +910,12 @@ impl Editor {
         let (mixer_title, mixer_panel) = if black_white {
             ("B&W", Panel::BlackWhiteMix)
         } else {
-            ("Color Mixer", Panel::ColorMixer)
+            ("颜色混合器", Panel::ColorMixer)
         };
         let mut switch = PanelSwitch::new(r, mixer_panel);
         if switched_section(ui, mixer_title, &mut switch.state, |ui| {
             if black_white {
-                let heading = subheading(ui, "Black & White Mix");
+                let heading = subheading(ui, "黑白混合");
                 // Measured (once) only while this panel is open.
                 let auto_mix = photo
                     .spread()
@@ -938,12 +935,12 @@ impl Editor {
                 let enabled = auto_mix.is_some_and(|mix| mix != r.effects.gray_mix);
                 let auto = ui
                     .scope_builder(egui::UiBuilder::new().max_rect(button), |ui| {
-                        ui.add_enabled(enabled, egui::Button::new("Auto").small())
+                        ui.add_enabled(enabled, egui::Button::new("自动").small())
                     })
                     .inner;
                 if auto
-                    .on_hover_text("Set the mix from the photo's colors")
-                    .on_disabled_hover_text("The Auto mix is applied")
+                    .on_hover_text("根据照片颜色设置混合")
+                    .on_disabled_hover_text("已应用自动混合")
                     .clicked()
                 {
                     auto_mix_request = true;
@@ -957,7 +954,7 @@ impl Editor {
                     target,
                     view.is(Tool::Targeted(Target::BlackWhite)),
                     &format!(
-                        "Targeted adjustment: drag up or down on the photo to brighten or darken its color · {}",
+                        "目标调整：在照片上上下拖动，改变该颜色的明暗 · {}",
                         targeted_shortcut("G")
                     ),
                 ) {
@@ -987,8 +984,8 @@ impl Editor {
                     ui,
                     &mut view.mixer_tab,
                     &[
-                        (MixerTab::Mixer, "Mixer"),
-                        (MixerTab::PointColor, "Point Color"),
+                        (MixerTab::Mixer, "混合器"),
+                        (MixerTab::PointColor, "点颜色"),
                     ],
                     w,
                 );
@@ -997,19 +994,19 @@ impl Editor {
                 // Only the current process renders Point Color.
                 let supported = super::point_color_panel::renders_point_color(r);
                 if let Some(steps) = super::point_color_panel::point_color_steps(r) {
-                    hint_row(ui, &format!("{steps} in Calibration to use Point Color."));
+                    hint_row(ui, &format!("请在校准中{steps}，以使用点颜色。"));
                 }
                 ui.add_enabled_ui(supported, |ui| {
                     super::point_color_panel::point_color_panel(ui, &mut r.point_colors, view)
                 });
                 return;
             }
-            control_row(ui, "Mixer", |ui| {
+            control_row(ui, "混合器", |ui| {
                 let w = ui.available_width();
                 segmented(
                     ui,
                     &mut view.mixer_color,
-                    &[(false, "HSL"), (true, "Color")],
+                    &[(false, "HSL"), (true, "彩色")],
                     w,
                 );
             });
@@ -1033,7 +1030,7 @@ impl Editor {
                 });
                 let i = view.selected_band;
                 ui.push_id(("hsl", i), |ui| {
-                    for (c, name) in ["Hue", "Saturation", "Luminance"].into_iter().enumerate() {
+                    for (c, name) in ["色相", "饱和度", "明亮度"].into_iter().enumerate() {
                         slider_with(
                             ui,
                             name,
@@ -1050,11 +1047,11 @@ impl Editor {
                 let channel_tip = |c: usize| {
                     let name = ["hue", "saturation", "luminance"][c];
                     format!(
-                        "Targeted adjustment: drag up or down on the photo to change its color's {name} · {}",
+                        "目标调整：在照片上上下拖动，改变该颜色的{name} · {}",
                         targeted_shortcut(["H", "S", "L"][c])
                     )
                 };
-                control_row(ui, "Adjust", |ui| {
+                control_row(ui, "调整", |ui| {
                     ui.spacing_mut().item_spacing.x = 6.;
                     if !all {
                         let (button, _) =
@@ -1073,7 +1070,7 @@ impl Editor {
                     segmented(
                         ui,
                         &mut view.mixer_adjust,
-                        &[(0, "Hue"), (1, "Sat"), (2, "Lum"), (3, "All")],
+                        &[(0, "色相"), (1, "饱和度"), (2, "明亮度"), (3, "全部")],
                         w,
                     );
                 });
@@ -1087,7 +1084,7 @@ impl Editor {
                 for c in channels {
                     let target = hsl_target(c);
                     if all {
-                        let heading = subheading(ui, ["Hue", "Saturation", "Luminance"][c]);
+                        let heading = subheading(ui, ["色相", "饱和度", "明亮度"][c]);
                         let button = Rect::from_min_size(
                             Pos2::new(heading.right() - 24., heading.top() - 3.),
                             Vec2::splat(22.),
@@ -1134,7 +1131,7 @@ impl Editor {
         switch.finish(r);
 
         let mut switch = PanelSwitch::new(r, Panel::ColorGrading);
-        if switched_section(ui, "Color Grading", &mut switch.state, |ui| {
+        if switched_section(ui, "颜色分级", &mut switch.state, |ui| {
             ui.push_id(grading_document, |ui| {
                 super::color_grading::color_grading_ui(ui, r, &mut view.grading);
             });
@@ -1148,7 +1145,7 @@ impl Editor {
 
         let mut switch = PanelSwitch::new(r, Panel::Detail);
         let sharpening = SharpeningSliders::defaults(r.sharpening_model);
-        if switched_section(ui, "Detail", &mut switch.state, |ui| {
+        if switched_section(ui, "细节", &mut switch.state, |ui| {
             let radius_and_masking = r.engine >= 3;
             let color_default = if r.noise_model.is_original() {
                 0.
@@ -1158,14 +1155,14 @@ impl Editor {
             let mut control = |ui: &mut egui::Ui, id: ParameterId, default: f32| {
                 setting_slider(ui, id, id.value_mut(r), default);
             };
-            subheading(ui, "Sharpening");
+            subheading(ui, "锐化");
             control(ui, ParameterId::SharpeningAmount, sharpening.amount);
             if radius_and_masking {
                 control(ui, ParameterId::SharpeningRadius, sharpening.radius);
                 control(ui, ParameterId::SharpeningDetail, sharpening.detail);
                 control(ui, ParameterId::SharpeningMasking, sharpening.masking);
             }
-            subheading(ui, "Noise Reduction");
+            subheading(ui, "降噪");
             control(ui, ParameterId::LuminanceNoise, 0.);
             ui.push_id("luma-nr", |ui| {
                 control(ui, ParameterId::LuminanceDetail, 0.5);
@@ -1193,21 +1190,21 @@ impl Editor {
         switch.finish(r);
 
         let mut switch = PanelSwitch::new(r, Panel::LensCorrections);
-        if switched_section(ui, "Lens Corrections", &mut switch.state, |ui| {
+        if switched_section(ui, "镜头校正", &mut switch.state, |ui| {
             let photo = metadata.as_ref();
-            subheading(ui, "Profile");
+            subheading(ui, "配置文件");
             ui.add_enabled_ui(r.engine >= 4, |ui| {
                 control_row(ui, "", |ui| {
-                    ui.checkbox(&mut r.lens_ca, "Remove Chromatic Aberration")
-                        .on_hover_text("Remove red/cyan and blue/yellow fringes toward the edges of the frame, measured from the photo itself.")
-                        .on_disabled_hover_text("Update the process version in Calibration to use lens corrections.");
+                    ui.checkbox(&mut r.lens_ca, "移除色差")
+                        .on_hover_text("根据照片测量并移除边缘的红／青和蓝／黄色差。")
+                        .on_disabled_hover_text("请在校准中更新处理版本以使用镜头校正。");
                 });
                 control_row(ui, "", |ui| {
                     let mut on = r.lens_profile;
                     if ui
-                        .checkbox(&mut on, "Enable Profile Corrections")
-                        .on_hover_text("Correct distortion and vignetting with an Adobe lens profile, or the lens data the camera stored in the RAW.")
-                        .on_disabled_hover_text("Update the process version in Calibration to use lens corrections.")
+                        .checkbox(&mut on, "启用配置文件校正")
+                        .on_hover_text("使用 Adobe 镜头配置或 RAW 中保存的镜头数据校正畸变与暗角。")
+                        .on_disabled_hover_text("请在校准中更新处理版本以使用镜头校正。")
                         .changed()
                         && let Some(m) = &metadata
                     {
@@ -1224,9 +1221,9 @@ impl Editor {
                 .as_ref()
                 .map(|m| m.lens_model.clone())
                 .filter(|l| !l.is_empty());
-            control_row(ui, "Lens", |ui| {
+            control_row(ui, "镜头", |ui| {
                 ui.label(
-                    egui::RichText::new(lens.as_deref().unwrap_or("Unknown"))
+                    egui::RichText::new(lens.as_deref().unwrap_or("未知"))
                         .size(11.)
                         .color(palette.gray(200)),
                 );
@@ -1246,7 +1243,7 @@ impl Editor {
                 });
             }
             if r.lens_profile {
-                subheading(ui, "Amount");
+                subheading(ui, "数量");
                 ui.push_id("lens-amount", |ui| {
                     setting_control(ui, r, ParameterId::LensDistortion, 1., photo);
                     setting_control(ui, r, ParameterId::LensVignetting, 1., photo);
@@ -1254,28 +1251,28 @@ impl Editor {
             }
             control_row(ui, "", |ui| {
                 if ui
-                    .small_button("Import Lens Profiles…")
-                    .on_hover_text("Import Adobe .lcp lens profiles, e.g. from /Library/Application Support/Adobe/CameraRaw/LensProfiles")
+                    .small_button("导入镜头配置…")
+                    .on_hover_text("导入 Adobe .lcp 镜头配置，例如 /Library/Application Support/Adobe/CameraRaw/LensProfiles")
                     .clicked()
                 {
                     import_lens = true;
                 }
                 if ui
-                    .small_button("Import Folder…")
-                    .on_hover_text("Import every .lcp lens profile in a folder and its subfolders")
+                    .small_button("导入文件夹…")
+                    .on_hover_text("导入文件夹及子文件夹内全部 .lcp 镜头配置")
                     .clicked()
                 {
                     import_folder = Some(ImportKind::LensProfiles);
                 }
             });
             // Lightroom's Manual tab: Distortion, then Defringe and Vignetting.
-            subheading(ui, "Distortion");
+            subheading(ui, "畸变");
             ui.push_id("manual-distortion", |ui| {
                 ui.add_enabled_ui(r.engine >= 4, |ui| {
                     setting_control(ui, r, ParameterId::ManualDistortion, 0., photo);
                 });
             });
-            let row = subheading(ui, "Defringe");
+            let row = subheading(ui, "去边");
             // The Fringe Color Selector, at the row's far left as White Balance's.
             let rect = Rect::from_center_size(
                 Pos2::new(row.left() + 13., row.center().y),
@@ -1289,13 +1286,13 @@ impl Editor {
             }
             eyedropper_icon(ui.painter(), rect.center(), picking || response.hovered());
             if response
-                .on_hover_text("Fringe color selector: click a purple or green fringe in the photo")
+                .on_hover_text("去边颜色吸管：点击照片中的紫色或绿色边缘")
                 .clicked()
             {
                 view.toggle(Tool::Defringe);
             }
             defringe_sliders(ui, &mut r.effects);
-            subheading(ui, "Vignetting");
+            subheading(ui, "暗角");
             ui.push_id("lens-vignette", |ui| {
                 setting_control(ui, r, ParameterId::LensVignetteAmount, 0., photo);
                 setting_control(ui, r, ParameterId::LensVignetteMidpoint, 0.5, photo);
@@ -1320,15 +1317,15 @@ impl Editor {
         switch.finish(r);
 
         let mut switch = PanelSwitch::new(r, Panel::Transform);
-        if switched_section(ui, "Transform", &mut switch.state, |ui| {
+        if switched_section(ui, "变换", &mut switch.state, |ui| {
             let supported = r.engine >= 4;
             if !supported {
-                hint_row(ui, "Update the process in Calibration to use Transform.");
+                hint_row(ui, "请在校准中更新处理版本以使用变换。");
             }
             ui.add_enabled_ui(supported, |ui| {
                 use crate::model::transform::UprightMode;
                 // As Lightroom: Update beside the heading, then the modes in two rows.
-                control_row(ui, "Upright", |ui| {
+                control_row(ui, "透视校正", |ui| {
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                         // Guided solves its guides again; without guides it has nothing to go by.
                         let analysed = match r.upright.mode {
@@ -1337,8 +1334,8 @@ impl Editor {
                             _ => true,
                         };
                         if ui
-                            .add_enabled(upright_ready && analysed, egui::Button::new("Update"))
-                            .on_hover_text("Analyse the photo again, e.g. after changing lens corrections")
+                            .add_enabled(upright_ready && analysed, egui::Button::new("更新"))
+                            .on_hover_text("重新分析照片，例如更改镜头校正后")
                             .clicked()
                         {
                             upright_request = true;
@@ -1348,8 +1345,16 @@ impl Editor {
                 let u = &mut r.upright;
                 let before = u.mode;
                 for row in [
-                    [(UprightMode::Off, "Off"), (UprightMode::Auto, "Auto"), (UprightMode::Guided, "Guided")],
-                    [(UprightMode::Level, "Level"), (UprightMode::Vertical, "Vertical"), (UprightMode::Full, "Full")],
+                    [
+                        (UprightMode::Off, "关闭"),
+                        (UprightMode::Auto, "自动"),
+                        (UprightMode::Guided, "引导式"),
+                    ],
+                    [
+                        (UprightMode::Level, "水平"),
+                        (UprightMode::Vertical, "垂直"),
+                        (UprightMode::Full, "全面"),
+                    ],
                 ] {
                     let w = ui.available_width();
                     segmented(ui, &mut u.mode, &row, w);
@@ -1364,23 +1369,26 @@ impl Editor {
                 }
                 if u.mode == UprightMode::Guided {
                     let count = u.guides.len();
-                    control_row(ui, "Guides", |ui| {
+                    control_row(ui, "引导线", |ui| {
                         let drawing = view.is(Tool::Guided);
                         if ui
-                            .selectable_label(drawing, "Draw")
-                            .on_hover_text("Draw up to four guides along verticals and horizontals · Shift+T")
+                            .selectable_label(drawing, "绘制")
+                            .on_hover_text("沿垂直及水平线绘制最多四条引导线 · Shift+T")
                             .clicked()
                         {
                             guided_action = Some(GuidedAction::Toggle);
                         }
                         ui.label(
-                            egui::RichText::new(format!("{count} of {}", crate::model::transform::MAX_GUIDES))
-                                .color(palette.gray(170)),
+                            egui::RichText::new(format!(
+                                "{count} of {}",
+                                crate::model::transform::MAX_GUIDES
+                            ))
+                            .color(palette.gray(170)),
                         );
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                             if ui
-                                .add_enabled(count > 0, egui::Button::new("Clear"))
-                                .on_hover_text("Remove every guide")
+                                .add_enabled(count > 0, egui::Button::new("清除"))
+                                .on_hover_text("移除所有引导线")
                                 .clicked()
                             {
                                 guided_action = Some(GuidedAction::Clear);
@@ -1389,25 +1397,29 @@ impl Editor {
                     });
                     if view.is(Tool::Guided) {
                         control_row(ui, "", |ui| {
-                            ui.checkbox(&mut view.guided.loupe, "Show Loupe")
-                                .on_hover_text("Magnify the photo while placing a guide's end");
-                            ui.checkbox(&mut view.guided.grid, "Grid");
+                            ui.checkbox(&mut view.guided.loupe, "显示放大镜")
+                                .on_hover_text("放置引导线端点时放大照片");
+                            ui.checkbox(&mut view.guided.grid, "网格");
                         });
                     }
                 } else if view.is(Tool::Guided) {
                     view.tool = Tool::None;
                 }
                 control_row(ui, "", |ui| {
-                    ui.checkbox(&mut r.constrain_crop, "Constrain Crop")
-                        .on_hover_text("Shrink the crop, keeping its aspect, to leave out the white areas outside the photo");
+                    ui.checkbox(&mut r.constrain_crop, "约束裁剪")
+                        .on_hover_text("保持比例缩小裁剪，排除照片外的白色区域");
                 });
-                subheading(ui, "Transform");
+                subheading(ui, "变换");
                 // Stored as Camera Raw applies them, before the photo is turned for
                 // display; shown, as in Lightroom, along the displayed photo's axes.
                 let turns = metadata.as_ref().map_or(0, |m| {
                     crate::model::image_frame::ImageFrame::for_metadata(m).turns
                 });
-                let axes = crate::model::transform::display_axes((turns + r.rotation) % 4, r.flip_x, r.flip_y);
+                let axes = crate::model::transform::display_axes(
+                    (turns + r.rotation) % 4,
+                    r.flip_x,
+                    r.flip_y,
+                );
                 let mut shown = r.transform.displayed(axes);
                 let t = &mut shown;
                 setting_slider(ui, ParameterId::TransformVertical, &mut t.vertical, 0.);
@@ -1429,13 +1441,13 @@ impl Editor {
         switch.finish(r);
 
         let mut switch = PanelSwitch::new(r, Panel::Effects);
-        if switched_section(ui, "Effects", &mut switch.state, |ui| {
+        if switched_section(ui, "效果", &mut switch.state, |ui| {
             let photo = metadata.as_ref();
-            subheading(ui, "Post-Crop Vignetting");
+            subheading(ui, "裁剪后暗角");
             setting_control(ui, r, ParameterId::VignetteAmount, 0., photo);
             setting_control(ui, r, ParameterId::VignetteMidpoint, 0.5, photo);
             setting_control(ui, r, ParameterId::VignetteFeather, 0.5, photo);
-            subheading(ui, "Grain");
+            subheading(ui, "颗粒");
             ui.push_id("grain", |ui| {
                 setting_control(ui, r, ParameterId::GrainAmount, 0., photo);
                 setting_control(ui, r, ParameterId::GrainSize, 0.25, photo);
@@ -1447,40 +1459,39 @@ impl Editor {
         switch.finish(r);
 
         let mut switch = PanelSwitch::new(r, Panel::Calibration);
-        if switched_section(ui, "Calibration", &mut switch.state, |ui| {
-            subheading(ui, "Process");
+        if switched_section(ui, "校准", &mut switch.state, |ui| {
+            subheading(ui, "处理版本");
             if r.engine < 4 {
                 ui.horizontal(|ui| {
-                    ui.small(format!("Version {} (older rendering preserved)", r.engine));
+                    ui.small(format!("版本 {}（保留旧版渲染）", r.engine));
                     if ui
-                        .small_button("Update")
-                        .on_hover_text(
-                            "Render with the current process, including built-in lens corrections",
-                        )
+                        .small_button("更新")
+                        .on_hover_text("使用当前处理版本渲染，包括内置镜头校正")
                         .clicked()
                     {
                         r.update_process(metadata.as_ref());
                     }
                 });
             } else {
-                ui.small("Current version");
+                ui.small("当前版本");
             }
             if r.profile.is_some() {
-                ui.checkbox(&mut r.profile_tone, "Profile tone rendering")
-                    .on_hover_text("Use the camera profile's base tone curve. Older edits retain their original rendering until enabled.");
+                ui.checkbox(&mut r.profile_tone, "配置文件色调渲染")
+                    .on_hover_text("使用相机配置的基础色调曲线。启用前，旧编辑保留原有渲染。");
                 if let Some(m) = &metadata {
                     let baseline = crate::camera_profiles::reference::baseline_exposure(m);
                     if baseline != r.camera_exposure
-                        && ui.small_button("Use camera exposure baseline")
-                            .on_hover_text("Apply the camera's reference exposure offset while leaving the Exposure slider unchanged.")
+                        && ui
+                            .small_button("使用相机曝光基准")
+                            .on_hover_text("应用相机参考曝光偏移，不改变曝光滑块。")
                             .clicked()
                     {
                         r.camera_exposure = baseline;
                     }
                 }
             }
-            if ui.checkbox(&mut r.reference_curves, "Reference tone curves")
-                .on_hover_text("Natural cubic curves, hue-preserving master processing and an sRGB transfer in ProPhoto RGB. Older edits keep their saved curve behavior until enabled.")
+            if ui.checkbox(&mut r.reference_curves, "参考色调曲线")
+                .on_hover_text("自然三次曲线、保色相主曲线处理及 ProPhoto RGB 中的 sRGB 转换。启用前，旧编辑保留已保存的曲线行为。")
                 .changed()
                 && r.reference_curves
             {
@@ -1492,20 +1503,19 @@ impl Editor {
                 }
             }
             if !r.reference_curves {
-                ui.checkbox(&mut r.wide_gamut_curves, "Legacy wide-gamut curves");
+                ui.checkbox(&mut r.wide_gamut_curves, "旧版广色域曲线");
             }
-            ui.checkbox(&mut r.reference_color, "Reference color rendering")
-                .on_hover_text("Updated vibrance, color mixer luminance and RGB-hue split toning. Older saved edits retain their original rendering until enabled.");
-            ui.checkbox(&mut r.reference_calibration, "Reference calibration")
-                .on_hover_text("Neutral-preserving primary adjustments and corrected shadow tint. Older edits keep their saved behavior until enabled.");
-            subheading(ui, "Shadows");
+            ui.checkbox(&mut r.reference_color, "参考色彩渲染")
+                .on_hover_text("改进自然饱和度、颜色混合器明亮度及 RGB 色相分离色调。启用前，旧编辑保留原有渲染。");
+            ui.checkbox(&mut r.reference_calibration, "参考校准")
+                .on_hover_text(
+                    "保留中性色的原色调整与改进的阴影色调。启用前，旧编辑保留原有行为。",
+                );
+            subheading(ui, "阴影");
             ui.push_id("calibration-shadows", |ui| {
                 setting_slider(ui, ParameterId::ShadowTint, &mut r.effects.shadow_tint, 0.);
             });
-            for (i, name) in ["Red Primary", "Green Primary", "Blue Primary"]
-                .iter()
-                .enumerate()
-            {
+            for (i, name) in ["红原色", "绿原色", "蓝原色"].iter().enumerate() {
                 subheading(ui, name);
                 ui.push_id(("calibration", i), |ui| {
                     let primary = ParameterId::PRIMARIES[i];
@@ -1551,7 +1561,7 @@ impl Editor {
             Some(GuidedAction::Toggle) => self.toggle_guided_tool(),
             Some(GuidedAction::Clear) => {
                 self.view.guided.selected = None;
-                self.set_guides(Vec::new(), "Clear Guides");
+                self.set_guides(Vec::new(), "清除引导线");
             }
             None => {}
         }
@@ -1583,13 +1593,13 @@ impl Editor {
                     ui.ctx().request_repaint();
                     self.refresh_library_defaults();
                     self.status = format!(
-                        "Imported {} Adobe profiles for {} {}. Choose one from the Profile menu.",
+                        "已为 {} 个 Adobe 配置导入 {} {} 的配置，请从配置文件菜单中选择。",
                         done.len(),
                         m.make,
                         m.model
                     );
                 }
-                Err(e) => self.status = format!("Profiles not imported: {e:#}"),
+                Err(e) => self.status = format!("未导入配置文件：{e:#}"),
             }
         }
     }
@@ -1609,13 +1619,13 @@ fn aspect_name(aspect: f32) -> &'static str {
     ASPECTS
         .iter()
         .find(|(a, _)| near(*a, aspect) || (*a > 0. && near(1. / *a, aspect)))
-        .map_or("Custom", |(_, name)| *name)
+        .map_or("自定义", |(_, name)| *name)
 }
 
 /// The crop's aspect presets, long side over short.
 pub(super) const ASPECTS: [(f32, &str); 9] = [
-    (-1., "Original"),
-    (0., "Free"),
+    (-1., "原始"),
+    (0., "自由"),
     (1., "1 x 1"),
     (1.25, "4 x 5"),
     (1.4, "5 x 7"),
@@ -1625,7 +1635,7 @@ pub(super) const ASPECTS: [(f32, &str); 9] = [
     (65. / 24., "65 x 24 (XPan)"),
 ];
 pub(super) const BANDS: [&str; 8] = [
-    "Red", "Orange", "Yellow", "Green", "Aqua", "Blue", "Purple", "Magenta",
+    "红色", "橙色", "黄色", "绿色", "青色", "蓝色", "紫色", "洋红",
 ];
 fn band_color(i: usize) -> Color32 {
     [
@@ -1732,11 +1742,11 @@ fn control_row<R>(ui: &mut egui::Ui, label: &str, add: impl FnOnce(&mut egui::Ui
 /// Defringe's Amount and hue range for Purple, then Green. Double-clicking a hue
 /// resets it to that color's own default range.
 pub(super) fn defringe_sliders(ui: &mut egui::Ui, e: &mut crate::model::effects::Effects) {
-    for (i, name, hue) in [(0, "Purple", [0.55, 0.9]), (1, "Green", [0.2, 0.5])] {
+    for (i, name, hue) in [(0, "紫色", [0.55, 0.9]), (1, "绿色", [0.2, 0.5])] {
         ui.push_id(("defringe", i), |ui| {
             slider_with(
                 ui,
-                &format!("{name} Amount"),
+                &format!("{name}数量"),
                 &mut e.defringe[i],
                 0. ..=1.,
                 0.,
@@ -1751,7 +1761,7 @@ pub(super) fn defringe_sliders(ui: &mut egui::Ui, e: &mut crate::model::effects:
             });
             let low = slider_with(
                 ui,
-                &format!("{name} Hue"),
+                &format!("{name}色相"),
                 lo,
                 0. ..=(*hi - 0.1).max(0.),
                 defaults[0],
@@ -1778,7 +1788,7 @@ pub(super) fn defringe_sliders(ui: &mut egui::Ui, e: &mut crate::model::effects:
                 // Named after the whole range, not the end the slider clamped.
                 name_history_step(
                     ui,
-                    format!("Defringe {name} Hue"),
+                    format!("去边{name}色相"),
                     format!("{:.0} / {:.0}", defaults[0] * 100., defaults[1] * 100.),
                 );
             }
@@ -1791,15 +1801,15 @@ fn eyedropper_icon(painter: &egui::Painter, c: Pos2, strong: bool) {
 }
 /// The line that opens the Remove and Masking drawers: both tools are new.
 /// What the experimental label's tooltip says about a tool.
-const UNMEASURED: &str = "Not yet measured against Lightroom. Spots and masks are saved apart \
-     from the rest of the edit, so older RAWmakase releases open the photo without them.";
-const RED_EYE_NOTE: &str = "Fitted to Camera Raw on synthetic eyes. Corrections are saved apart \
-     from the rest of the edit, so older RAWmakase releases open the photo without them.";
+const UNMEASURED: &str =
+    "尚未与 Lightroom 对比验证。修复点和蒙版独立保存，旧版程序打开照片时不会应用它们。";
+const RED_EYE_NOTE: &str =
+    "通过模拟眼睛拟合 Camera Raw 红眼校正。校正独立保存，旧版程序打开照片时不会应用此校正。";
 fn experimental(ui: &mut egui::Ui, note: &str) {
     ui.horizontal(|ui| {
         ui.add_space(83.);
         ui.label(
-            egui::RichText::new("Experimental · early version")
+            egui::RichText::new("实验功能 · 早期版本")
                 .size(10.)
                 .color(theme::palette(ui.ctx()).warning()),
         )

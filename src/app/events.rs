@@ -91,8 +91,8 @@ impl Editor {
                 Event::Selection(done) => self.selection_done(*done),
                 Event::ModelInstalled(result) => {
                     self.selection.models.finished(&result);
-                    if result.as_ref().err().is_some_and(|e| e == "Cancelled") {
-                        self.status = "Model download cancelled".into();
+                    if result.as_ref().err().is_some_and(|e| e == "已取消") {
+                        self.status = "已取消模型下载".into();
                     } else {
                         self.model_installed(result);
                     }
@@ -100,8 +100,8 @@ impl Editor {
                 Event::ModelRemoved(result) => {
                     self.selection.models.removed(result.is_ok());
                     self.status = match result {
-                        Ok(()) => "Selection model removed".into(),
-                        Err(e) => format!("Model not removed: {e}"),
+                        Ok(()) => "选区模型已移除".into(),
+                        Err(e) => format!("未移除模型：{e}"),
                     };
                 }
                 Event::CatalogUpgraded { generation, result } => {
@@ -136,7 +136,7 @@ impl Editor {
                 Event::PresetSave(p) => {
                     self.activity.finish_dialog();
                     match crate::presets::save_preset(&p, self.document.edit.recipe()) {
-                        Ok(()) => self.status = "Preset saved".into(),
+                        Ok(()) => self.status = "预设已保存".into(),
                         Err(e) => self.status = e.to_string(),
                     }
                 }
@@ -176,7 +176,7 @@ impl Editor {
                     self.preview.mode = super::state::TextureMode::Whole;
                     // Uncropped, so it is placed by the photo's crop once that is known.
                     self.preview.crop = Some([0., 0., 1., 1.]);
-                    self.preview.status = "Camera preview • developing RAW…".into();
+                    self.preview.status = "相机预览 · 正在显影 RAW…".into();
                 }
                 Event::Ready { id, full, status } if id == self.load.id() => {
                     self.document.set_image(full);
@@ -294,7 +294,7 @@ impl Editor {
                     task: TaskKind::Render(Pane::Before),
                     error,
                 } if id == self.preview.before.task.id() => {
-                    self.status = format!("Before: {error}");
+                    self.status = format!("调整前：{error}");
                     self.preview.before.task.finish(id);
                     // A failed render on the GPU retires the edit's textures too: render
                     // the edit again. Before keeps its failed job, so it is not retried.
@@ -332,7 +332,7 @@ impl Editor {
                 self.view.clear_document();
                 self.selection.clear_catalog();
                 self.status = if l.message.is_empty() {
-                    "Catalog ready. Offline photos remain in the library; locate their folders to develop them.".into()
+                    "图库已就绪。离线照片仍保留在照片库中，定位其文件夹后即可显影。".into()
                 } else {
                     l.message.clone()
                 };
@@ -377,7 +377,7 @@ impl Editor {
             }
             Err(e) => {
                 self.pending_photo = None;
-                self.status = format!("Catalog operation failed: {e}");
+                self.status = format!("图库操作失败：{e}");
             }
         }
     }

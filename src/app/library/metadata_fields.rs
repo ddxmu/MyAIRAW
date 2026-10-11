@@ -222,7 +222,7 @@ impl Library {
         {
             // The drafts stay with the photos they were typed for, to be
             // saved again or discarded.
-            self.message = format!("Metadata could not be saved: {e}");
+            self.message = format!("无法保存元数据：{e}");
             return;
         }
         let read = self.session.catalog.descriptive_of(&targets);
@@ -275,8 +275,8 @@ impl Library {
         let enabled = !self.fields.targets.is_empty();
         ui.add_enabled_ui(enabled, |ui| {
             let f = &mut self.fields;
-            let title = text_row(ui, "Title", &mut f.drafts.title, &f.title, false);
-            let caption = text_row(ui, "Caption", &mut f.drafts.caption, &f.caption, true);
+            let title = text_row(ui, "标题", &mut f.drafts.title, &f.title, false);
+            let caption = text_row(ui, "说明", &mut f.drafts.caption, &f.caption, true);
             let creators = creator_rows(ui, &mut f.drafts.creators, &f.creators);
             f.edited.creators |= creators.typed;
             commit |= creators.commit;
@@ -286,20 +286,14 @@ impl Library {
                 f.add_creator = false;
             }
             f.add_creator |= creators.added;
-            let copyright = text_row(
-                ui,
-                "Copyright",
-                &mut f.drafts.copyright,
-                &f.copyright,
-                false,
-            );
+            let copyright = text_row(ui, "版权", &mut f.drafts.copyright, &f.copyright, false);
             commit |= title.left || caption.left || copyright.left;
             f.edited.title |= title.typed;
             f.edited.caption |= caption.typed;
             f.edited.copyright |= copyright.typed;
         });
         if commit && let Err(e) = self.commit_fields() {
-            self.message = format!("Metadata could not be saved: {e}");
+            self.message = format!("无法保存元数据：{e}");
         }
         let (text, can_clear) = match &self.fields.location {
             Shared::None | Shared::Same(None) => (String::new(), enabled),
@@ -330,7 +324,7 @@ impl Library {
         let clear = ui
             .put(
                 button,
-                egui::Button::new(egui::RichText::new("Clear").size(11.)).frame(false),
+                egui::Button::new(egui::RichText::new("清除").size(11.)).frame(false),
             )
             .on_hover_text("Clear Location: leave it out of exports, the file's included");
         if clear.clicked() && can_clear {
@@ -366,7 +360,7 @@ impl Library {
                 palette.gray(VALUE_GRAY),
             );
             let tip = if *all {
-                "Remove this keyword".to_string()
+                "移除此关键词".to_string()
             } else {
                 "Some of the selected photos have it (*); remove it from them".to_string()
             };
@@ -397,7 +391,7 @@ impl Library {
                     &palette,
                     egui::TextEdit::singleline(&mut self.fields.keyword_entry),
                 )
-                .hint_text("Add keywords: Child < Parent, …")
+                .hint_text("添加关键词：子词 < 父词，…")
                 .vertical_align(egui::Align::Center),
             )
         });
@@ -507,7 +501,7 @@ fn creator_rows(
         let (rect, _) =
             ui.allocate_exact_size(Vec2::new(ui.available_width(), ROW), egui::Sense::hover());
         if i == 0 {
-            caption_at(ui, rect, "Creator");
+            caption_at(ui, rect, "作者");
         }
         let field = field_rect(rect);
         let button = egui::Rect::from_min_max(
@@ -531,9 +525,9 @@ fn creator_rows(
         typed |= response.changed();
         let last = i + 1 == count;
         let (label, tip) = if last {
-            ("+", "Add a creator")
+            ("+", "添加作者")
         } else {
-            ("−", "Remove this creator")
+            ("−", "移除此作者")
         };
         if ui
             .put(

@@ -36,7 +36,7 @@ impl Editor {
             if self.library.is_some()
                 && let Err(error) = self.command_metadata(edit, None, advance)
             {
-                self.status = format!("Metadata could not be saved: {}", error.message);
+                self.status = format!("无法保存元数据：{}", error.message);
             }
         } else if self.module == Module::Library
             && let Some(library) = &mut self.library
@@ -302,7 +302,7 @@ impl Editor {
                         .library
                         .as_ref()
                         .map(|library| library.session.catalog.location().name())
-                        .unwrap_or_else(|| "No catalog".into());
+                        .unwrap_or_else(|| "未打开图库".into());
                     // Every element is painted in a 28 px slot so all centers line up.
                     let name = ui.painter().layout_no_wrap(
                         catalog,
@@ -339,19 +339,19 @@ impl Editor {
                         color,
                     );
                     let response = response
-                        .on_hover_text("Catalog: open, create or import")
+                        .on_hover_text("图库：打开、新建或导入")
                         .on_hover_cursor(egui::CursorIcon::PointingHand);
                     egui::Popup::menu(&response).show(|ui| {
                         ui.set_min_width(210.);
                         if ui
-                            .add(egui::Button::new("Setup assistant…").frame(false))
+                            .add(egui::Button::new("设置向导…").frame(false))
                             .clicked()
                         {
                             self.open_onboarding();
                             ui.close();
                         }
                         if ui
-                            .add(egui::Button::new("Catalog Settings…").frame(false))
+                            .add(egui::Button::new("图库设置…").frame(false))
                             .clicked()
                         {
                             self.open_preferences(super::preferences::Tab::Catalog);
@@ -359,13 +359,10 @@ impl Editor {
                         }
                         ui.separator();
                         for (kind, label) in [
-                            (CatalogDialog::Open, "Open catalog…"),
-                            (CatalogDialog::Create, "New catalog…"),
-                            (CatalogDialog::ImportLightroom, "Import Lightroom catalog…"),
-                            (
-                                CatalogDialog::Folder(FolderAction::Add),
-                                "Add photo folder…",
-                            ),
+                            (CatalogDialog::Open, "打开图库…"),
+                            (CatalogDialog::Create, "新建图库…"),
+                            (CatalogDialog::ImportLightroom, "导入 Lightroom 图库…"),
+                            (CatalogDialog::Folder(FolderAction::Add), "添加照片文件夹…"),
                         ] {
                             if ui
                                 .add_enabled(
@@ -396,13 +393,9 @@ impl Editor {
                             } else {
                                 1
                             });
-                            let [library, develop] = segment_bar(
-                                ui,
-                                ["Library", "Develop"],
-                                selected,
-                                &TOP_BAR_SEGMENTS,
-                            );
-                            if develop.on_hover_text("Develop · D").clicked() {
+                            let [library, develop] =
+                                segment_bar(ui, ["照片库", "显影"], selected, &TOP_BAR_SEGMENTS);
+                            if develop.on_hover_text("显影 · D").clicked() {
                                 self.onboarding.visible = false;
                                 if self.module == Module::Library
                                     && let Some(id) = self
@@ -415,15 +408,13 @@ impl Editor {
                                     self.module = Module::Develop;
                                 }
                             }
-                            if library.on_hover_text("Library · G").clicked() && self.flush() {
+                            if library.on_hover_text("照片库 · G").clicked() && self.flush() {
                                 self.onboarding.visible = false;
                                 self.module = Module::Library;
                             }
                             ui.add_space(12.);
-                            let hover = format!(
-                                "Keyboard shortcuts · {}",
-                                super::shortcuts::keys_text("Cmd+/")
-                            );
+                            let hover =
+                                format!("键盘快捷键 · {}", super::shortcuts::keys_text("Cmd+/"));
                             if super::shortcuts::icon_button(
                                 ui,
                                 super::icons::Icon::Keyboard,
@@ -440,7 +431,7 @@ impl Editor {
                                 "Ctrl+,"
                             };
                             if super::preferences::gear_button(ui)
-                                .on_hover_text(format!("Preferences · {shortcut}"))
+                                .on_hover_text(format!("偏好设置 · {shortcut}"))
                                 .clicked()
                             {
                                 self.open_preferences(super::preferences::Tab::General);
@@ -593,7 +584,7 @@ impl Editor {
                     }
                 } else {
                     ui.centered_and_justified(|ui| {
-                        ui.label("Your photographs, folders and collections");
+                        ui.label("你的照片、文件夹与收藏集");
                     });
                 }
             });
@@ -634,7 +625,10 @@ impl Editor {
             .min_size(180.)
             .max_size(500.)
             .show(ui, |ui| {
-                let _side = super::widgets::SectionSide::enter(ui, super::widgets::SectionGroup::LibraryLeft);
+                let _side = super::widgets::SectionSide::enter(
+                    ui,
+                    super::widgets::SectionGroup::LibraryLeft,
+                );
                 // Lightroom's Export… at the foot of the Library's left panel, for the
                 // photos selected.
                 let mut export = false;
@@ -643,21 +637,24 @@ impl Editor {
                         .frame(egui::Frame::new().inner_margin(egui::Margin::symmetric(8, 8)))
                         .show_separator_line(false)
                         .show(ui, |ui| {
-                            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                                export = super::widgets::action_button(
-                                    ui,
-                                    "Export…",
-                                    Some(super::icons::Icon::Export),
-                                    super::widgets::ButtonKind::Primary,
-                                    true,
-                                )
-                                .on_hover_text(if cfg!(target_os = "macos") {
-                                    "Export the selected photos · ⇧⌘E"
-                                } else {
-                                    "Export the selected photos · Ctrl+Shift+E"
-                                })
-                                .clicked();
-                            });
+                            ui.with_layout(
+                                egui::Layout::right_to_left(egui::Align::Center),
+                                |ui| {
+                                    export = super::widgets::action_button(
+                                        ui,
+                                        "导出…",
+                                        Some(super::icons::Icon::Export),
+                                        super::widgets::ButtonKind::Primary,
+                                        true,
+                                    )
+                                    .on_hover_text(if cfg!(target_os = "macos") {
+                                        "导出所选照片 · ⇧⌘E"
+                                    } else {
+                                        "导出所选照片 · Ctrl+Shift+E"
+                                    })
+                                    .clicked();
+                                },
+                            );
                         });
                 }
                 // In the Loupe, the Navigator controls the zoom: Develop's for
@@ -671,8 +668,7 @@ impl Editor {
                         .as_ref()
                         .and_then(|l| l.loupe_navigator())
                         .map_or((None, None), |(photo, shown)| (Some(photo), shown));
-                    match crate::app::navigator::navigator(ui, photo, Some(self.view.zoom), shown)
-                    {
+                    match crate::app::navigator::navigator(ui, photo, Some(self.view.zoom), shown) {
                         Some(crate::app::navigator::Change::Level(level)) => {
                             self.view.zoom.set(level)
                         }
@@ -689,8 +685,8 @@ impl Editor {
                 if let Some(library) = &mut self.library {
                     action = action.then(library.sidebar(ui, !loupe));
                 } else {
-                    ui.heading("Library");
-                    ui.label("Create an RAWmakase catalog or import a Lightroom catalog from the Catalog menu.");
+                    ui.heading("照片库");
+                    ui.label("从图库菜单新建 MyAIRAW 图库，或导入 Lightroom 图库。");
                 }
             });
         action
@@ -731,11 +727,9 @@ impl Editor {
                     let toggle = ui
                         .checkbox(
                             &mut self.auto_advance,
-                            egui::RichText::new("Auto Advance").small(),
+                            egui::RichText::new("自动前进").small(),
                         )
-                        .on_hover_text(
-                            "Photo > Auto Advance: a rating, flag or label moves on to the next photo",
-                        );
+                        .on_hover_text("自动前进：评分、旗标或标签操作后自动切换到下一张");
                     if toggle.changed() {
                         let _ = self.save_session();
                     }
@@ -1070,9 +1064,9 @@ impl Editor {
         egui::Panel::bottom("status").show(ui, |ui| {
             ui.horizontal(|ui| {
                 let display = if self.view.monitor.is_some() {
-                    "Display: custom ICC (disable compositor ICC conversion)"
+                    "显示：自定义 ICC（禁用系统合成器 ICC 转换）"
                 } else {
-                    "Display: sRGB (compositor may manage the monitor)"
+                    "显示：sRGB（系统可能管理显示器色彩）"
                 };
                 status_text(
                     ui,
@@ -1107,7 +1101,7 @@ impl Editor {
                     ui.colored_label(
                         Color32::YELLOW,
                         egui::RichText::new(
-                            "Saved edits protected; editing is temporary. Export or save a preset.",
+                            "已保存的编辑受到保护，当前编辑为临时修改。请导出照片或保存预设。",
                         )
                         .small(),
                     );
@@ -1214,7 +1208,7 @@ impl Editor {
         if self.exporting() {
             Some("the export")
         } else if self.activity.is_syncing() {
-            Some("Sync Settings")
+            Some("同步设置")
         } else if self.activity.is_changing_folder() {
             Some(FOLDER_CHANGE)
         } else if self.automation.outputs_running() {
@@ -1255,25 +1249,23 @@ impl Editor {
         }
         if self.close_confirm {
             let waits_for = self.closing_waits_for();
-            egui::Window::new("Work still pending").show(ctx, |ui| {
+            egui::Window::new("任务尚未完成").show(ctx, |ui| {
                 ui.label(if let Some(work) = waits_for {
-                    format!("Wait for {work} to finish before closing.")
+                    format!("请等待{work}完成后关闭。")
                 } else if self.autosave.busy() {
-                    "Edits are still being saved: the catalog is not answering. Wait, or \
-                     close without saving."
-                        .into()
+                    "正在保存编辑，但图库尚未响应。请等待，或选择不保存并关闭。".into()
                 } else {
-                    "Edits could not be saved. Retry or save a preset before closing.".into()
+                    "编辑无法保存。请重试，或在关闭前保存为预设。".into()
                 });
-                if ui.button("Keep editing").clicked() {
+                if ui.button("继续编辑").clicked() {
                     self.close_confirm = false;
                     self.close_after_work = false;
                 }
                 // What only runs without its own way to stop it: closing anyway
                 // must stay possible should it stall on a network share.
                 let anyway = match waits_for {
-                    Some(OUTPUT) => Some("Cancel it and close"),
-                    Some(FOLDER_CHANGE) => Some("Close anyway"),
+                    Some(OUTPUT) => Some("取消任务并关闭"),
+                    Some(FOLDER_CHANGE) => Some("仍然关闭"),
                     _ => None,
                 };
                 if let Some(label) = anyway
@@ -1285,7 +1277,7 @@ impl Editor {
                     self.close_after_work = false;
                     ctx.send_viewport_cmd(egui::ViewportCommand::Close);
                 }
-                if waits_for.is_none() && ui.button("Close without saving").clicked() {
+                if waits_for.is_none() && ui.button("不保存并关闭").clicked() {
                     self.document.edit.save_state_mut().saved();
                     if let Some(library) = &mut self.library {
                         library.discard_drafts();

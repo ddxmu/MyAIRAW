@@ -23,9 +23,9 @@ pub(super) fn renders_point_color(r: &Recipe) -> bool {
 /// and Reference tone curves whenever they are off: Update leaves them as they were.
 pub(super) fn point_color_steps(r: &Recipe) -> Option<&'static str> {
     match (r.engine >= 4, r.reference_curves) {
-        (false, false) => Some("Update the process and turn on Reference tone curves"),
-        (false, true) => Some("Update the process"),
-        (true, false) => Some("Turn on Reference tone curves"),
+        (false, false) => Some("更新处理版本并开启参考色调曲线"),
+        (false, true) => Some("更新处理版本"),
+        (true, false) => Some("开启参考色调曲线"),
         (true, true) => None,
     }
 }
@@ -110,7 +110,7 @@ impl super::Editor {
                 // scheduled: Visualize Range shows the new swatch.
                 self.view.point_color.selected = Some(i);
                 self.view.tool = Tool::None;
-                let step = super::history::Step::new("Point Color", "Add Swatch");
+                let step = super::history::Step::new("点颜色", "添加色样");
                 self.change_edit(Some(step), |r| r.point_colors = swatches);
             }
             Err(refusal) => self.status = refusal.message().into(),
@@ -124,7 +124,7 @@ pub(super) fn point_color_panel(
     list: &mut Vec<PointColor>,
     view: &mut ViewState,
 ) {
-    set_edit_context(ui, "Point Color");
+    set_edit_context(ui, "点颜色");
     let pc = &mut view.point_color;
     pc.selected = pc.selected.filter(|i| *i < list.len());
     let picking = view.tool == Tool::PointColor;
@@ -133,13 +133,13 @@ pub(super) fn point_color_panel(
     }
     let pc = &mut view.point_color;
     let Some(i) = pc.selected else {
-        hint(ui, "Click the dropper, then a color in the photo");
+        hint(ui, "点击吸管后，在照片中点击颜色");
         return;
     };
     let swatch = &mut list[i];
     comparison(ui, swatch);
     ui.push_id(("point-color", i), |ui| {
-        for (c, name) in ["Hue Shift", "Sat Shift", "Lum Shift"]
+        for (c, name) in ["色相偏移", "饱和度偏移", "明亮度偏移"]
             .into_iter()
             .enumerate()
         {
@@ -147,22 +147,22 @@ pub(super) fn point_color_panel(
         }
         slider_with(
             ui,
-            "Variance",
+            "变化范围",
             &mut swatch.variance,
             -1. ..=1.,
             0.,
             None,
             None,
         );
-        slider_with(ui, "Range", &mut swatch.range, 0. ..=1., 0.5, None, None);
+        slider_with(ui, "范围", &mut swatch.range, 0. ..=1., 0.5, None, None);
         disclosure(ui, &mut pc.ranges);
         if pc.ranges {
             ranges(ui, swatch);
         }
         ui.horizontal(|ui| {
             ui.add_space(83.);
-            ui.checkbox(&mut pc.visualize, "Visualize Range")
-                .on_hover_text("Show the colors this swatch selects; everything else turns gray");
+            ui.checkbox(&mut pc.visualize, "显示范围")
+                .on_hover_text("显示此色样选择的颜色，其他区域显示为灰色");
         });
     });
 }
@@ -194,7 +194,7 @@ fn swatch_row(
         palette.gray(if strong { 235 } else { 170 }),
     );
     let toggle = response
-        .on_hover_text("Point Color dropper: click a color in the photo to add a swatch")
+        .on_hover_text("点颜色吸管：点击照片中的颜色以添加色样")
         .clicked();
     let step = ((row.right() - row.left() - 88.) / MAX_SWATCHES as f32).min(24.);
     let mut delete = None;
@@ -220,11 +220,11 @@ fn swatch_row(
             pc.selected = Some(slot);
         }
         response.context_menu(|ui| {
-            if ui.button("Delete Swatch").clicked() {
+            if ui.button("删除色样").clicked() {
                 delete = Some(Some(slot));
                 ui.close();
             }
-            if ui.button("Delete All Swatches").clicked() {
+            if ui.button("删除全部色样").clicked() {
                 delete = Some(None);
                 ui.close();
             }
@@ -234,12 +234,12 @@ fn swatch_row(
         Some(Some(slot)) => {
             list.remove(slot);
             pc.selected = (!list.is_empty()).then(|| slot.min(list.len() - 1));
-            name_history_step(ui, "Point Color".into(), "Delete Swatch".into());
+            name_history_step(ui, "点颜色".into(), "删除色样".into());
         }
         Some(None) => {
             list.clear();
             pc.selected = None;
-            name_history_step(ui, "Point Color".into(), "Delete All Swatches".into());
+            name_history_step(ui, "点颜色".into(), "删除全部色样".into());
         }
         None => {}
     }
@@ -271,7 +271,7 @@ fn ranges(ui: &mut egui::Ui, swatch: &mut PointColor) {
     let window = crate::develop::point_color::HUE_WINDOW;
     range_points(
         ui,
-        "Hue Range",
+        "色相范围",
         &mut swatch.hue_range,
         Hold::InnerSpan,
         defaults.hue_range,
@@ -279,7 +279,7 @@ fn ranges(ui: &mut egui::Ui, swatch: &mut PointColor) {
     );
     range_points(
         ui,
-        "Sat Range",
+        "饱和度范围",
         &mut swatch.saturation_range,
         Hold::Value(s),
         defaults.saturation_range,
@@ -287,7 +287,7 @@ fn ranges(ui: &mut egui::Ui, swatch: &mut PointColor) {
     );
     range_points(
         ui,
-        "Lum Range",
+        "明亮度范围",
         &mut swatch.luminance_range,
         Hold::Value(crate::develop::srgb_encode(v)),
         defaults.luminance_range,
@@ -382,11 +382,11 @@ fn range_points(
                 Stroke::new(1., palette.gray(215)),
             ));
         }
-        response.on_hover_text("Drag the outer or inner points · double-click to reset");
+        response.on_hover_text("拖动外部或内部控制点 · 双击重置");
     });
     if *points != before {
         let shown: Vec<String> = points.iter().map(|p| format!("{:.0}", p * 100.)).collect();
-        name_history_step(ui, format!("Point Color {label}"), shown.join(" / "));
+        name_history_step(ui, format!("点颜色 {label}"), shown.join(" / "));
     }
 }
 
@@ -433,7 +433,7 @@ fn disclosure(ui: &mut egui::Ui, open: &mut bool) {
                 )
                 .sense(Sense::click()),
             )
-            .on_hover_text("Hue, Sat and Lum Range")
+            .on_hover_text("色相、饱和度与明亮度范围")
             .clicked()
         {
             *open = !*open;
@@ -493,13 +493,9 @@ mod tests {
     fn point_color_steps_name_the_controls_that_are_there() {
         use crate::model::recipe::Recipe;
         let cases = [
-            (
-                3,
-                false,
-                Some("Update the process and turn on Reference tone curves"),
-            ),
-            (3, true, Some("Update the process")),
-            (4, false, Some("Turn on Reference tone curves")),
+            (3, false, Some("更新处理版本并开启参考色调曲线")),
+            (3, true, Some("更新处理版本")),
+            (4, false, Some("开启参考色调曲线")),
             (4, true, None),
         ];
         for (engine, reference_curves, steps) in cases {

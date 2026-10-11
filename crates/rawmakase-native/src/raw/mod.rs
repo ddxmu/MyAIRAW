@@ -10,6 +10,7 @@ use std::{
     sync::atomic::{AtomicBool, Ordering},
 };
 mod ffi;
+mod raster;
 use crate::camera_data::{CameraImage, Decode, Demosaic, HighlightTonePriority, Metadata};
 pub use ffi::{display_transform, srgb_profile, version};
 /// Runs `work` on a thread of its own at background priority: a lower
@@ -35,14 +36,21 @@ pub fn background_pool(
         .build()
 }
 pub struct Raw {
-    handle: ffi::Handle,
+    handle: Source,
     pub metadata: Metadata,
+}
+enum Source {
+    Camera(ffi::Handle),
+    Raster(image::DynamicImage),
 }
 impl Raw {
     /// LibRaw's facts about the file at `path`, and the crop a RAF header
     /// recommends. What the file says beyond them (lens tables, a DNG's profile
     /// and hints) and the imported lens profiles are `crate::photo::open`'s.
     pub fn open_file(path: &Path) -> Result<Self> {
+        if !crate::storage::is_raw(path) && crate::storage::is_editable(path) {
+            return raster::open(path);
+        }
         let path_ref = path;
         let (handle, m) = ffi::Handle::open(path)?;
         let text = |bytes: &[std::ffi::c_char]| {
@@ -51,6 +59,7 @@ impl Raw {
             String::from_utf8_lossy(&bytes[..end]).into_owned()
         };
         let metadata = Metadata {
+            display_referred: false,
             make: text(&m.make),
             model: text(&m.model),
             width: m.width,
@@ -94,13 +103,30 @@ impl Raw {
         if let Some(crop) = fuji_crop(path_ref) {
             metadata.apply_default_crop(crop);
         }
-        Ok(Self { handle, metadata })
+        Ok(Self {
+            handle: Source::Camera(handle),
+            metadata,
+        })
     }
     /// The embedded JPEG preview, as stored.
     pub fn thumbnail(&mut self) -> Result<Vec<u8>> {
-        self.handle.thumbnail()
+        match &mut self.handle {
+            Source::Camera(handle) => handle.thumbnail(),
+            Source::Raster(image) => {
+                let mut bytes = Vec::new();
+                image::codecs::jpeg::JpegEncoder::new_with_quality(&mut bytes, 90).encode_image(
+                    &image
+                        .thumbnail(image.width().min(2560), image.height().min(2560))
+                        .to_rgb8(),
+                )?;
+                Ok(bytes)
+            }
+        }
     }
     pub fn develop(self, decode: Decode, cancel: &AtomicBool) -> Result<CameraImage> {
+        if matches!(self.handle, Source::Raster(_)) {
+            return raster::develop(self, decode, cancel);
+        }
         match decode {
             Decode::Half => self.develop_libraw(true, cancel),
             Decode::Full(Demosaic::Libraw) => self.develop_libraw(false, cancel),
@@ -114,12 +140,15 @@ impl Raw {
     /// Unpacked CFA data demosaiced by `crate::demosaic`; `None` when the file is not
     /// single-channel Bayer or X-Trans data.
     fn develop_cfa(&self, cancel: &AtomicBool) -> Result<Option<CameraImage>> {
+        let Source::Camera(handle) = &self.handle else {
+            unreachable!()
+        };
         let Some(ffi::Cfa {
             width: w,
             height: h,
             pattern,
             mut data,
-        }) = self.handle.cfa()?
+        }) = handle.cfa()?
         else {
             return Ok(None);
         };
@@ -158,13 +187,16 @@ impl Raw {
         }))
     }
     fn develop_libraw(self, fast: bool, cancel: &AtomicBool) -> Result<CameraImage> {
+        let Source::Camera(handle) = self.handle else {
+            unreachable!()
+        };
         let ffi::Developed {
             width: w,
             height: h,
             scale,
             clipped,
             pixels,
-        } = self.handle.develop(fast, cancel)?;
+        } = handle.develop(fast, cancel)?;
         Ok(CameraImage {
             recovered: Default::default(),
             width: w,

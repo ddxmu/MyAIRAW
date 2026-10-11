@@ -32,12 +32,12 @@ impl Tab {
     ];
     fn title(self) -> &'static str {
         match self {
-            Tab::General => "General",
-            Tab::Catalog => "Catalog",
-            Tab::Profiles => "Profiles & Presets",
-            Tab::Performance => "Performance",
-            Tab::Display => "Display",
-            Tab::Automation => "Automation",
+            Tab::General => "常规",
+            Tab::Catalog => "图库",
+            Tab::Profiles => "配置文件与预设",
+            Tab::Performance => "性能",
+            Tab::Display => "显示",
+            Tab::Automation => "自动化",
         }
     }
 }
@@ -134,7 +134,7 @@ fn bytes(n: u64) -> String {
     } else if n > 0. {
         format!("{:.0} KB", (n / 1024.).max(1.))
     } else {
-        "Empty".into()
+        "空".into()
     }
 }
 
@@ -192,7 +192,7 @@ impl Editor {
             Ok(()) => self.preferences.defaults_dirty = false,
             Err(e) => {
                 self.preferences.defaults_failed = true;
-                self.status = format!("Metadata defaults not saved: {e:#}");
+                self.status = format!("无法保存默认元数据：{e:#}");
             }
         }
     }
@@ -289,7 +289,7 @@ impl Editor {
                         .layout(egui::Layout::right_to_left(egui::Align::Center)),
                 );
                 bar.spacing_mut().button_padding = Vec2::new(18., 6.);
-                let done = primary_button(&mut bar, "Done").clicked();
+                let done = primary_button(&mut bar, "完成").clicked();
                 // Only what happened while the window was open, e.g. an import.
                 if self.status != self.preferences.status_at_open {
                     bar.add_space(16.);
@@ -312,7 +312,7 @@ impl Editor {
         let palette = theme::palette(ui.ctx());
         ui.spacing_mut().item_spacing.y = 2.;
         ui.label(
-            egui::RichText::new("Preferences")
+            egui::RichText::new("偏好设置")
                 .size(11.)
                 .color(palette.gray(130)),
         );
@@ -345,8 +345,8 @@ impl Editor {
     }
 
     fn general_page(&mut self, ui: &mut egui::Ui) {
-        group(ui, "About");
-        form_row(ui, "RAWmakase", |ui| {
+        group(ui, "关于");
+        form_row(ui, "MyAIRAW", |ui| {
             value(ui, crate::updates::config().current_version);
             ui.add_space(8.);
             self.update_status(ui);
@@ -354,25 +354,25 @@ impl Editor {
         form_row(ui, "LibRaw", |ui| {
             value(ui, &crate::raw::version());
         });
-        form_row(ui, "Updates", |ui| self.automatic_updates_checkbox(ui));
+        form_row(ui, "更新", |ui| self.automatic_updates_checkbox(ui));
         #[cfg(feature = "telemetry")]
         {
-            form_row(ui, "Usage stats", |ui| self.usage_stats_preference(ui));
+            form_row(ui, "使用统计", |ui| self.usage_stats_preference(ui));
             form_row(ui, "", |ui| self.usage_stats_details(ui));
         }
         gap(ui);
-        group(ui, "Locations");
+        group(ui, "存储位置");
         let data = crate::storage::data_dir();
-        form_row(ui, "App data", |ui| path_value(ui, &data));
+        form_row(ui, "应用数据", |ui| path_value(ui, &data));
         form_row(ui, "", |ui| reveal_button(ui, &data));
         gap(ui);
-        group(ui, "Help");
+        group(ui, "帮助");
         form_row(ui, "", |ui| {
-            if ui.button("Keyboard Shortcuts").clicked() {
+            if ui.button("键盘快捷键").clicked() {
                 self.view.shortcuts = true;
                 self.preferences.open = false;
             }
-            if ui.button("Setup Assistant…").clicked() {
+            if ui.button("设置向导…").clicked() {
                 self.preferences.open = false;
                 self.open_onboarding();
             }
@@ -384,27 +384,27 @@ impl Editor {
         let usage = &self.preferences.usage;
         if let Some(library) = &self.library {
             let location = library.session.catalog.location().clone();
-            group(ui, "Current catalog");
-            form_row(ui, "Name", |ui| value(ui, &location.name()));
+            group(ui, "当前图库");
+            form_row(ui, "名称", |ui| value(ui, &location.name()));
             let CatalogLocation::File(path) = location;
-            form_row(ui, "Location", |ui| path_value(ui, &path));
+            form_row(ui, "位置", |ui| path_value(ui, &path));
             form_row(ui, "", |ui| reveal_button(ui, &path));
             form_row(ui, "Photos", |ui| {
                 value(ui, &library.session.photos.len().to_string());
             });
-            form_row(ui, "Folders", |ui| {
+            form_row(ui, "文件夹", |ui| {
                 value(ui, &usage.folders.map_or("–".into(), |n| n.to_string()));
             });
-            form_row(ui, "Catalog size", |ui| {
+            form_row(ui, "图库大小", |ui| {
                 value(ui, &usage.catalog.map_or("–".into(), bytes));
             });
         } else {
-            group(ui, "Current catalog");
+            group(ui, "当前图库");
             form_row(ui, "", |ui| {
-                value(ui, "No catalog is open.");
+                value(ui, "尚未打开图库。");
             });
         }
-        form_row(ui, "Previews", |ui| {
+        form_row(ui, "预览", |ui| {
             value(ui, &bytes(usage.previews));
         });
         let preview_kinds = usage.preview_kinds;
@@ -413,7 +413,7 @@ impl Editor {
                 hint(
                     ui,
                     &format!(
-                        "Thumbnails {} · Standard {} · 1:1 {}",
+                        "缩略图 {} · 标准预览 {} · 1:1 预览 {}",
                         bytes(kinds.thumbnails),
                         bytes(kinds.standard),
                         bytes(kinds.one_to_one)
@@ -422,7 +422,7 @@ impl Editor {
             });
         }
         let mut size = self.preview_builds.standard_size;
-        form_row(ui, "Standard Preview Size", |ui| {
+        form_row(ui, "标准预览尺寸", |ui| {
             egui::ComboBox::from_id_salt("standard-preview-size")
                 .width(120.)
                 .selected_text(format!("{size} pixels"))
@@ -437,7 +437,7 @@ impl Editor {
             let _ = self.save_session();
         }
         let mut discard = self.preview_builds.discard_one_to_one_after;
-        form_row(ui, "Discard 1:1 Previews", |ui| {
+        form_row(ui, "丢弃 1:1 预览", |ui| {
             let name = |days| {
                 crate::app::preview_build::DISCARD_CHOICES
                     .iter()
@@ -463,7 +463,7 @@ impl Editor {
             if ui
                 .add_enabled(
                     preview_kinds.is_some_and(|k| k.standard > 0),
-                    egui::Button::new("Clear Standard Previews"),
+                    egui::Button::new("清除标准预览"),
                 )
                 .clicked()
             {
@@ -472,7 +472,7 @@ impl Editor {
             if ui
                 .add_enabled(
                     preview_kinds.is_some_and(|k| k.one_to_one > 0),
-                    egui::Button::new("Clear 1:1 Previews"),
+                    egui::Button::new("清除 1:1 预览"),
                 )
                 .clicked()
             {
@@ -482,14 +482,14 @@ impl Editor {
         form_row(ui, "", |ui| {
             hint(
                 ui,
-                "Build previews from a photo's menu. Develop shows Standard previews while a photo opens; 1:1 previews let an offline photo be zoomed to 100% in the Loupe.",
+                "从照片菜单生成预览。打开照片时显示标准预览；1:1 预览可让离线照片在放大视图中以 100% 显示。",
             );
         });
         if let Some(kind) = clear {
             self.clear_previews(kind);
             self.status = match kind {
-                PreviewKind::Standard => "Standard previews cleared",
-                PreviewKind::OneToOne => "1:1 previews cleared",
+                PreviewKind::Standard => "标准预览已清除",
+                PreviewKind::OneToOne => "1:1 预览已清除",
             }
             .into();
             self.preferences.usage.preview_kinds = preview_kinds.map(|kinds| match kind {
@@ -505,12 +505,12 @@ impl Editor {
         }
         gap(ui);
         self.folder_locations_block(ui);
-        group(ui, "Metadata defaults");
+        group(ui, "元数据默认值");
         let defaults = &mut self.preferences.defaults;
         let mut left = false;
         for (label, text) in [
-            ("Creator", &mut defaults.creator),
-            ("Copyright", &mut defaults.copyright),
+            ("作者", &mut defaults.creator),
+            ("版权", &mut defaults.copyright),
         ] {
             form_row(ui, label, |ui| {
                 let field = ui.add(egui::TextEdit::singleline(text).desired_width(320.));
@@ -524,19 +524,19 @@ impl Editor {
         form_row(ui, "", |ui| {
             hint(
                 ui,
-                "For photos added from folders, when neither the file nor its sidecar has one.",
+                "用于从文件夹添加的照片，仅在文件及附属文件均没有对应值时生效。",
             );
         });
         if left {
             self.save_defaults();
         }
         gap(ui);
-        group(ui, "Catalogs");
+        group(ui, "图库");
         form_row(ui, "", |ui| {
             for (kind, label) in [
-                (CatalogDialog::Open, "Open…"),
-                (CatalogDialog::Create, "New…"),
-                (CatalogDialog::ImportLightroom, "Import Lightroom Catalog…"),
+                (CatalogDialog::Open, "打开…"),
+                (CatalogDialog::Create, "新建…"),
+                (CatalogDialog::ImportLightroom, "导入 Lightroom 图库…"),
             ] {
                 if ui.button(label).clicked() {
                     self.catalog_dialog(kind, &ctx);
@@ -550,14 +550,11 @@ impl Editor {
         // First, as in Lightroom's Presets preferences.
         self.raw_defaults_block(ui);
         gap(ui);
-        group(ui, "Black & white");
+        group(ui, "黑白");
         form_row(ui, "", |ui| {
             let mut auto = self.first_conversion == super::treatment::FirstConversion::AutoMix;
             if ui
-                .checkbox(
-                    &mut auto,
-                    "Apply auto mix when first converting to black and white",
-                )
+                .checkbox(&mut auto, "首次转为黑白时应用自动混合")
                 .changed()
             {
                 self.first_conversion = if auto {
@@ -573,43 +570,40 @@ impl Editor {
         let (cameras, lenses) = (usage.camera_profiles, usage.lens_profiles);
         let presets = self.presets.library.presets.len();
         let mut chosen = None;
-        group(ui, "Camera profiles");
+        group(ui, "相机配置文件");
         form_row(ui, "Imported", |ui| {
             value(ui, &plural(cameras, "profile", "profiles"));
         });
         form_row(ui, "", |ui| {
-            if ui.button("Import Profiles…").clicked() {
+            if ui.button("导入配置文件…").clicked() {
                 chosen = Some(FileDialog::CameraProfile);
             }
             reveal_button(ui, &camera_profiles_dir());
         });
         gap(ui);
-        group(ui, "Lens profiles");
+        group(ui, "镜头配置文件");
         form_row(ui, "Imported", |ui| {
             value(ui, &plural(lenses, "profile", "profiles"));
         });
         form_row(ui, "", |ui| {
-            if ui.button("Import Lens Profiles…").clicked() {
+            if ui.button("导入镜头配置…").clicked() {
                 chosen = Some(FileDialog::LensProfile);
             }
             reveal_button(ui, &lens_profiles_dir());
         });
         gap(ui);
-        group(ui, "Develop presets");
-        form_row(ui, "Installed", |ui| {
+        group(ui, "显影预设");
+        form_row(ui, "已安装", |ui| {
             value(ui, &plural(presets, "preset", "presets"));
         });
         form_row(ui, "", |ui| {
-            if ui.button("Import Preset…").clicked() {
+            if ui.button("导入预设…").clicked() {
                 chosen = Some(FileDialog::ImportXmp);
             }
             reveal_button(ui, &presets_dir());
         });
         form_row(ui, "", |ui| {
-            hint(
-                ui,
-                "The Setup Assistant finds Lightroom's own profiles and presets on this Mac.",
-            );
+            hint(ui, "设置向导可查找此 Mac 上 Lightroom 的配置文件与预设。");
         });
         if let Some(kind) = chosen {
             self.dialog(kind, &ctx);
@@ -618,25 +612,25 @@ impl Editor {
     }
 
     fn performance_page(&mut self, ui: &mut egui::Ui) {
-        group(ui, "Demosaic");
+        group(ui, "去马赛克");
         let current = self.demosaic.effective();
         let mut picked = None;
         for (choice, label, note) in [
             (
                 Demosaic::Rawmakase,
-                "RAWmakase",
-                "Faster, with equal or better detail.",
+                "MyAIRAW",
+                "速度更快，细节保持相当或更好。",
             ),
             (
                 Demosaic::Libraw,
                 "LibRaw",
-                "AHD for Bayer sensors, Markesteijn for X-Trans.",
+                "拜耳传感器使用 AHD，X-Trans 使用 Markesteijn。",
             ),
         ] {
             form_row(
                 ui,
                 if choice == Demosaic::Rawmakase {
-                    "Engine"
+                    "引擎"
                 } else {
                     ""
                 },
@@ -659,11 +653,11 @@ impl Editor {
             }
         }
         gap(ui);
-        group(ui, "Decoded photo cache");
+        group(ui, "照片解码缓存");
         let (entries, size) = self.preferences.usage.decode_cache;
         let dir = decode_cache_dir();
-        form_row(ui, "Location", |ui| path_value(ui, &dir));
-        form_row(ui, "Size", |ui| {
+        form_row(ui, "位置", |ui| path_value(ui, &dir));
+        form_row(ui, "大小", |ui| {
             value(
                 ui,
                 &format!(
@@ -676,14 +670,14 @@ impl Editor {
         let mut purge = false;
         form_row(ui, "", |ui| {
             purge = ui
-                .add_enabled(entries > 0, egui::Button::new("Purge Cache"))
+                .add_enabled(entries > 0, egui::Button::new("清空缓存"))
                 .clicked();
             reveal_button(ui, &dir);
         });
         form_row(ui, "", |ui| {
             hint(
                 ui,
-                "Reopening a photo skips decoding while it is cached. Purging only removes decoded copies, never photos or edits.",
+                "照片有缓存时再次打开无需重新解码。清理仅移除解码缓存，不会删除原照片或编辑。",
             );
         });
         if purge {
@@ -694,20 +688,17 @@ impl Editor {
                 .filter(|e| e.path().extension().is_some_and(|x| x == "decoded"))
                 .filter(|e| std::fs::remove_file(e.path()).is_ok())
                 .count();
-            self.status = format!(
-                "Purged {} from the cache",
-                plural(removed, "photo", "photos")
-            );
+            self.status = format!("已从缓存中清除 {}", plural(removed, "photo", "photos"));
             self.measure_usage();
         }
     }
 
     fn display_page(&mut self, ui: &mut egui::Ui) {
         let ctx = ui.ctx().clone();
-        group(ui, "Interface");
+        group(ui, "界面");
         let choices = self.themes.choices();
         let name = |file: &Option<String>| match file {
-            None => "RAWmakase".to_string(),
+            None => "MyAIRAW".to_string(),
             Some(file) => choices.iter().find(|(f, _)| f == file).map_or_else(
                 || fastframe_theme::display_name(file).to_string(),
                 |(_, n)| n.clone(),
@@ -715,12 +706,12 @@ impl Editor {
         };
         let selected = self.themes.selected();
         let mut chosen = selected.clone();
-        form_row(ui, "Theme", |ui| {
+        form_row(ui, "主题", |ui| {
             egui::ComboBox::from_id_salt("interface-theme")
                 .width(220.)
                 .selected_text(name(&chosen))
                 .show_ui(ui, |ui| {
-                    ui.selectable_value(&mut chosen, None, "RAWmakase");
+                    ui.selectable_value(&mut chosen, None, "MyAIRAW");
                     for (file, label) in &choices {
                         ui.selectable_value(&mut chosen, Some(file.clone()), label);
                     }
@@ -731,7 +722,7 @@ impl Editor {
             hint(
                 ui,
                 &self.themes.status().unwrap_or_else(|| {
-                    "Palette files in the themes folder are listed here. On Omarchy the desktop's theme is followed until you choose another. The photo's backdrop stays neutral grey.".into()
+                    "此处列出主题文件夹中的配色文件。Omarchy 桌面默认跟随系统主题；照片背景始终保持中性灰。".into()
                 }),
             );
         });
@@ -740,9 +731,9 @@ impl Editor {
             let _ = self.save_session();
         }
         gap(ui);
-        group(ui, "Monitor profile");
+        group(ui, "显示器配置文件");
         let monitor = self.view.monitor.clone();
-        form_row(ui, "Profile", |ui| match &monitor {
+        form_row(ui, "配置文件", |ui| match &monitor {
             Some(path) => {
                 value(ui, &path.file_name().unwrap_or_default().to_string_lossy());
             }
@@ -753,15 +744,15 @@ impl Editor {
         let mut choose = false;
         let mut srgb = false;
         form_row(ui, "", |ui| {
-            choose = ui.button("Choose Profile…").clicked();
+            choose = ui.button("选择配置文件…").clicked();
             srgb = ui
-                .add_enabled(monitor.is_some(), egui::Button::new("Use sRGB"))
+                .add_enabled(monitor.is_some(), egui::Button::new("使用 sRGB"))
                 .clicked();
         });
         form_row(ui, "", |ui| {
             hint(
                 ui,
-                "Photos are shown in this profile. Choose your display's calibrated ICC profile, or keep sRGB.",
+                "照片按此配置文件显示。请选择显示器校准后的 ICC 配置文件，或保留 sRGB。",
             );
         });
         if choose {

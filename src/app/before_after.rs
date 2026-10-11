@@ -42,11 +42,11 @@ pub(super) enum Axis {
 
 /// The views the Before/After menu lists, with their names.
 pub(super) const VIEWS: [(Compare, &str); 5] = [
-    (Compare::BeforeOnly, "Before Only"),
-    (Compare::SideBySide(Axis::LeftRight), "Left / Right"),
-    (Compare::SideBySide(Axis::TopBottom), "Top / Bottom"),
-    (Compare::Split(Axis::LeftRight), "Split Left / Right"),
-    (Compare::Split(Axis::TopBottom), "Split Top / Bottom"),
+    (Compare::BeforeOnly, "仅编辑前"),
+    (Compare::SideBySide(Axis::LeftRight), "左右"),
+    (Compare::SideBySide(Axis::TopBottom), "上下"),
+    (Compare::Split(Axis::LeftRight), "左右分割"),
+    (Compare::Split(Axis::TopBottom), "上下分割"),
 ];
 
 impl Compare {
@@ -279,10 +279,10 @@ impl Editor {
                 self.document.before = Some(after);
                 ("", None)
             }
-            Transfer::BeforeToAfter => ("Copy Before Settings to After", Some(before)),
+            Transfer::BeforeToAfter => ("将编辑前设置复制到编辑后", Some(before)),
             Transfer::Swap => {
                 self.document.before = Some(after);
-                ("Swap Before and After Settings", Some(before))
+                ("交换编辑前后设置", Some(before))
             }
         };
         if let Some(edit) = edit.filter(|e| *e != *self.document.edit.recipe()) {
@@ -457,8 +457,8 @@ impl Editor {
                 .with_clip_rect(pane.area)
                 .line_segment(line, egui::Stroke::new(1., Color32::from_white_alpha(200)));
         }
-        badge(ui, pane.clip, "Before");
-        badge(ui, panes.after.clip, "After");
+        badge(ui, pane.clip, "编辑前");
+        badge(ui, panes.after.clip, "编辑后");
         Some(rect)
     }
     /// Draws the render of the side beside the edit, the whole photo at `rect` and a
@@ -666,7 +666,7 @@ mod tests {
         assert_eq!(e.document.edit.recipe().exposure, 0.);
         assert_eq!(e.document.edit.recipe().crop, edited.crop);
         let (steps, _) = e.document.edit.history().steps();
-        assert_eq!(steps.last().unwrap().name, "Copy Before Settings to After");
+        assert_eq!(steps.last().unwrap().name, "将编辑前设置复制到编辑后");
         e.undo();
         assert_eq!(*e.document.edit.recipe(), edited);
         // Swap: each side takes the other's settings, the edit's change as one step.
@@ -676,7 +676,7 @@ mod tests {
         assert_eq!(e.document.edit.recipe().contrast, 0.3);
         assert_eq!(e.document.before.as_ref(), Some(&edited));
         let (steps, _) = e.document.edit.history().steps();
-        assert_eq!(steps.last().unwrap().name, "Swap Before and After Settings");
+        assert_eq!(steps.last().unwrap().name, "交换编辑前后设置");
         assert_eq!(e.before_settings().exposure, 1.);
         // Copying settings that are already the edit's records nothing.
         let before = e.document.edit.recipe().clone();

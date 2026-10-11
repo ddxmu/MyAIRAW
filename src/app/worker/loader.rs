@@ -25,7 +25,7 @@ struct FullJob {
 fn caught(load: impl FnOnce() -> anyhow::Result<()>) -> anyhow::Result<()> {
     std::panic::catch_unwind(std::panic::AssertUnwindSafe(load)).unwrap_or_else(|panic| {
         Err(anyhow::anyhow!(
-            "Loading failed: {}",
+            "加载失败：{}",
             super::panic_message(&*panic)
         ))
     })
@@ -70,7 +70,7 @@ fn full_loader(
                     Event::Ready {
                         id: job.id,
                         full: image.clone(),
-                        status: format!("Developed in {:.2}s", job.started.elapsed().as_secs_f32()),
+                        status: format!("显影耗时 {:.2} 秒", job.started.elapsed().as_secs_f32()),
                     },
                 );
                 job.full.store(&image, &job.cancel);
@@ -147,7 +147,7 @@ fn opener(
                     metadata,
                     recipe,
                     export: ExportOptions::default(),
-                    status: "Original".into(),
+                    status: "原始".into(),
                 })),
             );
             send(
@@ -195,7 +195,7 @@ fn opener(
                     Event::Ready {
                         id: job.id,
                         full: Arc::new(image),
-                        status: format!("Opened from cache in {:.2}s", t.elapsed().as_secs_f32()),
+                        status: format!("已从缓存打开，耗时 {:.2} 秒", t.elapsed().as_secs_f32()),
                     },
                 );
                 if let Some(prefetch) = prefetch {
@@ -213,7 +213,7 @@ fn opener(
                 Event::Ready {
                     id: job.id,
                     full: quick,
-                    status: "Loading full resolution…".into(),
+                    status: "正在加载完整分辨率…".into(),
                 },
             );
             full.submit(FullJob {

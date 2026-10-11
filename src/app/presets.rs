@@ -96,12 +96,12 @@ impl Editor {
             .id_salt("preset-list")
             .auto_shrink([false; 2])
             .show(ui, |ui| {
-                section(ui, "Presets", false, |ui| {
+                section(ui, "预设", false, |ui| {
                     ui.spacing_mut().item_spacing = Vec2::new(4., 4.);
                     ui.horizontal(|ui| {
                         ui.add(
                             egui::TextEdit::singleline(&mut self.presets.filter)
-                                .hint_text("Search presets")
+                                .hint_text("搜索预设")
                                 .font(egui::FontId::proportional(12.))
                                 .desired_width(ui.available_width() - 26.),
                         );
@@ -118,20 +118,20 @@ impl Editor {
                             14.,
                             color,
                         );
-                        let response = response.on_hover_text("Import Lightroom presets (.xmp)");
+                        let response = response.on_hover_text("导入 Lightroom 预设（.xmp）");
                         egui::Popup::menu(&response).show(|ui| {
                             ui.set_min_width(190.);
                             if ui
-                                .add(egui::Button::new("Import Presets…").frame(false))
-                                .on_hover_text("Choose one or more .xmp presets")
+                                .add(egui::Button::new("导入预设…").frame(false))
+                                .on_hover_text("选择一个或多个 .xmp 预设")
                                 .clicked()
                             {
                                 import = Some(FileDialog::ImportXmp);
                                 ui.close();
                             }
                             if ui
-                                .add(egui::Button::new("Import Folder…").frame(false))
-                                .on_hover_text("Import every preset in a folder and its subfolders")
+                                .add(egui::Button::new("导入文件夹…").frame(false))
+                                .on_hover_text("导入文件夹及子文件夹中的全部预设")
                                 .clicked()
                             {
                                 import = Some(FileDialog::ImportFolder(ImportKind::Presets));
@@ -146,12 +146,7 @@ impl Editor {
                         _ => 0,
                     };
                     let w = ui.available_width();
-                    if segmented(
-                        ui,
-                        &mut show,
-                        &[(0, "All"), (1, "Favorites"), (2, "Compatible")],
-                        w,
-                    ) {
+                    if segmented(ui, &mut show, &[(0, "全部"), (1, "收藏"), (2, "兼容")], w) {
                         self.presets.favorites_only = show == 1;
                         self.presets.compatible_only = show == 2;
                     }
@@ -162,12 +157,9 @@ impl Editor {
                     ui.add(
                         egui::Label::new(
                             egui::RichText::new(if self.document.metadata.is_some() {
-                                format!(
-                                    "{available} of {} presets fit this camera",
-                                    library.presets.len()
-                                )
+                                format!("此相机兼容 {available} / {} 个预设", library.presets.len())
                             } else {
-                                format!("{} presets", library.presets.len())
+                                format!("{} 个预设", library.presets.len())
                             })
                             .size(10.)
                             .color(palette.gray(125)),
@@ -176,20 +168,17 @@ impl Editor {
                     );
                     if !library.errors.is_empty() {
                         ui.label(
-                            egui::RichText::new(format!(
-                                "{} unreadable files",
-                                library.errors.len()
-                            ))
-                            .size(10.)
-                            .color(ui.visuals().warn_fg_color),
+                            egui::RichText::new(format!("{} 个文件无法读取", library.errors.len()))
+                                .size(10.)
+                                .color(ui.visuals().warn_fg_color),
                         )
                         .on_hover_text(library.errors.join("\n"));
                     }
                     ui.add_space(2.);
                     let groups = self.preset_list();
                     if groups.is_empty() && !library.presets.is_empty() {
-                        ui.weak("No presets match these filters.");
-                        if ui.small_button("Clear filters").clicked() {
+                        ui.weak("没有预设符合这些筛选条件。");
+                        if ui.small_button("清除筛选").clicked() {
                             self.presets.filter.clear();
                             self.presets.favorites_only = false;
                             self.presets.compatible_only = false;
@@ -206,8 +195,21 @@ impl Editor {
                         let id = ui.make_persistent_id(("preset-group", imported, group));
                         let open = force_open
                             || ui.ctx().data(|d| d.get_temp::<bool>(id)).unwrap_or(false);
-                        if list_row(ui, group, Some(presets.len()), 0, Some(open), false, true)
-                            .clicked()
+                        let shown_group = if *imported {
+                            group.as_str()
+                        } else {
+                            super::chinese::label(group)
+                        };
+                        if list_row(
+                            ui,
+                            shown_group,
+                            Some(presets.len()),
+                            0,
+                            Some(open),
+                            false,
+                            true,
+                        )
+                        .clicked()
                             && !force_open
                         {
                             ui.ctx().data_mut(|d| d.insert_temp(id, !open));
@@ -225,7 +227,11 @@ impl Editor {
                             let favorite = self.presets.favorites.contains(&p.id);
                             let response = list_row(
                                 ui,
-                                name,
+                                if *imported {
+                                    name.as_str()
+                                } else {
+                                    super::chinese::label(name)
+                                },
                                 None,
                                 1,
                                 None,
@@ -260,9 +266,9 @@ impl Editor {
                             }
                             if star_response
                                 .on_hover_text(if favorite {
-                                    "Remove from favorites"
+                                    "从收藏移除"
                                 } else {
-                                    "Add to favorites"
+                                    "添加到收藏"
                                 })
                                 .clicked()
                             {
@@ -286,13 +292,13 @@ impl Editor {
                             if user.owns(p) {
                                 response.context_menu(|ui| {
                                     use super::user_presets::PresetAction;
-                                    if ui.button("Update with Current Settings").clicked() {
+                                    if ui.button("使用当前设置更新").clicked() {
                                         user_action = Some(PresetAction::Update(i));
                                     }
-                                    if ui.button("Rename…").clicked() {
+                                    if ui.button("重命名…").clicked() {
                                         user_action = Some(PresetAction::StartRename(i));
                                     }
-                                    if ui.button("Delete").clicked() {
+                                    if ui.button("删除").clicked() {
                                         user_action = Some(PresetAction::Delete(i));
                                     }
                                 });
@@ -383,7 +389,7 @@ pub(super) struct AppliedPreset {
 
 impl std::fmt::Display for AppliedPreset {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Applied {}", self.name)?;
+        write!(f, "已应用 {}", self.name)?;
         if let Some(used) = &self.substitute {
             write!(f, " · using {used}")?;
         }
@@ -508,7 +514,7 @@ impl Editor {
         }
         self.document.edit.replace(session.shown.clone());
         self.document.edit.name_next_step(super::history::Step::new(
-            "Preset Amount",
+            "预设强度",
             format!("{:.0}", amount * 100.),
         ));
         AmountChange::Changed
@@ -545,7 +551,7 @@ impl Editor {
         ui.push_id("preset-amount", |ui| {
             super::widgets::slider_with(
                 ui,
-                "Amount",
+                "数量",
                 &mut amount,
                 crate::presets::amount::RANGE,
                 1.,
@@ -777,27 +783,22 @@ impl Editor {
             }
             super::widgets::context_menu(&response, |ui| {
                 ui.set_width(270.);
-                if super::widgets::menu_item(
-                    ui,
-                    "Copy History Step Settings to Before",
-                    "",
-                    true,
-                    false,
-                ) {
+                if super::widgets::menu_item(ui, "将历史步骤设置复制到编辑前", "", true, false)
+                {
                     to_before = Some(n);
                     ui.close();
                 }
             });
         };
-        section(ui, "History", false, |ui| {
+        section(ui, "历史记录", false, |ui| {
             ui.spacing_mut().item_spacing.y = 0.;
             for (i, step) in steps.iter().enumerate().rev() {
                 row(ui, i + 1, &step.name, &step.value);
             }
             let opened = if self.document.lightroom_history.is_empty() {
-                "Opened"
+                "已打开"
             } else {
-                "Opened with Lightroom edit"
+                "已打开 Lightroom 编辑"
             };
             row(ui, 0, opened, "");
             if self.document.lightroom_history.is_empty() {
@@ -805,14 +806,14 @@ impl Editor {
             }
             ui.add_space(10.);
             ui.label(
-                egui::RichText::new("From Lightroom")
+                egui::RichText::new("来自 Lightroom")
                     .size(11.)
                     .color(theme::palette(ui.ctx()).gray(125)),
             );
             ui.add_space(4.);
             for (i, step) in self.document.lightroom_history.iter().enumerate().rev() {
                 let name = if step.name.is_empty() {
-                    "Edit"
+                    "编辑"
                 } else {
                     step.name.as_str()
                 };
@@ -828,13 +829,8 @@ impl Editor {
                 }
                 super::widgets::context_menu(&response, |ui| {
                     ui.set_width(270.);
-                    if super::widgets::menu_item(
-                        ui,
-                        "Copy History Step Settings to Before",
-                        "",
-                        true,
-                        false,
-                    ) {
+                    if super::widgets::menu_item(ui, "将历史步骤设置复制到编辑前", "", true, false)
+                    {
                         lightroom = Some((i, LightroomStep::ToBefore));
                         ui.close();
                     }

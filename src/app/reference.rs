@@ -118,7 +118,7 @@ impl Editor {
             return;
         };
         if let Err(refusal) = source {
-            self.status = format!("Can't be the reference photo: {}", refusal.detail());
+            self.status = format!("无法用作参考照片：{}", refusal.detail());
             return;
         }
         if self.reference.photo != Some(id) {
@@ -222,7 +222,7 @@ impl Editor {
             Err(error) => {
                 self.reference.load.finish(ticket);
                 self.reference.pending = None;
-                self.status = format!("Reference photo: {error}");
+                self.status = format!("参考照片：{error}");
                 self.reference.error = Some(error);
             }
         }
@@ -277,13 +277,13 @@ impl Editor {
         pane: Pane,
     ) -> Option<Rect> {
         let palette = theme::palette(ui.ctx());
-        badge(ui, panes.after.clip, "Active");
+        badge(ui, panes.after.clip, "当前");
         let rect = self.reference_rect(ui, pane);
         match (rect, self.reference.photo) {
             (Some((rect, g)), _) => self.paint_second_side(ui, pane, rect, &g),
             (None, Some(id)) => self.reference_stand_in(ui, pane, id),
             (None, None) => {
-                let text = "Drag a photo from the filmstrip here,\nor right-click one and choose\nSet as Reference Photo";
+                let text = "将胶片栏中的照片拖到此处，\n或右键点击照片并选择\n设为参考照片";
                 ui.painter().with_clip_rect(pane.clip).text(
                     pane.clip.center(),
                     egui::Align2::CENTER_CENTER,
@@ -302,7 +302,7 @@ impl Editor {
                 palette.gray(170),
             );
         }
-        badge(ui, pane.clip, "Reference");
+        badge(ui, pane.clip, "参考");
         rect.map(|(rect, _)| rect)
     }
     /// Where the reference photo is drawn in `pane` at its own zoom, and its
@@ -459,10 +459,7 @@ mod tests {
     fn wait_for_reference(editor: &mut Editor) {
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(60);
         while editor.reference.loading() {
-            assert!(
-                std::time::Instant::now() < deadline,
-                "reference not developed"
-            );
+            assert!(std::time::Instant::now() < deadline, "参考照片尚未显影");
             match editor.rx.recv_timeout(std::time::Duration::from_secs(60)) {
                 Ok(Event::Reference { ticket, result }) => editor.reference_ready(ticket, result),
                 Ok(_) => {}
@@ -534,7 +531,7 @@ mod tests {
         let shown = super::super::state::Picture::presented(egui::TextureId::Managed(1), [1, 1]);
         editor.preview.before.texture = Some(shown);
         // Left/Right moves the Active photo; the reference stays where it was.
-        editor.reference.error = Some("was offline".into());
+        editor.reference.error = Some("已离线".into());
         // A load still running for it is dropped once it opens.
         editor.reload_reference();
         let stale = editor.reference.load.id();
@@ -636,7 +633,7 @@ mod tests {
             resolution: Resolution::Half,
         };
         editor.reference_ready(ticket, Ok(Box::new(half)));
-        editor.reference_ready(ticket, Err("full decode failed".into()));
+        editor.reference_ready(ticket, Err("完整解码失败".into()));
         assert!(!editor.reference.loading());
         editor.load_reference();
         assert!(editor.reference.loading());
@@ -689,7 +686,7 @@ mod tests {
         editor.set_reference(other);
         assert_eq!(editor.reference.photo, None);
         assert_eq!(editor.view.compare, Compare::Off);
-        assert!(editor.status.contains("reference"));
+        assert!(editor.status.contains("参考"));
         Ok(())
     }
 

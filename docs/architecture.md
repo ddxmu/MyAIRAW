@@ -28,6 +28,17 @@ files should preserve.
 
 ## Module ownership
 
+MyAIRAW keeps the same dependency directions. Raster input normalization lives
+beside LibRaw in `raw/raster.rs`; it yields the same `CameraImage` with linear
+sRGB and an identity camera matrix. Display-referred images do not acquire a
+camera DCP. Their `Metadata::display_referred` flag bypasses the camera exposure
+ramp, scene-referred shoulder and sensor highlight reconstruction; new RGB
+recipes start without sharpening.
+Both RAW and raster edits use the existing catalog/recipe/export
+owners. The locally vendored updater adds signed file-level reconstruction only;
+the existing validated DMG handoff, startup acknowledgment and rollback own the
+actual replacement, including when a delta falls back to a full package.
+
 | Module | Owns | Main extension points |
 | --- | --- | --- |
 | `camera_data` | A RAW's metadata, the demosaic and decode choices and the decoded camera-space image, as values with no native code | `camera_data.rs` |

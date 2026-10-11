@@ -33,11 +33,11 @@ impl ToneRegion {
     }
     pub(super) fn label(self) -> &'static str {
         match self {
-            Self::Blacks => "Blacks",
-            Self::Shadows => "Shadows",
-            Self::Exposure => "Exposure",
-            Self::Highlights => "Highlights",
-            Self::Whites => "Whites",
+            Self::Blacks => "黑色色阶",
+            Self::Shadows => "阴影",
+            Self::Exposure => "曝光",
+            Self::Highlights => "高光",
+            Self::Whites => "白色色阶",
         }
     }
     pub(super) fn value(self, r: &Recipe) -> f32 {
@@ -282,7 +282,7 @@ mod tests {
         h.drag(egui::PointerButton::Primary, start, &[120., 170., 220.]);
         assert_eq!(h.recipe.blacks, 0.3);
         assert_eq!(h.recipe.exposure, 0.);
-        assert_eq!(h.steps(), [("Blacks".into(), "+30".into())]);
+        assert_eq!(h.steps(), [("黑色色阶".into(), "+30".into())]);
     }
 
     #[test]

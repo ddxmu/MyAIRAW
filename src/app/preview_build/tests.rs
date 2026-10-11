@@ -27,7 +27,7 @@ fn test_render(item: &Item, cancel: &AtomicBool) -> anyhow::Result<image::RgbIma
         STARTED.lock().unwrap().push(item.path.clone());
         let until = Instant::now() + Duration::from_secs(10);
         while !released(&item.path) && Instant::now() < until {
-            anyhow::ensure!(!cancel.load(Ordering::Relaxed), "Cancelled");
+            anyhow::ensure!(!cancel.load(Ordering::Relaxed), "已取消");
             std::thread::sleep(Duration::from_millis(2));
         }
     }
@@ -148,21 +148,21 @@ fn only_stale_raws_of_the_selection_are_built() {
     let queued = e
         .build_previews(&[a, b, c, d], PreviewKind::Standard)
         .unwrap();
-    // The JPEG and the offline RAW are skipped; the fresh one costs nothing.
+    // The JPEG is now editable; only the offline RAW is skipped.
     assert_eq!(
         queued,
         Queued {
-            queued: 2,
-            skipped: 2
+            queued: 3,
+            skipped: 1
         }
     );
     settle(&mut e);
     assert_eq!(renders_of(&path_of(&e, a)), 1);
     assert_eq!(renders_of(&path_of(&e, b)), 1);
-    assert_eq!(renders_of(&path_of(&e, c)), 0);
+    assert_eq!(renders_of(&path_of(&e, c)), 1);
     assert!(fresh(&cache, &e, b));
     let progress = e.preview_builds.progress().unwrap();
-    assert_eq!((progress.done, progress.total), (2, 2));
+    assert_eq!((progress.done, progress.total), (3, 3));
     assert!(progress.failed.is_empty());
 }
 
@@ -525,8 +525,8 @@ fn the_command_builds_what_the_menu_would() {
     assert!(matches!(
         reply,
         Reply::Previews {
-            queued: 2,
-            skipped: 1
+            queued: 3,
+            skipped: 0
         }
     ));
     let state = serde_json::to_value(e.command_state()).unwrap();

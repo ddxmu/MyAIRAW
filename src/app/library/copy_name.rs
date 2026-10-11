@@ -65,7 +65,7 @@ impl CopyNames {
         let palette = theme::palette(ui.ctx());
         let (rect, _) =
             ui.allocate_exact_size(Vec2::new(ui.available_width(), ROW), egui::Sense::hover());
-        caption_at(ui, rect, "Copy Name");
+        caption_at(ui, rect, "副本名称");
         let mut outcome = Ok(false);
         if self.draft.as_ref().is_none_or(|(id, _)| *id != photo.id) {
             // Another copy was selected before the field lost focus: keep its

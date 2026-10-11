@@ -53,20 +53,17 @@ impl Library {
         let quick = self.ensure_quick()?;
         let all_in = ids.iter().all(|id| self.in_quick(*id));
         let (added, removed, verb) = if all_in {
-            (Vec::new(), ids.to_vec(), "Removed from")
+            (Vec::new(), ids.to_vec(), "已移出")
         } else {
             let added: Vec<PhotoId> = ids
                 .iter()
                 .copied()
                 .filter(|id| !self.in_quick(*id))
                 .collect();
-            (added, Vec::new(), "Added to")
+            (added, Vec::new(), "已加入")
         };
         let count = added.len() + removed.len();
-        let summary = format!(
-            "{verb} Quick Collection · {}",
-            plural(count, "photo", "photos")
-        );
+        let summary = format!("{verb}快速收藏 · {}", plural(count, "photo", "photos"));
         self.record_collection(quick, added, removed, summary)
     }
     /// Cmd+Shift+B: empties the Quick Collection.
@@ -83,12 +80,7 @@ impl Library {
         if removed.is_empty() {
             return Ok(());
         }
-        self.record_collection(
-            quick,
-            Vec::new(),
-            removed,
-            "Cleared Quick Collection".into(),
-        )
+        self.record_collection(quick, Vec::new(), removed, "已清空快速收藏".into())
     }
     /// Cmd+B: shows the Quick Collection.
     pub(in crate::app) fn show_quick(&mut self) -> Result<()> {
@@ -109,7 +101,7 @@ impl Library {
             (false, true) => Ok(()),
         };
         if let Err(e) = done {
-            self.message = format!("Quick Collection not changed: {e}");
+            self.message = format!("未更改快速收藏：{e}");
         }
     }
     /// Makes a change and hands it to the undo log once it is saved.

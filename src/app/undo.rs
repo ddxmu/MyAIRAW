@@ -239,8 +239,8 @@ impl Editor {
     /// command stays where it was.
     fn apply(&mut self, command: &Command, direction: Direction) -> bool {
         let verb = match direction {
-            Direction::Undo => "Undo",
-            Direction::Redo => "Redo",
+            Direction::Undo => "撤销",
+            Direction::Redo => "重做",
         };
         match command {
             Command::Metadata { change, develop } => {

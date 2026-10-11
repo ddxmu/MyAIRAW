@@ -697,7 +697,7 @@ fn catalog_header_keeps_the_recipe_resolved_by_the_loader() -> anyhow::Result<()
             metadata: Metadata::default(),
             recipe: recipe.clone(),
             export: Default::default(),
-            status: "Original".into(),
+            status: "原始".into(),
         })))
         .unwrap();
     editor.events(&ctx);
@@ -728,7 +728,7 @@ fn develop_history_survives_reopening_the_photo() -> anyhow::Result<()> {
                 metadata: Metadata::default(),
                 recipe: Recipe::default(),
                 export: Default::default(),
-                status: "Original".into(),
+                status: "原始".into(),
             })))
             .unwrap();
         editor.events(&ctx);
@@ -1046,7 +1046,7 @@ fn red_eye_tool_adds_moves_and_deletes_one_history_step_each() {
     frame(vec![egui::Event::PointerMoved(d), button(d, true)]);
     let (ops, names, status) = frame(vec![button(d, false)]);
     assert_eq!((ops.len(), names.len()), (2, 2));
-    assert!(status.contains("Unable to find red eye"), "{status}");
+    assert!(status.contains("无法找到红眼"), "{status}");
     // Dragging the first correction moves it in one step.
     let e = Pos2::new(70., 60.);
     frame(vec![egui::Event::PointerMoved(a), button(a, true)]);
@@ -1150,7 +1150,7 @@ fn pet_eye_type_finds_a_glowing_pupil_and_adds_a_catchlight() {
     // Red Eye finds nothing red there.
     in_edit_frame(&ctx, &mut editor, |e| e.add_red_eye([0.5, 0.5], 0.15));
     assert!(editor.document.edit.recipe().red_eye.is_empty());
-    assert!(editor.status.contains("Unable to find red eye"));
+    assert!(editor.status.contains("无法找到红眼"));
     editor.view.red_eye.pet = red_eye_tool::PupilType::Pet;
     in_edit_frame(&ctx, &mut editor, |e| e.add_red_eye([0.5, 0.5], 0.15));
     let eyes = &editor.document.edit.recipe().red_eye;
@@ -1245,11 +1245,7 @@ fn red_eye_tool_refuses_a_red_area_too_large_to_be_a_pupil() {
     editor.document.set_image(image);
     in_edit_frame(&ctx, &mut editor, |e| e.add_red_eye([0.5, 0.5], 0.48));
     assert!(editor.document.edit.recipe().red_eye.is_empty());
-    assert!(
-        editor.status.contains("Unable to find red eye"),
-        "{}",
-        editor.status
-    );
+    assert!(editor.status.contains("无法找到红眼"), "{}", editor.status);
     editor.document.edit.recipe().validate().unwrap();
 }
 #[test]
@@ -1557,7 +1553,7 @@ fn auto_is_one_undoable_step_that_keeps_edits_made_while_it_ran() {
     assert_eq!(auto.effects.clarity, 0.25);
     let (steps, applied) = editor.document.edit.history().steps();
     assert_eq!(applied, 1);
-    assert_eq!(steps[0].name, "Auto Settings");
+    assert_eq!(steps[0].name, "自动设置");
     editor.undo();
     let mut expected = before;
     expected.effects.clarity = 0.25;
@@ -1576,7 +1572,7 @@ fn auto_is_one_undoable_step_that_keeps_edits_made_while_it_ran() {
     assert_eq!(r.auto_white_balance, Some([r.temperature, r.tint]));
     assert_eq!(r.exposure, auto.exposure);
     let (steps, _) = editor.document.edit.history().steps();
-    assert_eq!(steps[1].name, "White Balance");
+    assert_eq!(steps[1].name, "白平衡");
     // Pasted onto a photo, the values were not estimated for it: the WB menu says Custom.
     editor.copy_settings(crate::model::settings_groups::GroupSelection::default());
     editor.paste_settings();
@@ -1691,7 +1687,7 @@ fn auto_arriving_mid_drag_lands_between_the_two_halves_of_the_drag() {
         .map(|s| s.name.clone())
         .collect();
     assert_eq!(names.len(), 3, "{names:?}");
-    assert_eq!(names[1], "Auto Settings");
+    assert_eq!(names[1], "自动设置");
     // Undoing the rest of the drag keeps Auto; the next undo removes only Auto.
     editor.undo();
     assert_eq!(*editor.document.edit.recipe(), with_auto);
@@ -2096,7 +2092,7 @@ fn undo_brings_back_a_range_rejected_under_the_unflagged_filter() -> anyhow::Res
     assert_eq!(library.selected(), Some(ids[3]));
     assert_eq!(library.selected_photos(), ids[1..4]);
     assert!(library.session.photos.iter().all(|p| p.flag == 0));
-    assert!(e.status.starts_with("Undo 3 photos"));
+    assert!(e.status.starts_with("撤销 3 张照片"));
     e.redo();
     let library = e.library.as_ref().unwrap();
     assert_eq!(library.shown().len(), 2);
@@ -2325,7 +2321,7 @@ fn quick_collection_toggles_shows_clears_and_undoes() -> anyhow::Result<()> {
     press(&mut e, egui::Key::B, egui::Modifiers::COMMAND);
     let library = e.library.as_ref().unwrap();
     assert_eq!(library.shown(), ids[..2]);
-    assert_eq!(library.source_name(), "Quick Collection");
+    assert_eq!(library.source_name(), "快速收藏集");
     // B again on photos all in it takes them out.
     press(&mut e, egui::Key::B, egui::Modifiers::NONE);
     assert!(e.library.as_ref().unwrap().shown().is_empty());
@@ -2374,7 +2370,7 @@ fn the_preset_list_is_kept_until_what_it_shows_changes() {
         presets: vec![
             preset("a", "Film", "Warm⁺"),
             preset("b", "Film", "Cool"),
-            preset("c", "Mono", "Grain"),
+            preset("c", "Mono", "颗粒"),
         ],
         errors: Vec::new(),
     });
@@ -2394,7 +2390,7 @@ fn the_preset_list_is_kept_until_what_it_shows_changes() {
         names(&mut editor),
         [
             ("Film".into(), vec!["Warm+".into(), "Cool".into()]),
-            ("Mono".into(), vec!["Grain".into()])
+            ("Mono".into(), vec!["颗粒".into()])
         ]
     );
     // Kept while nothing it depends on changes.
@@ -2408,7 +2404,7 @@ fn the_preset_list_is_kept_until_what_it_shows_changes() {
     assert!(names(&mut editor).is_empty());
     editor.presets.favorites.insert("c".into());
     editor.presets.revision += 1;
-    assert_eq!(names(&mut editor), [("Mono".into(), vec!["Grain".into()])]);
+    assert_eq!(names(&mut editor), [("Mono".into(), vec!["颗粒".into()])]);
     // Rebuilt when another photo's compatibility replaces this one's.
     editor.presets.favorites_only = false;
     editor.presets.compatible_only = true;
@@ -2468,7 +2464,7 @@ fn double_clicking_a_defringe_hue_resets_it_to_its_colors_default() {
         ctx.data(|d| d.get_temp(super::widgets::history_step_id()));
     assert_eq!(
         step,
-        Some(("Defringe Green Hue".to_string(), "40 / 60".to_string()))
+        Some(("去边绿色色相".to_string(), "40 / 60".to_string()))
     );
 }
 #[test]
@@ -2835,7 +2831,7 @@ fn auto_straighten_sets_the_level_angle_as_one_step_and_measures_again_after_a_t
     assert_eq!(applied, 1);
     assert_eq!(
         (steps[0].name.as_str(), steps[0].value.as_str()),
-        ("Straighten", "Auto")
+        ("拉直", "自动")
     );
     // Upright is left as it was.
     assert_eq!(e.document.edit.recipe().upright, upright);
@@ -3059,7 +3055,7 @@ fn guided_upright_gestures_are_one_history_step_each() {
     let names: Vec<&str> = steps.iter().map(|s| s.name.as_str()).collect();
     assert_eq!(
         names,
-        ["Add Guide", "Add Guide", "Move Guide", "Delete Guide"]
+        ["添加引导线", "添加引导线", "移动引导线", "删除引导线"]
     );
     assert_eq!(applied, 4);
     // One guide corrects nothing, and says so.
@@ -3199,7 +3195,7 @@ fn v_converts_to_black_and_white_with_the_auto_mix_as_one_step() {
     assert_eq!(applied, 3);
     assert_eq!(
         (steps[2].name.as_str(), steps[2].value.as_str()),
-        ("Black & White Mix", "Auto")
+        ("黑白混合", "自动")
     );
     // With the preference off, the first conversion keeps the mix at zero.
     let session = crate::app::session::Session {
@@ -3320,7 +3316,7 @@ fn preset_amount_scales_the_preset_from_the_settings_before_it() {
     assert!((editor.document.edit.recipe().contrast - 0.2).abs() < 1e-6);
     let (steps, applied) = editor.document.edit.history().steps();
     assert_eq!(applied, 4);
-    assert_eq!(steps[3].name, "Preset Amount");
+    assert_eq!(steps[3].name, "预设强度");
     assert_eq!(steps[3].value, "50");
     // An Upright analysis landing meanwhile keeps the Amount, and the Amount keeps it.
     let analysed = vec![[1., 0., 0., 0., 1., 0., 0., 0., 1.]; 2];
@@ -3366,7 +3362,7 @@ fn preset_amount_scales_the_preset_from_the_settings_before_it() {
     ctx.data_mut(|d| {
         d.insert_temp(
             super::widgets::history_step_id(),
-            ("Preset Amount".to_string(), "50".to_string()),
+            ("预设强度".to_string(), "50".to_string()),
         )
     });
     editor.set_preset_amount(0.5);
@@ -3377,7 +3373,7 @@ fn preset_amount_scales_the_preset_from_the_settings_before_it() {
     assert!(editor.presets.amount.is_none());
     editor.apply_preset(0).unwrap();
     let (steps, applied) = editor.document.edit.history().steps();
-    assert_ne!(steps[applied - 1].name, "Preset Amount");
+    assert_ne!(steps[applied - 1].name, "预设强度");
     // Undo ends it too.
     let frame = editor.begin_edit_frame();
     let mut recipe = editor.document.edit.recipe().clone();
@@ -3655,14 +3651,14 @@ fn an_edit_right_after_a_wheel_scroll_is_its_own_history_step() {
     ctx.data_mut(|d| {
         d.insert_temp(
             super::widgets::history_step_id(),
-            ("Exposure".to_string(), "+0.50".to_string()),
+            ("曝光".to_string(), "+0.50".to_string()),
         )
     });
     editor.finish_edit_frame(edit, &ctx);
     let (steps, applied) = editor.document.edit.history().steps();
     assert_eq!(applied, 2);
-    assert_ne!(steps[0].name, "Exposure");
-    assert_eq!(steps[1].name, "Exposure");
+    assert_ne!(steps[0].name, "曝光");
+    assert_eq!(steps[1].name, "曝光");
 }
 #[test]
 fn a_wheel_scroll_is_its_own_step_however_late_the_next_frame_comes() {
@@ -3701,13 +3697,13 @@ fn a_wheel_scroll_is_its_own_step_however_late_the_next_frame_comes() {
     ctx.data_mut(|d| {
         d.insert_temp(
             super::widgets::history_step_id(),
-            ("Exposure".to_string(), "+0.50".to_string()),
+            ("曝光".to_string(), "+0.50".to_string()),
         )
     });
     editor.finish_edit_frame(edit, &ctx);
     let (steps, applied) = editor.document.edit.history().steps();
     assert_eq!(applied, 2);
-    assert_eq!(steps[1].name, "Exposure");
+    assert_eq!(steps[1].name, "曝光");
     // A rating or flag right after a scroll is logged after it, so Undo takes it first.
     let edit = editor.begin_edit_frame();
     editor.scroll_tool_size(notch);
@@ -3864,7 +3860,7 @@ fn point_colors_dropper_adds_a_selected_swatch_as_one_step_and_visualizes_it() {
     assert_eq!(applied, 1);
     assert_eq!(
         (steps[0].name.as_str(), steps[0].value.as_str()),
-        ("Point Color", "Add Swatch")
+        ("点颜色", "添加色样")
     );
     let swatch = editor.document.edit.recipe().point_colors[0];
     // The photo is blue: a hue near 4 sixths of a turn, sampled with default ranges.
@@ -4004,7 +4000,7 @@ fn a_panel_header_switch_turns_the_panel_off_and_on_without_opening_it() {
     let draw = |state: &mut PanelState, events, time| {
         widget_frame(&ctx, time, events, |ui| {
             area.set(ui.max_rect());
-            super::widgets::switched_section(ui, "Tone Curve", state, |ui| {
+            super::widgets::switched_section(ui, "色调曲线", state, |ui| {
                 ui.label("contents");
             });
         })
@@ -4068,7 +4064,7 @@ fn changing_a_setting_in_a_panel_that_is_off_turns_it_back_on() {
 fn solo_mode_opens_one_panel_per_side_and_is_set_from_the_header_menu() {
     use super::widgets::{SectionGroup, SectionSide};
     let ctx = egui::Context::default();
-    let titles = ["Basic", "Tone Curve", "Detail"];
+    let titles = ["基本", "色调曲线", "细节"];
     let headers = std::cell::RefCell::new(Vec::new());
     let draw = |events, time| {
         widget_frame(&ctx, time, events, |ui| {
@@ -4096,17 +4092,14 @@ fn solo_mode_opens_one_panel_per_side_and_is_set_from_the_header_menu() {
     let solo: Option<std::collections::BTreeSet<String>> =
         ctx.data(|d| d.get_temp(super::widgets::solo_sections_id()));
     assert_eq!(solo, Some(["develop-right".to_string()].into()));
-    assert_eq!(
-        collapsed(),
-        ["Basic".to_string(), "Detail".to_string()].into()
-    );
+    assert_eq!(collapsed(), ["基本".to_string(), "细节".to_string()].into());
     // Opening Detail closes Tone Curve.
     draw(vec![], 3.);
     let detail = Pos2::new(60., headers.borrow()[2]);
     draw(click_at(detail, egui::PointerButton::Primary), 4.);
     assert_eq!(
         collapsed(),
-        ["Basic".to_string(), "Tone Curve".to_string()].into()
+        ["基本".to_string(), "色调曲线".to_string()].into()
     );
 }
 #[test]
@@ -4118,7 +4111,7 @@ fn up_and_down_nudge_the_hovered_slider_but_never_while_typing_or_scrolling() {
     let mut draw = |value: &mut f32, focus: bool, events: Vec<egui::Event>, time| {
         widget_frame(&ctx, time, events, |ui| {
             let top = ui.cursor().min;
-            super::widgets::slider(ui, "Contrast", value, -1. ..=1., 0.);
+            super::widgets::slider(ui, "对比度", value, -1. ..=1., 0.);
             row.set(Rect::from_min_max(
                 top,
                 Pos2::new(ui.max_rect().right(), ui.cursor().top()),
@@ -4182,7 +4175,7 @@ fn a_disabled_slider_ignores_up_and_down() {
         widget_frame(&ctx, time, events, |ui| {
             let top = ui.cursor().min;
             ui.add_enabled_ui(false, |ui| {
-                super::widgets::slider(ui, "Contrast", value, -1. ..=1., 0.);
+                super::widgets::slider(ui, "对比度", value, -1. ..=1., 0.);
             });
             row.set(Rect::from_min_max(
                 top,
@@ -4218,7 +4211,7 @@ fn b_and_w_opens_and_closes_with_the_color_mixer_in_solo_mode() {
         widget_frame(&ctx, time, events, |ui| {
             let _side = SectionSide::enter(ui, SectionGroup::DevelopRight);
             headers.borrow_mut().clear();
-            for title in ["Tone Curve", mixer] {
+            for title in ["色调曲线", mixer] {
                 headers.borrow_mut().push(ui.cursor().top() + 8. + 14.);
                 super::widgets::section(ui, title, false, |ui| {
                     ui.label(title);
@@ -4230,20 +4223,20 @@ fn b_and_w_opens_and_closes_with_the_color_mixer_in_solo_mode() {
         ctx.data(|d| d.get_temp(super::widgets::collapsed_sections_id()))
             .unwrap_or_default()
     };
-    draw("Color Mixer", vec![], 0.);
+    draw("颜色混合器", vec![], 0.);
     // Open Tone Curve alone, then convert to black & white: B&W stays closed.
     let mixer = Pos2::new(60., headers.borrow()[1]);
     draw(
-        "Color Mixer",
+        "颜色混合器",
         click_at(mixer, egui::PointerButton::Primary),
         1.,
     );
-    assert_eq!(collapsed(), ["Color Mixer".to_string()].into());
+    assert_eq!(collapsed(), ["颜色混合器".to_string()].into());
     draw("B&W", vec![], 3.);
-    assert_eq!(collapsed(), ["Color Mixer".to_string()].into());
+    assert_eq!(collapsed(), ["颜色混合器".to_string()].into());
     // Opening B&W closes Tone Curve, and the Color Mixer comes back open.
     draw("B&W", click_at(mixer, egui::PointerButton::Primary), 4.);
-    assert_eq!(collapsed(), ["Tone Curve".to_string()].into());
+    assert_eq!(collapsed(), ["色调曲线".to_string()].into());
 }
 
 /// Develop opens every photo with the edit the shared resolver gives it, so a photo
@@ -4953,7 +4946,7 @@ fn a_copy_removed_when_the_catalog_cannot_be_read_again_still_leaves_undo() -> a
     assert_eq!(rating(&editor, again), 2);
     editor.undo();
     assert_eq!(rating(&editor, again), 2);
-    assert!(status.contains("could not be read again"), "{status}");
+    assert!(status.contains("无法重新读取"), "{status}");
     Ok(())
 }
 #[test]
@@ -5263,7 +5256,7 @@ fn the_library_info_panel_stays_while_a_field_in_it_cannot_be_saved() -> anyhow:
     library.set_copy_name_draft(copy, "B&W");
     assert!(!e.change_panels(PanelChange::Toggle(WorkspacePanel::Right)));
     assert!(e.panel_shown(WorkspacePanel::Right));
-    assert!(e.status.starts_with("Not saved"));
+    assert!(e.status.starts_with("未保存"));
     // The left panel holds no field; it hides.
     assert!(e.change_panels(PanelChange::Toggle(WorkspacePanel::Left)));
     e.library.as_mut().unwrap().discard_drafts();

@@ -149,7 +149,7 @@ impl Editor {
             self.document.edit.recipe_mut().effects.gray_mix = mix;
             self.document
                 .edit
-                .name_next_step(Step::new("Black & White Mix", "Auto"));
+                .name_next_step(Step::new("黑白混合", "自动"));
         }
     }
 }

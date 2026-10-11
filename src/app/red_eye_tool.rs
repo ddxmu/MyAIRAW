@@ -231,7 +231,7 @@ impl Editor {
     /// fraction) of image position `center`, or says none was found.
     pub(super) fn add_red_eye(&mut self, center: [f32; 2], size: f32) {
         if self.document.edit.recipe().red_eye.len() >= crate::model::red_eye::MAX_OPS {
-            self.status = "Too many red eye corrections on this photo".into();
+            self.status = "此照片的红眼校正数量已达上限".into();
             return;
         }
         let Some(im) = self.document.full() else {
@@ -284,8 +284,8 @@ impl Editor {
             // Lightroom's warning.
             Err(_) => {
                 self.status = format!(
-                    "Unable to find {}. Be sure to use an area that includes the entire eye.",
-                    kind.name().to_lowercase()
+                    "无法找到{}，请确保选区包含完整眼睛。",
+                    super::chinese::label(kind.name()).to_lowercase()
                 )
             }
         }
@@ -337,13 +337,13 @@ impl Editor {
     /// The Red Eye drawer below the tool strip.
     pub(super) fn red_eye_panel(&mut self, ui: &mut egui::Ui) {
         let palette = theme::palette(ui.ctx());
-        super::widgets::set_edit_context(ui, "Red Eye");
+        super::widgets::set_edit_context(ui, "红眼");
         let selected = self
             .view
             .red_eye
             .selected
             .filter(|i| *i < self.document.edit.recipe().red_eye.len());
-        super::retouch_tool::control_label(ui, "Type", |ui| {
+        super::retouch_tool::control_label(ui, "类型", |ui| {
             let mut pet = selected.map_or(self.view.red_eye.pet, |i| {
                 PupilType::of(self.document.edit.recipe().red_eye[i].kind)
             });
@@ -351,7 +351,7 @@ impl Editor {
             if segmented(
                 ui,
                 &mut pet,
-                &[(PupilType::Red, "Red Eye"), (PupilType::Pet, "Pet Eye")],
+                &[(PupilType::Red, "红眼"), (PupilType::Pet, "宠物眼")],
                 w,
             ) {
                 self.view.red_eye.pet = pet;
@@ -369,7 +369,7 @@ impl Editor {
                 let before = op.clone();
                 slider_with(
                     ui,
-                    "Pupil Size",
+                    "瞳孔大小",
                     &mut op.pupil_size,
                     0. ..=1.,
                     crate::model::red_eye::DEFAULT_PUPIL_SIZE,
@@ -381,7 +381,7 @@ impl Editor {
                     EyeKind::Red => {
                         slider_with(
                             ui,
-                            "Darken",
+                            "变暗",
                             &mut op.darken,
                             0. ..=1.,
                             crate::model::red_eye::DEFAULT_DARKEN,
@@ -392,8 +392,8 @@ impl Editor {
                     EyeKind::Pet { catchlight } => indented(ui, |ui| {
                         let mut on = catchlight.is_some();
                         if ui
-                            .checkbox(&mut on, "Add Catchlight")
-                            .on_hover_text("Drag the catchlight to place it")
+                            .checkbox(&mut on, "添加眼神光")
+                            .on_hover_text("拖动眼神光设置位置")
                             .changed()
                         {
                             *catchlight = on.then_some(crate::model::red_eye::DEFAULT_CATCHLIGHT);
@@ -402,26 +402,23 @@ impl Editor {
                 }
                 op.fit_catchlight();
                 if *op != before {
-                    let name = format!("Update {} Correction", op.kind.name());
+                    let name = format!("更新{}校正", super::chinese::label(op.kind.name()));
                     self.show_red_eye();
                     super::widgets::name_history_step(ui, name, String::new());
                 }
             }
-            None => hint(ui, "Select a correction to change it"),
+            None => hint(ui, "选择校正以进行调整"),
         }
         ui.add_space(4.);
-        hint(
-            ui,
-            "Click the center of the eye; scroll or [ ] to size the circle",
-        );
-        hint(ui, "Delete removes the selected correction");
+        hint(ui, "点击眼睛中心；滚轮或 [ ] 调整圆圈大小");
+        hint(ui, "Delete 移除所选校正");
         ui.add_space(4.);
         indented(ui, |ui| {
             let w = (ui.available_width() - 4.) / 2.;
             let any = !self.document.edit.recipe().red_eye.is_empty();
             if ui
-                .add_enabled(any, egui::Button::new("Reset").min_size(Vec2::new(w, 22.)))
-                .on_hover_text("Remove every red eye correction")
+                .add_enabled(any, egui::Button::new("重置").min_size(Vec2::new(w, 22.)))
+                .on_hover_text("移除所有红眼校正")
                 .clicked()
             {
                 self.document.edit.recipe_mut().red_eye.clear();
@@ -430,10 +427,10 @@ impl Editor {
             if ui
                 .add_sized(
                     [w, 22.],
-                    egui::Button::new(egui::RichText::new("Close").color(palette.on_accent()))
+                    egui::Button::new(egui::RichText::new("关闭").color(palette.on_accent()))
                         .fill(palette.accent()),
                 )
-                .on_hover_text("Close the tool")
+                .on_hover_text("关闭工具")
                 .clicked()
             {
                 self.view.tool = super::state::Tool::None;

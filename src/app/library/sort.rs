@@ -36,16 +36,16 @@ impl Sort {
     ];
     pub(super) fn name(self) -> &'static str {
         match self {
-            Self::CaptureTime => "Capture Time",
-            Self::AddedOrder => "Added Order",
-            Self::EditTime => "Edit Time",
-            Self::Rating => "Rating",
-            Self::Pick => "Pick",
-            Self::LabelColor => "Label Color",
-            Self::LabelText => "Label Text",
-            Self::FileName => "File Name",
-            Self::Extension => "File Extension",
-            Self::AspectRatio => "Aspect Ratio",
+            Self::CaptureTime => "拍摄时间",
+            Self::AddedOrder => "添加顺序",
+            Self::EditTime => "编辑时间",
+            Self::Rating => "评分",
+            Self::Pick => "选中",
+            Self::LabelColor => "标签颜色",
+            Self::LabelText => "标签文字",
+            Self::FileName => "文件名",
+            Self::Extension => "文件扩展名",
+            Self::AspectRatio => "宽高比",
         }
     }
     /// Reads what this order needs beyond `Photo` from the catalog.

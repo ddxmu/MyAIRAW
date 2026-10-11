@@ -95,9 +95,8 @@ impl Library {
             return (stand_in, Some(note.into()));
         }
         let edge = (area.width().max(area.height()) * ctx.pixels_per_point()) as u32;
-        // A JPEG, TIFF or PNG has no edit to render: the grid's preview of
-        // it will do. A RAW is rendered, so its current edit always shows.
-        if edge <= GRID_EDGE && !crate::storage::is_raw(&photo.path) && stand_in.is_some() {
+        // Only non-editable formats may use the unedited thumbnail directly.
+        if edge <= GRID_EDGE && !crate::storage::is_editable(&photo.path) && stand_in.is_some() {
             return (stand_in, None);
         }
         let stamp = self.edit_stamp(ctx, photo.id);
@@ -108,7 +107,7 @@ impl Library {
         };
         match self.screen.get(photo, edge, stamp, edit) {
             Shown::Ready(texture) => (Some(texture.clone()), None),
-            Shown::Loading => (stand_in, Some("Loading…".into())),
+            Shown::Loading => (stand_in, Some("正在加载…".into())),
             Shown::Failed(error) => (stand_in, Some(format!("Preview unavailable: {error}"))),
         }
     }

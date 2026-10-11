@@ -83,12 +83,12 @@ pub(super) struct Summary {
 impl Summary {
     /// "Exported 148 of 150 · 2 not exported · 1 with notes".
     fn line(&self) -> String {
-        let mut line = format!("Exported {} of {}", self.exported, self.total);
+        let mut line = format!("已导出 {} / {}", self.exported, self.total);
         if !self.problems.is_empty() {
-            line.push_str(&format!(" · {} not exported", self.problems.len()));
+            line.push_str(&format!(" · {} 个未导出", self.problems.len()));
         }
         if self.noted > 0 {
-            line.push_str(&format!(" · {} with notes", self.noted));
+            line.push_str(&format!(" · {} 个附带提示", self.noted));
         }
         line
     }
@@ -218,7 +218,7 @@ impl Editor {
             _ if shown && open.is_none() => {
                 let source = self.document.path.clone().unwrap_or_default();
                 if !source.is_file() {
-                    self.status = format!("{} can't be exported: Offline", source.display());
+                    self.status = format!("{} 无法导出：已离线", source.display());
                     return None;
                 }
                 scope.chosen = 1;
@@ -239,16 +239,16 @@ impl Editor {
         }
         if scope.photos.is_empty() {
             self.status = match scope.left_out.as_slice() {
-                [] => "Select a photo to export".into(),
-                [(name, why)] => format!("{name} can't be exported: {why}"),
-                left_out => format!("None of the {} photos can be exported", left_out.len()),
+                [] => "请选择要导出的照片".into(),
+                [(name, why)] => format!("{name} 无法导出：{why}"),
+                left_out => format!("这 {} 张照片均无法导出", left_out.len()),
             };
             return None;
         }
         if scope.photos.iter().any(|p| p.open)
             && let Some(why) = self.open_photo_unready()
         {
-            self.status = format!("Export waits for the open photo: {why}");
+            self.status = format!("导出正在等待当前照片：{why}");
             return None;
         }
         Some(scope)
@@ -259,17 +259,17 @@ impl Editor {
     fn open_photo_unready(&self) -> Option<&'static str> {
         let d = &self.document;
         if d.metadata.is_none() || d.full().is_none() {
-            Some("it is still loading")
+            Some("尚在加载")
         } else if d.pending_lightroom.is_some() {
-            Some("its Lightroom edit is still being applied")
+            Some("尚在应用 Lightroom 编辑")
         } else if d.auto.is_running() {
-            Some("Auto is still working on it")
+            Some("自动调整尚未完成")
         } else if d.edit.save_state().is_protected() {
-            Some("its edit is protected, as the file changed since it was saved")
+            Some("文件自保存后已改变，编辑受到保护")
         } else if self.importing.is_some() {
-            Some("camera profiles are still being imported")
+            Some("尚在导入相机配置")
         } else if d.upright.is_running() || d.edit.recipe().upright.needs_analysis() {
-            Some("Upright is still analysing it")
+            Some("Upright 尚在分析")
         } else {
             None
         }
@@ -302,7 +302,7 @@ impl Editor {
                             label: p.label.clone(),
                         })
                     });
-                read.map_err(|e| format!("Metadata could not be read for export: {e}"))
+                read.map_err(|e| format!("导出时无法读取元数据：{e}"))
             }
             _ => Ok(Values::default()),
         };
@@ -327,14 +327,14 @@ impl Editor {
     /// now, the open one as shown. Asks once about files that already exist.
     fn export(&mut self, settings: ExportSettings) {
         if let Err(e) = settings.save() {
-            self.status = format!("Export settings not saved: {e:#}");
+            self.status = format!("无法保存导出设置：{e:#}");
         }
         let scope = std::mem::take(&mut self.exports.scope);
         let watermark = if settings.watermark {
             match watermark_for(&settings.watermark_name) {
                 Some(w) => Some(w),
                 None => {
-                    self.status = format!("Watermark not found: {}", settings.watermark_name);
+                    self.status = format!("未找到水印：{}", settings.watermark_name);
                     return;
                 }
             }
@@ -343,7 +343,7 @@ impl Editor {
         };
         // Metadata typed in the Library goes in the files: not exported without it.
         if !self.commit_library_drafts() {
-            self.status = format!("Export stopped: {}", self.status);
+            self.status = format!("导出已停止：{}", self.status);
             return;
         }
         // The open photo is exported as shown; if its edit can't be saved, it is
@@ -352,7 +352,7 @@ impl Editor {
         let batch = match self.batch_photos(&scope, unsaved) {
             Ok(batch) => batch,
             Err(e) => {
-                self.status = format!("Export stopped: the catalog could not be read: {e:#}");
+                self.status = format!("导出已停止：无法读取图库：{e:#}");
                 return;
             }
         };
@@ -381,7 +381,7 @@ impl Editor {
             .map(|chosen| {
                 let mut photo = match chosen.id {
                     Some(_) => BatchPhoto::from_record(
-                        records.next().expect("a record for each photo"),
+                        records.next().expect("每张照片的记录"),
                         chosen.source.clone(),
                         chosen.name.clone(),
                     ),
@@ -432,9 +432,9 @@ impl Editor {
                         after,
                     },
                 );
-                self.status = format!("Exporting {}…", plural(total, "photo", "photos"));
+                self.status = format!("正在导出 {}…", plural(total, "photo", "photos"));
             }
-            Err(Unplanned::NoFolder) => self.status = "Choose a folder to export to".into(),
+            Err(Unplanned::NoFolder) => self.status = "选择导出文件夹".into(),
             Err(Unplanned::Conflicts(conflicts)) => {
                 pending.conflicts = conflicts;
                 self.exports.pending = Some(pending);
@@ -463,13 +463,13 @@ impl Editor {
         let folders = folders(exported);
         for path in &shown {
             if let Err(e) = crate::platform::reveal::reveal(path) {
-                self.status = format!("{} · exported files not shown: {e:#}", self.status);
+                self.status = format!("{} · 无法显示导出文件：{e:#}", self.status);
                 return;
             }
         }
         if folders > shown.len() {
             self.status = format!(
-                "{} · showing {} of the {folders} folders exported to",
+                "{} · 显示 {} / {folders} 个导出目标文件夹",
                 self.status,
                 shown.len()
             );
@@ -488,7 +488,7 @@ impl Editor {
             .then(|| exported.first().cloned())
             .flatten();
         self.status = match single {
-            Some(path) => format!("Exported {}", path.display()),
+            Some(path) => format!("已导出 {}", path.display()),
             None => summary.line(),
         };
         // After the summary, so a file manager that can't be opened is said.
@@ -520,7 +520,7 @@ impl Editor {
         let (rect, response) = ui.allocate_exact_size(Vec2::new(210., 28.), Sense::click());
         let painter = ui.painter();
         let current = (progress.done + 1).min(progress.total);
-        let mut label = format!("Exporting {current} / {}", progress.total);
+        let mut label = format!("正在导出 {current} / {}", progress.total);
         if !waiting.is_empty() {
             label.push_str(&format!(" · {} waiting", waiting.len()));
         }
@@ -546,8 +546,8 @@ impl Editor {
         if !waiting.is_empty() {
             egui::Popup::menu(&response).show(|ui| {
                 for (queued, photos) in &waiting {
-                    let text = format!("Waiting: {}", plural(*photos, "photo", "photos"));
-                    if ui.button(format!("Remove · {text}")).clicked()
+                    let text = format!("等待中：{}", plural(*photos, "photo", "photos"));
+                    if ui.button(format!("移除 · {text}")).clicked()
                         && let Some(queue) = &self.exports.queue
                         && queue.remove(*queued)
                     {
@@ -563,7 +563,7 @@ impl Editor {
         );
         let cancel = ui
             .interact(close, ui.id().with("cancel-export"), Sense::click())
-            .on_hover_text("Cancel export");
+            .on_hover_text("取消导出");
         let color = palette.gray(if cancel.hovered() { 235 } else { 150 });
         crate::app::icons::paint_at(
             ui.painter(),
@@ -589,7 +589,7 @@ impl Editor {
             .color(Color32::from_rgb(230, 170, 100));
         if ui
             .add(egui::Button::new(line).frame(false))
-            .on_hover_text("Show what was not exported")
+            .on_hover_text("查看未导出的文件")
             .clicked()
         {
             self.exports.report = true;
@@ -614,14 +614,14 @@ impl Editor {
             .show(ctx, |ui| {
                 ui.set_width(520.);
                 ui.label(
-                    egui::RichText::new("Problem Exporting Files")
+                    egui::RichText::new("导出文件时遇到问题")
                         .size(15.)
                         .color(palette.gray(236)),
                 );
                 ui.add_space(6.);
                 if !summary.problems.is_empty() {
                     ui.label(
-                        egui::RichText::new("Some export operations were not performed.")
+                        egui::RichText::new("部分文件未完成导出。")
                             .size(12.)
                             .color(palette.gray(170)),
                     );
@@ -631,8 +631,8 @@ impl Editor {
                     .max_height(320.)
                     .show(ui, |ui| {
                         for (title, rows) in [
-                            ("Not exported", &summary.problems),
-                            ("Exported, with notes", &summary.notes),
+                            ("未导出", &summary.problems),
+                            ("已导出，请查看提示", &summary.notes),
                         ] {
                             if rows.is_empty() {
                                 continue;
@@ -654,7 +654,7 @@ impl Editor {
                     });
                 ui.add_space(12.);
                 ui.horizontal(|ui| {
-                    dismiss = ui.button("Dismiss").clicked();
+                    dismiss = ui.button("关闭提示").clicked();
                     close = super::widgets::primary_button(ui, "OK").clicked();
                 });
             });
@@ -684,15 +684,15 @@ fn summarize(queued: &Queued, outcomes: &[Outcome]) -> (Summary, Vec<PathBuf>) {
             }
             Outcome::Skipped(reason) => format!("skipped, {reason}"),
             Outcome::Failed(reason) => reason.clone(),
-            Outcome::Cancelled => "export cancelled".into(),
-            Outcome::NotStarted => "not started, export cancelled".into(),
+            Outcome::Cancelled => "已取消导出".into(),
+            Outcome::NotStarted => "未开始，导出已取消".into(),
         };
         summary.problems.push((name.clone(), problem));
     }
     for (name, why) in &queued.left_out {
         summary
             .problems
-            .push((name.clone(), format!("can't be exported: {why}")));
+            .push((name.clone(), format!("无法导出：{why}")));
     }
     summary.exported = exported.len();
     summary.total = queued.names.len() + queued.left_out.len();

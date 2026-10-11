@@ -286,7 +286,7 @@ fn work(
             match rendered {
                 Ok(Ok(image)) => Outcome::Ready(image),
                 Ok(Err(e)) => Outcome::Failed(format!("{e:#}")),
-                Err(_) => Outcome::Failed("The preview could not be rendered".into()),
+                Err(_) => Outcome::Failed("无法渲染预览".into()),
             }
         };
         let done = Done {
@@ -310,16 +310,16 @@ fn render(
     edit: Option<&EditSource>,
     cancel: &AtomicBool,
 ) -> anyhow::Result<image::RgbImage> {
-    if !crate::storage::is_raw(path) {
+    if !crate::storage::is_raw(path) && edit.is_none() {
         return Ok(thumbnails::downscale(&thumbnails::raster(path)?, edge));
     }
     let raw = crate::photo::open(path)?;
     let recipe = EditSource::recipe(edit, &raw)?;
     let image = raw.develop(crate::camera_data::Decode::Half, cancel)?;
-    anyhow::ensure!(!cancel.load(Ordering::Relaxed), "Cancelled");
+    anyhow::ensure!(!cancel.load(Ordering::Relaxed), "已取消");
     let out = crate::develop::render(&image, &recipe.checked()?, edge)?;
     image::RgbImage::from_raw(out.width, out.height, out.rgb8())
-        .ok_or_else(|| anyhow::anyhow!("Invalid preview size"))
+        .ok_or_else(|| anyhow::anyhow!("预览尺寸无效"))
 }
 
 #[cfg(test)]
@@ -383,7 +383,7 @@ mod tests {
         screen.wait(&ctx);
         assert!(matches!(
             screen.get(&photos[0], 100, 0, || None),
-            Shown::Failed("The preview could not be rendered")
+            Shown::Failed("无法渲染预览")
         ));
         assert!(matches!(
             screen.get(&photos[1], 100, 0, || None),
@@ -485,7 +485,7 @@ mod tests {
             while !cancel.load(Ordering::Relaxed) {
                 std::thread::sleep(std::time::Duration::from_millis(1));
             }
-            anyhow::bail!("Cancelled")
+            anyhow::bail!("已取消")
         }
         let ctx = egui::Context::default();
         let mut screen = ScreenPreviews::with(&ctx, render);

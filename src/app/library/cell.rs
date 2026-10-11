@@ -23,9 +23,9 @@ impl Style {
     }
     pub(super) fn name(self) -> &'static str {
         match self {
-            Self::Compact => "Compact Cells",
-            Self::Expanded => "Expanded Cells",
-            Self::Plain => "Photos Only",
+            Self::Compact => "紧凑网格",
+            Self::Expanded => "扩展网格",
+            Self::Plain => "仅照片",
         }
     }
     /// A cell's height for its `width`: expanded cells are taller by their
@@ -264,7 +264,7 @@ fn footer_badges(
     }
     if photo.master.is_some() {
         let name = if photo.copy_name.is_empty() {
-            "Copy"
+            "复制"
         } else {
             &photo.copy_name
         };
@@ -359,14 +359,14 @@ pub(in crate::app) fn photo_menu(
         ui.spacing_mut().item_spacing.y = 0.;
         let refusal = super::develop_refusal(photo, available);
         if module == super::Module::Develop {
-            if menu_item(ui, "Set as Reference Photo", "", refusal.is_none(), false) {
+            if menu_item(ui, "设为参考照片", "", refusal.is_none(), false) {
                 action = Some(PhotoAction::SetReference);
                 ui.close();
             }
             menu_separator(ui);
         }
         let shortcut = refusal.as_ref().map_or("D".into(), super::Refusal::label);
-        if menu_item(ui, "Open in Develop", &shortcut, refusal.is_none(), false) {
+        if menu_item(ui, "在显影中打开", &shortcut, refusal.is_none(), false) {
             action = Some(PhotoAction::Develop);
             ui.close();
         }
@@ -374,7 +374,7 @@ pub(in crate::app) fn photo_menu(
             action = Some(PhotoAction::Reveal);
             ui.close();
         }
-        if menu_item(ui, "Copy File Path", "", true, false) {
+        if menu_item(ui, "复制文件路径", "", true, false) {
             action = Some(PhotoAction::CopyPath);
             ui.close();
         }
@@ -383,23 +383,18 @@ pub(in crate::app) fn photo_menu(
         let copy = photo.master.is_some();
         for (title, shortcut, enabled, choice) in [
             (
-                "Create Virtual Copy",
+                "创建虚拟副本",
                 VIRTUAL_COPY_SHORTCUT,
                 true,
                 CopyAction::Create(photo.id),
             ),
             (
-                "Set Copy as Master",
+                "将副本设为主版本",
                 "",
                 copy,
                 CopyAction::SetMaster(photo.id),
             ),
-            (
-                "Remove Virtual Copy…",
-                "",
-                copy,
-                CopyAction::Remove(photo.id),
-            ),
+            ("移除虚拟副本…", "", copy, CopyAction::Remove(photo.id)),
         ] {
             if menu_item(ui, title, shortcut, enabled, false) {
                 action = Some(PhotoAction::Copy(choice));
@@ -407,40 +402,40 @@ pub(in crate::app) fn photo_menu(
             }
         }
         menu_separator(ui);
-        if menu_item(ui, "Read Metadata from Files…", "", true, false) {
+        if menu_item(ui, "从文件读取元数据…", "", true, false) {
             action = Some(PhotoAction::ReadMetadata);
             ui.close();
         }
         menu_separator(ui);
         submenu_style(ui);
-        ui.menu_button("Previews", |ui| {
+        ui.menu_button("预览", |ui| {
             ui.set_width(250.);
             ui.spacing_mut().item_spacing.y = 0.;
             use crate::catalog::preview_cache::PreviewKind;
-            if menu_item(ui, "Build Standard-Sized Previews", "", true, false) {
+            if menu_item(ui, "生成标准预览", "", true, false) {
                 action = Some(PhotoAction::BuildPreviews(PreviewKind::Standard));
                 ui.close();
             }
-            if menu_item(ui, "Build 1:1 Previews", "", true, false) {
+            if menu_item(ui, "生成 1:1 预览", "", true, false) {
                 action = Some(PhotoAction::BuildPreviews(PreviewKind::OneToOne));
                 ui.close();
             }
             menu_separator(ui);
-            if menu_item(ui, "Discard 1:1 Previews", "", true, false) {
+            if menu_item(ui, "丢弃 1:1 预览", "", true, false) {
                 action = Some(PhotoAction::DiscardPreviews(vec![PreviewKind::OneToOne]));
                 ui.close();
             }
-            if menu_item(ui, "Discard Standard and 1:1 Previews", "", true, false) {
+            if menu_item(ui, "丢弃标准及 1:1 预览", "", true, false) {
                 action = Some(PhotoAction::DiscardPreviews(PreviewKind::ALL.to_vec()));
                 ui.close();
             }
         });
         menu_separator(ui);
         submenu_style(ui);
-        ui.menu_button("Set Flag", |ui| {
+        ui.menu_button("设置旗标", |ui| {
             ui.set_width(170.);
             ui.spacing_mut().item_spacing.y = 0.;
-            for (flag, title) in [(1, "Flagged"), (0, "Unflagged"), (-1, "Rejected")] {
+            for (flag, title) in [(1, "已选中"), (0, "无旗标"), (-1, "已拒绝")] {
                 if menu_item(
                     ui,
                     title,
@@ -453,12 +448,12 @@ pub(in crate::app) fn photo_menu(
                 }
             }
         });
-        ui.menu_button("Set Rating", |ui| {
+        ui.menu_button("设置评分", |ui| {
             ui.set_width(170.);
             ui.spacing_mut().item_spacing.y = 0.;
             for rating in 0..=5 {
                 let title = if rating == 0 {
-                    "None".into()
+                    "无".into()
                 } else {
                     "★".repeat(rating as usize)
                 };
@@ -474,7 +469,7 @@ pub(in crate::app) fn photo_menu(
                 }
             }
         });
-        ui.menu_button("Set Color Label", |ui| {
+        ui.menu_button("设置颜色标签", |ui| {
             let palette = theme::palette(ui.ctx());
             ui.set_width(170.);
             ui.spacing_mut().item_spacing.y = 0.;
@@ -483,7 +478,7 @@ pub(in crate::app) fn photo_menu(
                 .zip(["6", "7", "8", "9", ""])
                 .chain([("", "")])
             {
-                let title = if label.is_empty() { "None" } else { label };
+                let title = if label.is_empty() { "无" } else { label };
                 let before = ui.cursor().min;
                 if menu_item(ui, title, key, true, photo.label == label) {
                     action = Some(PhotoAction::Edit(Edit::Label(label.into())));

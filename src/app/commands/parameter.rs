@@ -5,7 +5,7 @@ use crate::model::recipe::Recipe;
 use crate::{app::inspector::BANDS, model::params::ParameterId};
 
 /// The Color Mixer's channels, in the order of `Recipe::hsl`.
-const MIXER_CHANNELS: [&str; 3] = ["Hue", "Saturation", "Luminance"];
+const MIXER_CHANNELS: [&str; 3] = ["色相", "饱和度", "明亮度"];
 
 /// A slider a dial can turn.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -86,11 +86,11 @@ impl Param {
         match self {
             Self::Band(i) => return format!("{} {}", BANDS[i], MIXER_CHANNELS[channel]),
             Self::Hsl(i, c) => return format!("{} {}", BANDS[i], MIXER_CHANNELS[c]),
-            Self::Gray(i) => return format!("{} Gray", BANDS[i]),
+            Self::Gray(i) => return format!("{} 灰度", BANDS[i]),
             _ => {}
         }
         match self {
-            Self::Setting(id) => id.descriptor().label.to_string(),
+            Self::Setting(id) => crate::app::chinese::label(id.descriptor().label).to_string(),
             Self::Band(_) | Self::Hsl(..) | Self::Gray(_) => unreachable!("named above"),
         }
     }
