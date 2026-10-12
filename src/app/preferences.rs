@@ -20,15 +20,17 @@ pub(super) enum Tab {
     Performance,
     Display,
     Automation,
+    Ai,
 }
 impl Tab {
-    const ALL: [Tab; 6] = [
+    const ALL: [Tab; 7] = [
         Tab::General,
         Tab::Catalog,
         Tab::Profiles,
         Tab::Performance,
         Tab::Display,
         Tab::Automation,
+        Tab::Ai,
     ];
     fn title(self) -> &'static str {
         match self {
@@ -38,6 +40,7 @@ impl Tab {
             Tab::Performance => "性能",
             Tab::Display => "显示",
             Tab::Automation => "自动化",
+            Tab::Ai => "AI",
         }
     }
 }
@@ -272,6 +275,11 @@ impl Editor {
                         egui::ScrollArea::vertical()
                             .auto_shrink(false)
                             .show(&mut content, |ui| self.automation_page(ui));
+                    }
+                    Tab::Ai => {
+                        egui::ScrollArea::vertical()
+                            .auto_shrink(false)
+                            .show(&mut content, |ui| self.ai_settings_page(ui));
                     }
                 }
                 let footer = egui::Rect::from_min_max(

@@ -48,6 +48,7 @@ impl Editor {
         let ctx = ui.ctx().clone();
         self.control_commands(&ctx);
         self.events(&ctx);
+        self.poll_ai();
         self.poll_updates(&ctx);
         self.themes.poll(&ctx);
         if let Some(library) = &mut self.library {
@@ -57,6 +58,7 @@ impl Editor {
         self.poll_preview_builds();
         // Preferences is modal: keys go to it, not to the photo behind.
         let modal = self.preferences.open
+            || self.ai.open
             || self.export_modal()
             || self.modal.is_some()
             || self.not_editable.is_some()
@@ -136,6 +138,7 @@ impl Editor {
         self.copy_dialog_window(&ctx);
         self.preset_rename_window(&ctx);
         self.curve_save_window(&ctx);
+        self.ai_windows(&ctx);
         self.preferences_window(&ctx);
         // Above Preferences, where Change… asks it.
         self.folder_question_window(&ctx);
@@ -377,6 +380,13 @@ impl Editor {
                             }
                         }
                     });
+                    ui.add_space(8.);
+                    let ai = ui
+                        .add_enabled(!busy, egui::Button::new("AI"))
+                        .on_hover_text("AI 助手：按提示词调整当前照片");
+                    if ai.clicked() {
+                        self.ai.open = true;
+                    }
                     ui.add_space(8.);
                     if self.activity.is_busy() {
                         ui.spinner();

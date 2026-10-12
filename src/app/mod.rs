@@ -116,6 +116,8 @@ pub(crate) struct Editor {
     /// Shared automation queue and independently configured input adapters.
     controls: automation::Hub,
     automation: commands::Automation,
+    /// The optional AI photo assistant and its local API configuration.
+    ai: ai::State,
 }
 impl Editor {
     pub(crate) fn new(
@@ -222,6 +224,7 @@ impl Editor {
             ctx.clone(),
             crate::catalog::preview_cache::PreviewCache::path(),
         );
+        let persistent = session_file.is_some();
         let mut app = Self {
             activity: Default::default(),
             load: Default::default(),
@@ -301,6 +304,7 @@ impl Editor {
             )),
             controls: automation::Hub::inactive(),
             automation: commands::Automation::default(),
+            ai: ai::State::new(ctx, persistent),
         };
         app.reload_presets(ctx);
         // A catalog passed on the command line opens instead of the last one;
@@ -681,6 +685,7 @@ fn survive_surface_errors(device: &wgpu::Device) {
     }));
 }
 
+mod ai;
 mod auto;
 mod automation;
 mod before_after;

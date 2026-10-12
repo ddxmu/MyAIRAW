@@ -92,6 +92,12 @@ A panel should call the domain API responsible for an operation, rather than
 implementing file formats, SQL or pixel processing itself. Thumbnail decoding
 belongs to `raw`; library browsing does not call into the preview renderer.
 
+The optional AI assistant stays in the app layer: its OpenAI-compatible HTTP
+transport, local API-key settings and prompt UI do not cross into the photo
+domain. A response is reduced to an allow-listed set of develop parameters and
+applied through the normal history/edit path, so it remains undoable and never
+writes the original file directly.
+
 Each load/render task owns its generation, cancellation token and lifecycle.
 The single-slot mailbox replaces pending work. The app discards obsolete results,
 and a failure only finishes its owning task. Worker messages use named fields;
