@@ -12,4 +12,4 @@ publish = false
 # run time from a path we choose (see `runtime`), so a missing runtime is an
 # error value, not a startup failure. Default features would pull in
 # `download-binaries`-style build scripts; none of them are wanted.
-ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "load-dynamic"] }
+ort = { version = "=2.0.0-rc.14", default-features = false, features = ["std", "load-dynamic"] }
